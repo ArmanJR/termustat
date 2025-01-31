@@ -1,6 +1,7 @@
 .idea/
-courses/
-export/
+courses/*.sql
+export/*.json
+export/*.sql
 compare/
 .html
 *.json
