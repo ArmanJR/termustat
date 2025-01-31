@@ -1,8 +1,8 @@
 .idea/
 courses/
 export/
+compare/
 .html
-*.sql
 *.json
 
 # Created by https://www.toptal.com/developers/gitignore/api/goland,go,macos
