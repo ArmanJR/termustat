@@ -1,5 +1,5 @@
 .idea/
-courses/*.sql
+courses/*.html
 export/*.json
 export/*.sql
 compare/
