@@ -16,10 +16,9 @@ type Config struct {
 	JWTTTL    int    `mapstructure:"JWT_TTL"`
 	Port      string `mapstructure:"PORT"`
 
-	SMTPHost     string `mapstructure:"SMTP_HOST"`
-	SMTPPort     int    `mapstructure:"SMTP_PORT"`
-	SMTPUser     string `mapstructure:"SMTP_USER"`
-	SMTPPassword string `mapstructure:"SMTP_PASSWORD"`
+	MailgunAPIKey string `mapstructure:"MAILGUN_API_KEY"`
+	MailgunDomain string `mapstructure:"MAILGUN_DOMAIN"`
+	FrontendURL   string `mapstructure:"FRONTEND_URL"`
 }
 
 func LoadConfig() (config Config, err error) {

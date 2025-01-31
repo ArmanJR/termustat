@@ -2,33 +2,51 @@ package main
 
 import (
 	"github.com/armanjr/termustat/internal/config"
+	"github.com/armanjr/termustat/internal/handlers"
 	"github.com/armanjr/termustat/internal/routes"
-	"github.com/armanjr/termustat/pkg/database"
-	"log"
-
+	"github.com/armanjr/termustat/internal/services"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"log"
 )
 
+func initLogger() (*zap.Logger, error) {
+	config := zap.NewProductionConfig()
+	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	return config.Build()
+}
+
 func main() {
+	logger, err := initLogger()
+	if err != nil {
+		log.Fatal("Failed to initialize logger:", err)
+	}
+	defer logger.Sync()
+
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Fatal("Error loading config:", err)
+		logger.Fatal("Error loading config", zap.Error(err))
 	}
 
-	// Database connection
-	db, err := database.ConnectDB(&cfg)
+	err = config.ConnectDB(&cfg)
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		logger.Fatal("Failed to connect to database", zap.Error(err))
 	}
 
-	// Auto migrate models
-	if err := database.AutoMigrate(db); err != nil {
-		log.Fatal("Database migration failed:", err)
+	if err := config.AutoMigrate(); err != nil {
+		logger.Fatal("Database migration failed", zap.Error(err))
 	}
 
-	// Gin setup
+	mailer := services.NewMailer(&cfg)
+
+	authHandler := handlers.NewAuthHandler(mailer, &cfg, logger)
+
 	router := gin.Default()
-	routes.SetupRoutes(router)
+	routes.SetupRoutes(router, authHandler)
 
-	log.Fatal(router.Run(":" + cfg.Port))
+	logger.Info("Starting server", zap.String("port", cfg.Port))
+	if err := router.Run(":" + cfg.Port); err != nil {
+		logger.Fatal("Failed to start server", zap.Error(err))
+	}
 }
