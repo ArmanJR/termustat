@@ -6,7 +6,7 @@ import (
 )
 
 type PasswordReset struct {
-	Token     uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	Token     uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	UserID    uuid.UUID `gorm:"type:uuid;not null;index"`
 	ExpiresAt time.Time `gorm:"not null"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`

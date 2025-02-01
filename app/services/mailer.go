@@ -3,7 +3,7 @@ package services
 import (
 	"bytes"
 	"context"
-	"github.com/armanjr/termustat/internal/config"
+	"github.com/armanjr/termustat/app/config"
 	"github.com/mailgun/errors"
 	"html/template"
 	"path/filepath"

@@ -3,15 +3,15 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"github.com/armanjr/termustat/internal/config"
+	"github.com/armanjr/termustat/app/config"
 	"github.com/armanjr/termustat/pkg/utils"
 	"go.uber.org/zap"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/armanjr/termustat/internal/models"
-	"github.com/armanjr/termustat/internal/services"
+	"github.com/armanjr/termustat/app/models"
+	"github.com/armanjr/termustat/app/services"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"

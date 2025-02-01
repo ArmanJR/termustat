@@ -6,7 +6,7 @@ import (
 )
 
 type CourseTime struct {
-	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	ID        uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	CourseID  uuid.UUID `gorm:"type:uuid;not null;index"`
 	DayOfWeek int       `gorm:"check:day_of_week BETWEEN 0 AND 6"`
 	StartTime time.Time `gorm:"type:time;not null"`

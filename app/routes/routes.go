@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"github.com/armanjr/termustat/internal/handlers"
+	"github.com/armanjr/termustat/app/handlers"
 	"github.com/gin-gonic/gin"
 )
 

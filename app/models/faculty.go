@@ -6,7 +6,7 @@ import (
 )
 
 type Faculty struct {
-	ID           uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	ID           uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	UniversityID uuid.UUID `gorm:"type:uuid;not null;index"`
 	Name         string    `gorm:"not null"`
 	ShortCode    string    `gorm:"not null;size:10"`

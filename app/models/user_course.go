@@ -6,7 +6,7 @@ import (
 )
 
 type UserCourse struct {
-	ID         uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	ID         uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	UserID     uuid.UUID `gorm:"type:uuid;not null;index"`
 	CourseID   uuid.UUID `gorm:"type:uuid;not null;index"`
 	SemesterID uuid.UUID `gorm:"type:uuid;not null;index"`

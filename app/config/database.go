@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"github.com/armanjr/termustat/internal/models"
+	"github.com/armanjr/termustat/app/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

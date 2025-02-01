@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/armanjr/termustat/internal/config"
-	"github.com/armanjr/termustat/internal/handlers"
-	"github.com/armanjr/termustat/internal/routes"
-	"github.com/armanjr/termustat/internal/services"
+	"github.com/armanjr/termustat/app/config"
+	"github.com/armanjr/termustat/app/handlers"
+	"github.com/armanjr/termustat/app/routes"
+	"github.com/armanjr/termustat/app/services"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
