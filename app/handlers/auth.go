@@ -2,18 +2,17 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/armanjr/termustat/app/logger"
-	"net/http"
-	"time"
-
 	"github.com/armanjr/termustat/app/config"
+	"github.com/armanjr/termustat/app/logger"
 	"github.com/armanjr/termustat/app/models"
 	"github.com/armanjr/termustat/app/services"
-	"github.com/armanjr/termustat/pkg/utils"
+	"github.com/armanjr/termustat/app/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
+	"time"
 )
 
 // RegisterRequest represents registration request
