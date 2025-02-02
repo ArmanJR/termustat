@@ -25,6 +25,7 @@ CREATE TABLE professors (
                             id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                             university_id UUID NOT NULL REFERENCES universities(id) ON DELETE CASCADE,
                             name VARCHAR(255) NOT NULL,
+                            normalized_name VARCHAR(255) NOT NULL,
                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
                             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

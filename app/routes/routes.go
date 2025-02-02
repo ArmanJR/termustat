@@ -33,6 +33,7 @@ func SetupRoutes(router *gin.Engine) {
 		admin.GET("/universities/:id", handlers.GetUniversity)
 		admin.PUT("/universities/:id", handlers.UpdateUniversity)
 		admin.DELETE("/universities/:id", handlers.DeleteUniversity)
+		admin.GET("/universities/:id/professors", handlers.GetProfessorsByUniversity)
 
 		// Faculty
 		admin.POST("/faculties", handlers.CreateFaculty)
@@ -46,5 +47,9 @@ func SetupRoutes(router *gin.Engine) {
 		admin.GET("/semesters/:id", handlers.GetSemester)
 		admin.PUT("/semesters/:id", handlers.UpdateSemester)
 		admin.DELETE("/semesters/:id", handlers.DeleteSemester)
+
+		// Professor
+		admin.GET("/professors/:id", handlers.GetProfessor)
+		admin.PUT("/professors/:id", handlers.UpdateProfessor)
 	}
 }
