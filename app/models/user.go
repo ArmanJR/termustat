@@ -16,6 +16,7 @@ type User struct {
 	FacultyID     uuid.UUID `gorm:"type:uuid;not null;index"`
 	Gender        string    `gorm:"size:6;check:gender IN ('male', 'female')"`
 	EmailVerified bool      `gorm:"default:false"`
+	IsAdmin       bool      `gorm:"default:false"`
 	CreatedAt     time.Time `gorm:"autoCreateTime"`
 	UpdatedAt     time.Time `gorm:"autoUpdateTime"`
 }

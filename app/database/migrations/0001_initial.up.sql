@@ -1,7 +1,8 @@
 -- Universities Table
 CREATE TABLE universities (
                               id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                              name VARCHAR(255) NOT NULL,
+                              name_en VARCHAR(255) NOT NULL,
+                              name_fa VARCHAR(255) NOT NULL,
                               is_active BOOLEAN DEFAULT true NOT NULL,
                               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
                               updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -11,8 +12,10 @@ CREATE TABLE universities (
 CREATE TABLE faculties (
                            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                            university_id UUID NOT NULL REFERENCES universities(id) ON DELETE CASCADE,
-                           name VARCHAR(255) NOT NULL,
+                           name_en VARCHAR(255) NOT NULL,
+                           name_fa VARCHAR(255) NOT NULL,
                            short_code VARCHAR(10) NOT NULL,
+                           is_active BOOLEAN DEFAULT true NOT NULL,
                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -20,6 +23,7 @@ CREATE TABLE faculties (
 -- Professors Table
 CREATE TABLE professors (
                             id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                            university_id UUID NOT NULL REFERENCES universities(id) ON DELETE CASCADE,
                             name VARCHAR(255) NOT NULL,
                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
                             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -49,6 +53,7 @@ CREATE TABLE users (
                        faculty_id UUID NOT NULL REFERENCES faculties(id),
                        gender VARCHAR(6) NOT NULL CHECK (gender IN ('male', 'female')),
                        email_verified BOOLEAN DEFAULT false NOT NULL,
+                       is_admin BOOLEAN DEFAULT false NOT NULL,
                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -111,6 +116,7 @@ CREATE TABLE email_verifications (
 -- Indexes
 CREATE INDEX idx_universities_is_active ON universities(is_active);
 CREATE INDEX idx_faculties_university_id ON faculties(university_id);
+CREATE INDEX idx_professors_university_id ON professors(university_id);
 CREATE INDEX idx_users_university_id ON users(university_id);
 CREATE INDEX idx_users_faculty_id ON users(faculty_id);
 CREATE INDEX idx_courses_university_id ON courses(university_id);

@@ -1,37 +1,22 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
-	"github.com/armanjr/termustat/app/config"
-	"github.com/armanjr/termustat/pkg/utils"
-	"go.uber.org/zap"
+	"github.com/armanjr/termustat/app/logger"
 	"net/http"
-	"strings"
 	"time"
 
+	"github.com/armanjr/termustat/app/config"
 	"github.com/armanjr/termustat/app/models"
 	"github.com/armanjr/termustat/app/services"
+	"github.com/armanjr/termustat/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type AuthHandler struct {
-	mailer *services.Mailer
-	config *config.Config
-	logger *zap.Logger
-}
-
-func NewAuthHandler(mailer *services.Mailer, cfg *config.Config, logger *zap.Logger) *AuthHandler {
-	return &AuthHandler{
-		mailer: mailer,
-		config: cfg,
-		logger: logger,
-	}
-}
-
-// RegisterRequest Register Request
+// RegisterRequest represents registration request
 type RegisterRequest struct {
 	Email        string `json:"email" binding:"required,email"`
 	Password     string `json:"password" binding:"required,min=8"`
@@ -43,10 +28,10 @@ type RegisterRequest struct {
 	Gender       string `json:"gender" binding:"required,oneof=male female"`
 }
 
-func (h *AuthHandler) Register(c *gin.Context) {
+func Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Warn("Invalid registration request",
+		logger.Log.Warn("Invalid registration request",
 			zap.Error(err),
 			zap.Any("request", req))
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -78,6 +63,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		FacultyID:     uuid.MustParse(req.FacultyID),
 		Gender:        req.Gender,
 		EmailVerified: false,
+		IsAdmin:       false,
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
@@ -85,18 +71,18 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	go h.sendVerificationEmail(&user)
+	go sendVerificationEmail(&user)
 
-	h.logger.Info("New user registered",
+	logger.Log.Info("New user registered",
 		zap.String("email", req.Email),
 		zap.String("student_id", req.StudentID))
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Registration successful. Please check your email to verify your account."})
 }
 
-func (h *AuthHandler) sendVerificationEmail(user *models.User) {
+func sendVerificationEmail(user *models.User) {
 	token := uuid.New().String()
-	expiresAt := time.Now().Add(24 * time.Hour) // Token expires in 24 hours
+	expiresAt := time.Now().Add(24 * time.Hour)
 
 	verification := models.EmailVerification{
 		Token:     token,
@@ -105,11 +91,11 @@ func (h *AuthHandler) sendVerificationEmail(user *models.User) {
 	}
 
 	if err := config.DB.Create(&verification).Error; err != nil {
-		h.logger.Error("Failed to create verification record", zap.Error(err))
+		logger.Log.Error("Failed to create verification record", zap.Error(err))
 		return
 	}
 
-	verificationURL := fmt.Sprintf("%s/verify-email?token=%s", h.config.FrontendURL, token)
+	verificationURL := fmt.Sprintf("%s/verify-email?token=%s", config.Cfg.FrontendURL, token)
 
 	tplData := struct {
 		Name            string
@@ -119,31 +105,31 @@ func (h *AuthHandler) sendVerificationEmail(user *models.User) {
 		VerificationURL: verificationURL,
 	}
 
-	emailContent, err := h.mailer.RenderTemplate("verification_email.html", tplData)
+	emailContent, err := services.Mailer.RenderTemplate("verification_email.html", tplData)
 	if err != nil {
-		h.logger.Error("Failed to render verification email template", zap.Error(err))
+		logger.Log.Error("Failed to render verification email template", zap.Error(err))
 		return
 	}
 
-	if err := h.mailer.SendEmail(user.Email, emailContent.Subject, emailContent.Body); err != nil {
-		h.logger.Error("Failed to send verification email",
+	if err := services.Mailer.SendEmail(user.Email, emailContent.Subject, emailContent.Body); err != nil {
+		logger.Log.Error("Failed to send verification email",
 			zap.String("email", user.Email),
 			zap.Error(err))
 		return
 	}
 
-	h.logger.Info("Verification email sent successfully",
+	logger.Log.Info("Verification email sent successfully",
 		zap.String("email", user.Email),
 		zap.Time("expires_at", expiresAt))
 }
 
-// LoginRequest Login Request
+// LoginRequest represents login request
 type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 }
 
-func (h *AuthHandler) Login(c *gin.Context) {
+func Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -166,7 +152,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := utils.GenerateJWT(user.ID.String(), h.config.JWTSecret, h.config.JWTTTL)
+	token, err := utils.GenerateJWT(user.ID.String(), config.Cfg.JWTSecret, config.Cfg.JWTTTL)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
@@ -175,12 +161,12 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }
 
-// ForgotPasswordRequest Forgot Password Request
+// ForgotPasswordRequest represents forgot password request
 type ForgotPasswordRequest struct {
 	Email string `json:"email" binding:"required,email"`
 }
 
-func (h *AuthHandler) ForgotPassword(c *gin.Context) {
+func ForgotPassword(c *gin.Context) {
 	var req ForgotPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -189,7 +175,6 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 
 	var user models.User
 	if err := config.DB.Where("email = ?", req.Email).First(&user).Error; err != nil {
-		// Don't reveal if user exists
 		c.JSON(http.StatusOK, gin.H{"message": "If the email exists, a reset link will be sent"})
 		return
 	}
@@ -208,36 +193,35 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 		return
 	}
 
-	go h.sendPasswordResetEmail(&user, resetToken.String())
+	go sendPasswordResetEmail(&user, resetToken.String())
 
 	c.JSON(http.StatusOK, gin.H{"message": "Password reset instructions sent to your email"})
 }
 
-func (h *AuthHandler) sendPasswordResetEmail(user *models.User, token string) {
-	resetURL := fmt.Sprintf("%s/reset-password?token=%s", h.config.FrontendURL, token)
+func sendPasswordResetEmail(user *models.User, token string) {
+	resetURL := fmt.Sprintf("%s/reset-password?token=%s", config.Cfg.FrontendURL, token)
 	tplData := struct{ ResetURL string }{ResetURL: resetURL}
 
-	emailContent, err := h.mailer.RenderTemplate("password_reset_email.html", tplData)
+	emailContent, err := services.Mailer.RenderTemplate("password_reset_email.html", tplData)
 	if err != nil {
+		logger.Log.Error("Failed to render password reset email", zap.Error(err))
 		return
 	}
 
-	err = h.mailer.SendEmail(user.Email, emailContent.Subject, emailContent.Body)
-	if err != nil {
-		h.logger.Error("Failed to send password reset email",
+	if err := services.Mailer.SendEmail(user.Email, emailContent.Subject, emailContent.Body); err != nil {
+		logger.Log.Error("Failed to send password reset email",
 			zap.String("email", user.Email),
 			zap.Error(err))
-		return
 	}
 }
 
-// ResetPasswordRequest Reset Password Request
+// ResetPasswordRequest represents password reset request
 type ResetPasswordRequest struct {
 	Token    string `json:"token" binding:"required,uuid4"`
 	Password string `json:"password" binding:"required,min=8"`
 }
 
-func (h *AuthHandler) ResetPassword(c *gin.Context) {
+func ResetPassword(c *gin.Context) {
 	var req ResetPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -270,37 +254,7 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Password reset successful"})
 }
 
-func (h *AuthHandler) JWTAuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
-			return
-		}
-
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-		if tokenString == authHeader {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Bearer token required"})
-			return
-		}
-
-		claims, err := utils.ParseJWT(tokenString, h.config.JWTSecret)
-		if err != nil {
-			if errors.Is(err, utils.ErrExpiredToken) {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token expired"})
-				return
-			}
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-			return
-		}
-
-		// Set user ID in context for downstream handlers
-		c.Set("userID", claims.UserID)
-		c.Next()
-	}
-}
-
-func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
+func GetCurrentUser(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})

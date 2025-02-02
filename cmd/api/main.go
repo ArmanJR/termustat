@@ -2,51 +2,44 @@ package main
 
 import (
 	"github.com/armanjr/termustat/app/config"
-	"github.com/armanjr/termustat/app/handlers"
+	"github.com/armanjr/termustat/app/logger"
 	"github.com/armanjr/termustat/app/routes"
 	"github.com/armanjr/termustat/app/services"
+	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"log"
+	"os"
+	"time"
 )
 
-func initLogger() (*zap.Logger, error) {
-	config := zap.NewProductionConfig()
-	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	return config.Build()
-}
-
 func main() {
-	logger, err := initLogger()
-	if err != nil {
-		log.Fatal("Failed to initialize logger:", err)
-	}
-	defer logger.Sync()
+	// Configs
+	config.LoadConfig()
 
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		logger.Fatal("Error loading config", zap.Error(err))
+	// Application Timezone
+	if err := os.Setenv("TZ", config.Cfg.Timezone); err != nil {
+		log.Fatal("Failed to set timezone:", err)
 	}
 
-	err = config.ConnectDB(&cfg)
-	if err != nil {
-		logger.Fatal("Failed to connect to database", zap.Error(err))
-	}
+	// Logger
+	logger.InitLogger()
+	defer logger.Log.Sync()
 
-	if err := config.AutoMigrate(); err != nil {
-		logger.Fatal("Database migration failed", zap.Error(err))
-	}
+	// Database
+	config.ConnectDB()
+	config.AutoMigrate()
 
-	mailer := services.NewMailer(&cfg)
+	// Services
+	services.RegisterMailer()
 
-	authHandler := handlers.NewAuthHandler(mailer, &cfg, logger)
-
-	router := gin.Default()
-	routes.SetupRoutes(router, authHandler)
-
-	logger.Info("Starting server", zap.String("port", cfg.Port))
-	if err := router.Run(":" + cfg.Port); err != nil {
-		logger.Fatal("Failed to start server", zap.Error(err))
+	// HTTP
+	router := gin.New()
+	router.Use(ginzap.Ginzap(logger.Log, time.RFC3339, true))
+	router.Use(ginzap.RecoveryWithZap(logger.Log, true))
+	routes.SetupRoutes(router)
+	logger.Log.Info("Starting server", zap.String("port", config.Cfg.Port))
+	if err := router.Run(":" + config.Cfg.Port); err != nil {
+		logger.Log.Fatal("Failed to start server", zap.Error(err))
 	}
 }

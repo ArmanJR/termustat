@@ -7,7 +7,8 @@ import (
 
 type University struct {
 	ID        uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
-	Name      string    `gorm:"not null"`
+	NameEn    string    `gorm:"not null"`
+	NameFa    string    `gorm:"not null"`
 	IsActive  bool      `gorm:"default:true;index"`
 	Faculties []Faculty
 	CreatedAt time.Time `gorm:"autoCreateTime"`

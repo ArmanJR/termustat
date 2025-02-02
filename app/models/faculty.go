@@ -8,8 +8,10 @@ import (
 type Faculty struct {
 	ID           uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	UniversityID uuid.UUID `gorm:"type:uuid;not null;index"`
-	Name         string    `gorm:"not null"`
+	NameEn       string    `gorm:"not null"`
+	NameFa       string    `gorm:"not null"`
 	ShortCode    string    `gorm:"not null;size:10"`
+	IsActive     bool      `gorm:"default:true;index"`
 	CreatedAt    time.Time `gorm:"autoCreateTime"`
 	UpdatedAt    time.Time `gorm:"autoUpdateTime"`
 }

@@ -1,10 +1,14 @@
 package config
 
 import (
+	"fmt"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 type Config struct {
+	Timezone string `mapstructure:"TIMEZONE"`
+
 	DBHost     string `mapstructure:"DB_HOST"`
 	DBPort     string `mapstructure:"DB_PORT"`
 	DBUser     string `mapstructure:"DB_USER"`
@@ -21,17 +25,25 @@ type Config struct {
 	FrontendURL   string `mapstructure:"FRONTEND_URL"`
 }
 
-func LoadConfig() (config Config, err error) {
+var Cfg Config
+
+func LoadConfig() {
+	var config Config
+
 	viper.AddConfigPath(".")
 	viper.SetConfigName(".env")
 	viper.SetConfigType("env")
 	viper.AutomaticEnv()
 
-	err = viper.ReadInConfig()
+	err := viper.ReadInConfig()
 	if err != nil {
-		return
+		panic(fmt.Sprintf("Failed to load Configs: %v", zap.Error(err)))
 	}
 
 	err = viper.Unmarshal(&config)
-	return
+	if err != nil {
+		panic(fmt.Sprintf("Failed to unmarshal Configs: %v", zap.Error(err)))
+	}
+
+	Cfg = config
 }

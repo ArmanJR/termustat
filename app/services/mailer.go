@@ -18,30 +18,32 @@ type EmailTemplate struct {
 	Body    string
 }
 
-type Mailer struct {
+type MailerStruct struct {
 	mg      *mailgun.MailgunImpl
 	sender  string
 	tplPath string
 }
 
 var (
+	Mailer        *MailerStruct
 	templateCache = make(map[string]*template.Template)
 	templateMutex = &sync.RWMutex{}
 )
 
-func NewMailer(cfg *config.Config) *Mailer {
+func RegisterMailer() {
 	mg := mailgun.NewMailgun(
-		cfg.MailgunDomain,
-		cfg.MailgunAPIKey,
+		config.Cfg.MailgunDomain,
+		config.Cfg.MailgunAPIKey,
 	)
-	return &Mailer{
+	mailer := &MailerStruct{
 		mg:      mg,
-		sender:  "noreply@" + cfg.MailgunDomain,
+		sender:  "noreply@" + config.Cfg.MailgunDomain,
 		tplPath: "templates/email/",
 	}
+	Mailer = mailer
 }
 
-func (m *Mailer) SendEmail(to, subject, body string) error {
+func (m *MailerStruct) SendEmail(to, subject, body string) error {
 	ctx := context.Background()
 	message := mailgun.NewMessage(m.sender, subject, "", to)
 	message.SetHTML(body)
@@ -49,7 +51,7 @@ func (m *Mailer) SendEmail(to, subject, body string) error {
 	return err
 }
 
-func (m *Mailer) RenderTemplate(tplName string, data interface{}) (*EmailTemplate, error) {
+func (m *MailerStruct) RenderTemplate(tplName string, data interface{}) (*EmailTemplate, error) {
 	if tplName == "" {
 		return nil, errors.New("template name cannot be empty")
 	}
