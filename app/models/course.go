@@ -10,6 +10,7 @@ type Course struct {
 	UniversityID      uuid.UUID `gorm:"type:uuid;not null;index"`
 	FacultyID         uuid.UUID `gorm:"type:uuid;not null;index"`
 	ProfessorID       uuid.UUID `gorm:"type:uuid;not null;index"`
+	SemesterID        uuid.UUID `gorm:"type:uuid;not null;index"`
 	Code              string    `gorm:"not null;size:50"`
 	Name              string    `gorm:"not null;size:255"`
 	Weight            int       `gorm:"not null"`

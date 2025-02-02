@@ -39,5 +39,12 @@ func SetupRoutes(router *gin.Engine) {
 		admin.GET("/faculties/:id", handlers.GetFaculty)
 		admin.PUT("/faculties/:id", handlers.UpdateFaculty)
 		admin.DELETE("/faculties/:id", handlers.DeleteFaculty)
+
+		// Semester
+		admin.POST("/semesters", handlers.CreateSemester)
+		admin.GET("/semesters", handlers.GetAllSemesters)
+		admin.GET("/semesters/:id", handlers.GetSemester)
+		admin.PUT("/semesters/:id", handlers.UpdateSemester)
+		admin.DELETE("/semesters/:id", handlers.DeleteSemester)
 	}
 }

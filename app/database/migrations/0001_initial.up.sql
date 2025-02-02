@@ -34,8 +34,6 @@ CREATE TABLE semesters (
                            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                            year INT NOT NULL,
                            term VARCHAR(6) NOT NULL CHECK (term IN ('spring', 'fall')),
-                           start_date TIMESTAMP NOT NULL,
-                           end_date TIMESTAMP NOT NULL,
                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
                            UNIQUE(year, term)
@@ -64,6 +62,7 @@ CREATE TABLE courses (
                          university_id UUID NOT NULL REFERENCES universities(id) ON DELETE CASCADE,
                          faculty_id UUID NOT NULL REFERENCES faculties(id) ON DELETE CASCADE,
                          professor_id UUID NOT NULL REFERENCES professors(id),
+                         semester_id UUID NOT NULL REFERENCES semesters(id),
                          code VARCHAR(50) NOT NULL,
                          name VARCHAR(255) NOT NULL,
                          weight INT NOT NULL,
@@ -122,6 +121,7 @@ CREATE INDEX idx_users_faculty_id ON users(faculty_id);
 CREATE INDEX idx_courses_university_id ON courses(university_id);
 CREATE INDEX idx_courses_faculty_id ON courses(faculty_id);
 CREATE INDEX idx_courses_professor_id ON courses(professor_id);
+CREATE INDEX idx_courses_semester_id ON courses(semester_id);
 CREATE INDEX idx_course_times_course_id ON course_times(course_id);
 CREATE INDEX idx_user_courses_user_id ON user_courses(user_id);
 CREATE INDEX idx_user_courses_course_id ON user_courses(course_id);
