@@ -27,6 +27,16 @@ func SetupRoutes(router *gin.Engine) {
 	admin := router.Group("/api/v1/admin")
 	admin.Use(middlewares.JWTAuthMiddleware(), middlewares.IsAdminMiddleware())
 	{
+		// User
+		admin.GET("/users", handlers.GetAllUsers)
+		admin.GET("/users/:id", handlers.GetUser)
+		admin.PUT("/users/:id", handlers.UpdateUser)
+		admin.DELETE("/users/:id", handlers.DeleteUser)
+
+		admin.GET("/users/:id/courses", handlers.GetUserCourses)
+		admin.POST("/users/:id/courses", handlers.AddUserCourse)
+		admin.DELETE("/users/:id/courses/:course_id", handlers.RemoveUserCourse)
+
 		// University
 		admin.POST("/universities", handlers.CreateUniversity)
 		admin.GET("/universities", handlers.GetAllUniversities)
