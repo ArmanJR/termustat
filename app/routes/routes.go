@@ -7,8 +7,9 @@ import (
 )
 
 func SetupRoutes(router *gin.Engine) {
+	// an /api/ is already added by nginx
 	// Public routes
-	public := router.Group("/api/v1")
+	public := router.Group("/v1")
 	{
 		public.POST("/auth/register", handlers.Register)
 		public.POST("/auth/login", handlers.Login)
@@ -17,14 +18,14 @@ func SetupRoutes(router *gin.Engine) {
 	}
 
 	// Protected routes
-	protected := router.Group("/api/v1")
+	protected := router.Group("/v1")
 	protected.Use(middlewares.JWTAuthMiddleware())
 	{
 		protected.GET("/users/me", handlers.GetCurrentUser)
 	}
 
 	// Admin routes
-	admin := router.Group("/api/v1/admin")
+	admin := router.Group("/v1/admin")
 	admin.Use(middlewares.JWTAuthMiddleware(), middlewares.IsAdminMiddleware())
 	{
 		// User
