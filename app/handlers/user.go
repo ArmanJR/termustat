@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
+	"strconv"
 
 	"net/http"
 	"time"
@@ -27,6 +28,19 @@ type UserResponse struct {
 	IsAdmin       bool      `json:"is_admin"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+// Pagination struct to hold pagination parameters
+type Pagination struct {
+	Page     int   `json:"page"`
+	PageSize int   `json:"page_size"`
+	Total    int64 `json:"total"`
+}
+
+// PaginatedResponse struct to wrap the response with pagination info
+type PaginatedResponse struct {
+	Data       []UserResponse `json:"data"`
+	Pagination Pagination     `json:"pagination"`
 }
 
 // AdminUserRequest represents admin user update request
@@ -68,10 +82,29 @@ func GetUser(c *gin.Context) {
 	})
 }
 
-// GetAllUsers returns all users (Admin only)
+// GetAllUsers returns all users with pagination (Admin only)
 func GetAllUsers(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
+	offset := (page - 1) * pageSize
+
 	var users []models.User
-	if err := config.DB.Find(&users).Error; err != nil {
+	var total int64
+
+	if err := config.DB.Model(&models.User{}).Count(&total).Error; err != nil {
+		logger.Log.Error("Failed to count users", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count users"})
+		return
+	}
+
+	if err := config.DB.Limit(pageSize).Offset(offset).Find(&users).Error; err != nil {
 		logger.Log.Error("Failed to fetch users", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
 		return
@@ -95,7 +128,16 @@ func GetAllUsers(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, response)
+	paginatedResponse := PaginatedResponse{
+		Data: response,
+		Pagination: Pagination{
+			Page:     page,
+			PageSize: pageSize,
+			Total:    total,
+		},
+	}
+
+	c.JSON(http.StatusOK, paginatedResponse)
 }
 
 // UpdateUser updates user details (Admin only)
