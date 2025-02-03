@@ -10,6 +10,8 @@ Termustat is an online timetabling tool for university students in Iran. It work
 Termustat was developed by [Arman Jafarnezhad](https://linkedin.com/in/ArmanJ) in summer 2018 at Kharazmi University to streamline the traditional paper-based course planning process. What began as a personal project quickly evolved into a widely-adopted solution, garnering significant adoption across multiple prestigious Iranian universities including K.N. Toosi University of Technology and Shahid Beheshti University.
 The platform was created to address the common challenges students face when organizing their academic schedules, offering a digital alternative to manual planning methods.
 
+Read ["From Hesarak to Abbaspur"](https://t.me/sefroyekpub/43): The story of Termustat, published in the 7th issue of Safar-o-Yek magazine.
+
 ## Architecture
 
 ### Backend
@@ -32,7 +34,7 @@ Acts as the data processing powerhouse
 
 ## Project Evolution
 
-The [original Termustat](https://github.com/armanjr/termustat-legacy) was built using
+The original Termustat was built using
 - Backend: PHP & MySQL
 - Frontend: Materialize CSS framework & jQuery
 - Engine: Ruby on Rails
