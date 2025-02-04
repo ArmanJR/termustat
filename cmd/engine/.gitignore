@@ -1,7 +1,11 @@
+temp/
 .idea/
 courses/*.html
+legacy/courses/*.html
 export/*.json
+legacy/export/*.json
 export/*.sql
+legacy/export/*.sql
 compare/
 .html
 *.json

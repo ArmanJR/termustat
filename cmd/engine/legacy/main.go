@@ -58,7 +58,7 @@ func processAllCourses() error {
 		faculty := strings.TrimSuffix(file.Name(), ".html")
 		filePath := filepath.Join("courses", file.Name())
 
-		records, err := processHTMLFile(filePath)
+		records, err := processHTMLFile(filePath, faculty)
 		if err != nil {
 			log.Printf("Skipping %s due to error: %v", filePath, err)
 			continue
@@ -86,7 +86,7 @@ func processAllCourses() error {
 	return nil
 }
 
-func processHTMLFile(path string) ([]Record, error) {
+func processHTMLFile(path, faculty string) ([]Record, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("error opening file: %w", err)
@@ -100,28 +100,34 @@ func processHTMLFile(path string) ([]Record, error) {
 
 	var records []Record
 
-	doc.Find("table tr").Each(func(_ int, row *goquery.Selection) {
-		if row.HasClass("DTitle") {
-			return
-		}
+	doc.Find(".CTable3").Each(func(_ int, table *goquery.Selection) {
+		table.Find("tr").Each(func(_ int, row *goquery.Selection) {
+			if style, _ := row.Attr("style"); style == "display: none;" {
+				return
+			}
 
-		cells := row.Find("td")
-		if cells.Length() < 19 {
-			return
-		}
+			cells := row.Find("td")
+			if cells.Length() < 8 {
+				return
+			}
 
-		record := Record{
-			Faculty:  cleanText(cells.Eq(2).Text()),
-			CourseID: cleanText(cells.Eq(6).Text()),
-			Name:     cleanText(cells.Eq(7).Text()),
-			Weight:   cleanText(cells.Eq(8).Text()),
-			Capacity: cleanText(cells.Eq(10).Text()),
-			Gender:   cleanText(cells.Eq(13).Text()),
-			Teacher:  cleanText(cells.Eq(14).Text()),
-		}
+			record := Record{
+				Faculty:  faculty,
+				CourseID: cleanText(cells.Eq(0).Text()),
+				Name:     cleanText(cells.Eq(1).Text()),
+				Weight:   cleanText(cells.Eq(2).Text()),
+				Capacity: cleanText(cells.Eq(4).Text()),
+				Gender:   cleanText(cells.Eq(7).Text()),
+				Teacher:  cleanText(cells.Eq(8).Text()),
+			}
 
-		processTimeInfo(&record, cells.Eq(15).Text(), "")
-		records = append(records, record)
+			if cells.Length() > 15 && cleanText(cells.Eq(15).Text()) == "ارشد" {
+				record.Name += " (ارشد)"
+			}
+
+			processTimeInfo(&record, cells.Eq(9).Text(), cells.Eq(10).Text())
+			records = append(records, record)
+		})
 	})
 
 	return records, nil
@@ -177,9 +183,7 @@ func processTimeInfo(record *Record, timeStr, examStr string) {
 func processExamInfo(record *Record, examStr string) {
 	if dateStart := strings.Index(examStr, "("); dateStart != -1 {
 		if dateEnd := strings.Index(examStr[dateStart:], ")"); dateEnd != -1 {
-			date := examStr[dateStart+1 : dateStart+dateEnd]
-			date = strings.ReplaceAll(date, ".", "/")
-			record.DateExam = cleanText(date)
+			record.DateExam = cleanText(examStr[dateStart+1 : dateStart+dateEnd])
 		}
 	}
 
@@ -192,9 +196,8 @@ func cleanText(text string) string {
 	replacer := strings.NewReplacer(
 		"۰", "0", "۱", "1", "۲", "2", "۳", "3", "۴", "4",
 		"۵", "5", "۶", "6", "۷", "7", "۸", "8", "۹", "9",
-		"ي", "ی", "ك", "ک", "ئ", "ی", "ء", "", "٠", "0", "١", "1",
-		"٢", "2", "٣", "3", "٤", "4", "٥", "5", "٦", "6", "٧", "7",
-		"٨", "8", "٩", "9", "‌", " ", "‏", "", "\u200c", " ",
+		"ي", "ی", "١", "1", "٢", "2", "٣", "3", "٤", "4",
+		"٥", "5", "٦", "6", "٧", "7", "٨", "8", "٩", "9",
 	)
 	return strings.TrimSpace(replacer.Replace(text))
 }
