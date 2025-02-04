@@ -13,20 +13,20 @@ import (
 )
 
 type Record struct {
-	CourseID string `json:"course_id"`
-	Name     string `json:"name"`
-	Weight   string `json:"weight"`
-	Capacity string `json:"capacity"`
-	Gender   string `json:"gender"`
-	Teacher  string `json:"teacher"`
-	Faculty  string `json:"faculty"`
-	Time1    string `json:"time1"`
-	Time2    string `json:"time2"`
-	Time3    string `json:"time3"`
-	Time4    string `json:"time4"`
-	Time5    string `json:"time5"`
-	TimeExam string `json:"time_exam"`
-	DateExam string `json:"date_exam"`
+	CourseID  string `json:"course_id"`
+	Name      string `json:"name"`
+	Weight    string `json:"weight"`
+	Capacity  string `json:"capacity"`
+	Gender    string `json:"gender"`
+	Professor string `json:"professor"`
+	Faculty   string `json:"faculty"`
+	Time1     string `json:"time1"`
+	Time2     string `json:"time2"`
+	Time3     string `json:"time3"`
+	Time4     string `json:"time4"`
+	Time5     string `json:"time5"`
+	TimeExam  string `json:"time_exam"`
+	DateExam  string `json:"date_exam"`
 }
 
 func main() {
@@ -163,13 +163,13 @@ func processHTMLFile(path string) ([]Record, error) {
 		}
 
 		record := Record{
-			Faculty:  cleanText(cells.Eq(2).Text()),
-			CourseID: cleanText(cells.Eq(6).Text()),
-			Name:     cleanText(cells.Eq(7).Text()),
-			Weight:   cleanText(cells.Eq(8).Text()),
-			Capacity: cleanText(cells.Eq(10).Text()),
-			Gender:   cleanText(cells.Eq(13).Text()),
-			Teacher:  cleanText(cells.Eq(14).Text()),
+			Faculty:   cleanText(cells.Eq(2).Text()),
+			CourseID:  cleanText(cells.Eq(6).Text()),
+			Name:      cleanText(cells.Eq(7).Text()),
+			Weight:    cleanText(cells.Eq(8).Text()),
+			Capacity:  cleanText(cells.Eq(10).Text()),
+			Gender:    cleanText(cells.Eq(13).Text()),
+			Professor: cleanText(cells.Eq(14).Text()),
 		}
 
 		processTimeInfo(&record, cells.Eq(15).Text(), "")
@@ -284,7 +284,7 @@ func generateSQLInsert(faculty string, records []Record) (string, error) {
 			record.Weight,
 			record.Capacity,
 			escapeSQL(record.Gender),
-			escapeSQL(record.Teacher),
+			escapeSQL(record.Professor),
 			escapeSQL(record.Faculty),
 			escapeSQL(record.Time1),
 			escapeSQL(record.Time2),

@@ -23,20 +23,39 @@ type CourseRequest struct {
 	FacultyID    string `json:"faculty_id" binding:"required,uuid4"`
 	SemesterID   string `json:"semester_id" binding:"required,uuid4"`
 
-	ProfessorName     string `json:"professor_name" binding:"required"`
-	Code              string `json:"code" binding:"required"`
-	Name              string `json:"name" binding:"required"`
-	Weight            int    `json:"weight" binding:"required,min=1"`
-	Capacity          int    `json:"capacity" binding:"min=0"`
-	GenderRestriction string `json:"gender" binding:"required,oneof=male female mixed"`
-	Time1             string `json:"time1"`
-	Time2             string `json:"time2"`
-	Time3             string `json:"time3"`
-	Time4             string `json:"time4"`
-	Time5             string `json:"time5"`
-	Time6             string `json:"time6"`
-	TimeExam          string `json:"time_exam" binding:"required"`
-	DateExam          string `json:"date_exam" binding:"required"`
+	ProfessorName     string   `json:"professor_name" binding:"required"`
+	Code              string   `json:"code" binding:"required"`
+	Name              string   `json:"name" binding:"required"`
+	Weight            int      `json:"weight" binding:"required,min=1"`
+	Capacity          int      `json:"capacity" binding:"min=0"`
+	GenderRestriction string   `json:"gender" binding:"required,oneof=male female mixed"`
+	Times             []string `json:"times" binding:"required"`
+	TimeExam          string   `json:"time_exam" binding:"required"`
+	DateExam          string   `json:"date_exam" binding:"required"`
+}
+
+type CourseEngineRequest struct {
+	CourseID  string `json:"course_id"`
+	Name      string `json:"name"`
+	Weight    string `json:"weight"`
+	Capacity  string `json:"capacity"`
+	Gender    string `json:"gender"`
+	Professor string `json:"professor"` // professor name
+	Faculty   string `json:"faculty"`   // faculty code
+	Time1     string `json:"time1"`
+	Time2     string `json:"time2"`
+	Time3     string `json:"time3"`
+	Time4     string `json:"time4"`
+	Time5     string `json:"time5"`
+	TimeExam  string `json:"time_exam"`
+	DateExam  string `json:"date_exam"`
+}
+
+// CoursesEngineRequest represents courses creation/update request from engine's processing
+type CoursesEngineRequest struct {
+	UniversityID string                `json:"university_id" binding:"required"`
+	SemesterID   string                `json:"semester_id" binding:"required"`
+	Courses      []CourseEngineRequest `json:"courses" binding:"required"`
 }
 
 // CourseProcessingError represents a custom error for course processing
@@ -47,6 +66,44 @@ type CourseProcessingError struct {
 
 func (e *CourseProcessingError) Error() string {
 	return e.Err.Error()
+}
+
+// CreateCourse is used to create course via admin dashboard
+func CreateCourse(c *gin.Context) {
+	var req CourseRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Log.Warn("Invalid course request", zap.Error(err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	course, err := processCourse(req)
+	if err != nil {
+		c.JSON(err.StatusCode, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := courseRepo.CreateCourse(config.DB, &course, course.CourseTimes); err != nil {
+		logger.Log.Error("Failed to create course", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create course"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, course)
+}
+
+// CreateCourseFromEngine is used to process engine's response and call CreateCourse
+func CreateCourseFromEngine(c *gin.Context) {
+	var req CoursesEngineRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Log.Warn("Invalid course request", zap.Error(err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	//to be implemented
+
+	c.JSON(http.StatusNotImplemented, nil)
 }
 
 // parseTimeSlot parses a time string into CourseTime
@@ -150,9 +207,8 @@ func processCourse(courseRequest CourseRequest) (models.Course, *CourseProcessin
 	}
 
 	// Parse course times
-	timeSlots := []string{courseRequest.Time1, courseRequest.Time2, courseRequest.Time3, courseRequest.Time4, courseRequest.Time5, courseRequest.Time6}
 	var courseTimes []models.CourseTime
-	for _, ts := range timeSlots {
+	for _, ts := range courseRequest.Times {
 		if ts == "" {
 			continue
 		}
@@ -180,29 +236,6 @@ func processCourse(courseRequest CourseRequest) (models.Course, *CourseProcessin
 	}
 
 	return course, nil
-}
-
-func CreateCourse(c *gin.Context) {
-	var req CourseRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Log.Warn("Invalid course request", zap.Error(err))
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	course, err := processCourse(req)
-	if err != nil {
-		c.JSON(err.StatusCode, gin.H{"error": err.Error()})
-		return
-	}
-
-	if err := courseRepo.CreateCourse(config.DB, &course, course.CourseTimes); err != nil {
-		logger.Log.Error("Failed to create course", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create course"})
-		return
-	}
-
-	c.JSON(http.StatusCreated, course)
 }
 
 // BatchCourseRequest represents batch course creation
