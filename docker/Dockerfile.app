@@ -11,5 +11,5 @@ WORKDIR /app
 COPY --from=builder /app/termustat .
 COPY ../.env /app/.env
 
-EXPOSE 8080
+EXPOSE 80
 ENTRYPOINT ["./termustat"]

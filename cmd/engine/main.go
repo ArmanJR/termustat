@@ -32,9 +32,9 @@ type Record struct {
 func main() {
 	router := gin.New()
 	router.POST("/process", processUploadedFile)
-	log.Println("Starting server on port 8082...")
-	if err := router.Run(":8082"); err != nil {
-		log.Fatal("Failed to start server", err)
+	log.Println("Starting engine...")
+	if err := router.Run(":80"); err != nil {
+		log.Fatal("Failed to start engine server", err)
 	}
 }
 
