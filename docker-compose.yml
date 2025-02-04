@@ -16,6 +16,18 @@ services:
       - ./app/templates:/app/templates
       - ./app/database/migrations:/app/database/migrations
 
+  engine:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.engine
+    ports:
+      - "8082:8082"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   postgres:
     build:
       context: .

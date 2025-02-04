@@ -3,12 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/PuerkitoBio/goquery"
+	"github.com/gin-gonic/gin"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/PuerkitoBio/goquery"
 )
 
 type Record struct {
@@ -29,11 +30,62 @@ type Record struct {
 }
 
 func main() {
-	if err := processAllCourses(); err != nil {
-		log.Fatal(err)
+	router := gin.New()
+	router.POST("/process", processUploadedFile)
+	log.Println("Starting server on port 8082...")
+	if err := router.Run(":8082"); err != nil {
+		log.Fatal("Failed to start server", err)
 	}
 }
 
+func processUploadedFile(c *gin.Context) {
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "No file uploaded",
+		})
+		return
+	}
+
+	if !strings.HasSuffix(strings.ToLower(file.Filename), ".html") {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Only HTML files are allowed",
+		})
+		return
+	}
+
+	tempDir, err := os.MkdirTemp("", "course_processing")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to create temporary directory",
+		})
+		return
+	}
+	defer os.RemoveAll(tempDir)
+
+	filePath := filepath.Join(tempDir, file.Filename)
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to save uploaded file",
+		})
+		return
+	}
+
+	records, err := processHTMLFile(filePath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to process HTML file: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "File processed successfully",
+		"records": records,
+	})
+}
+
+// processAllCourses is used to process all the files in a directory
 func processAllCourses() error {
 	files, err := os.ReadDir("courses")
 	if err != nil {
