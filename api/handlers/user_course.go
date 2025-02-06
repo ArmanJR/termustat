@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"github.com/armanjr/termustat/app/config"
-	"github.com/armanjr/termustat/app/logger"
-	"github.com/armanjr/termustat/app/models"
+	"github.com/armanjr/termustat/api/config"
+	"github.com/armanjr/termustat/api/logger"
+	"github.com/armanjr/termustat/api/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.uber.org/zap"

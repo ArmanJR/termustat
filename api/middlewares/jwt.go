@@ -2,8 +2,8 @@ package middlewares
 
 import (
 	"errors"
-	"github.com/armanjr/termustat/app/config"
-	"github.com/armanjr/termustat/app/utils"
+	"github.com/armanjr/termustat/api/config"
+	"github.com/armanjr/termustat/api/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"

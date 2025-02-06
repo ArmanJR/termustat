@@ -1,12 +1,12 @@
-package professor
+package repositories
 
 import (
 	"errors"
 	"github.com/google/uuid"
 
-	"github.com/armanjr/termustat/app/config"
-	"github.com/armanjr/termustat/app/models"
-	"github.com/armanjr/termustat/app/utils"
+	"github.com/armanjr/termustat/api/config"
+	"github.com/armanjr/termustat/api/models"
+	"github.com/armanjr/termustat/api/utils"
 	"gorm.io/gorm"
 )
 

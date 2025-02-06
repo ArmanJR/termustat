@@ -2,16 +2,15 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/armanjr/termustat/app/logger"
+	"github.com/armanjr/termustat/api/logger"
+	courseRepo "github.com/armanjr/termustat/api/repositories"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/armanjr/termustat/app/config"
-	"github.com/armanjr/termustat/app/models"
-	courseRepo "github.com/armanjr/termustat/app/repositories/course"
-	professorRepo "github.com/armanjr/termustat/app/repositories/professor"
+	"github.com/armanjr/termustat/api/config"
+	"github.com/armanjr/termustat/api/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -193,7 +192,7 @@ func processCourse(courseRequest CourseRequest) (models.Course, *CourseProcessin
 
 	// Parse professor
 	universityID := uuid.MustParse(courseRequest.UniversityID)
-	professorID, err := professorRepo.GetOrCreate(universityID, courseRequest.ProfessorName)
+	professorID, err := courseRepo.GetOrCreate(universityID, courseRequest.ProfessorName)
 	if err != nil {
 		logger.Log.Error("Failed to get/create professor", zap.Error(err))
 		return course, &CourseProcessingError{StatusCode: http.StatusInternalServerError, Err: fmt.Errorf("failed to process professor")}

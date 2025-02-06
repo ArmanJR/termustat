@@ -1,7 +1,7 @@
-package course
+package repositories
 
 import (
-	"github.com/armanjr/termustat/app/models"
+	"github.com/armanjr/termustat/api/models"
 	"gorm.io/gorm"
 )
 

@@ -1,8 +1,8 @@
 package middlewares
 
 import (
-	"github.com/armanjr/termustat/app/config"
-	"github.com/armanjr/termustat/app/models"
+	"github.com/armanjr/termustat/api/config"
+	"github.com/armanjr/termustat/api/models"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )

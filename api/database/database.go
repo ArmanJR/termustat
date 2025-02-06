@@ -1,32 +1,29 @@
-package config
+package database
 
 import (
 	"fmt"
-	"github.com/armanjr/termustat/app/logger"
-	"github.com/armanjr/termustat/app/models"
-	"go.uber.org/zap"
+	"github.com/armanjr/termustat/api/config"
+	"github.com/armanjr/termustat/api/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
-
-func ConnectDB() {
+func NewDatabase(config config.DatabaseConfig) (*gorm.DB, error) {
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
-		Cfg.DBHost, Cfg.DBUser, Cfg.DBPassword, Cfg.DBName, Cfg.DBPort, Cfg.SSLMode, Cfg.Timezone,
+		config.Host, config.User, config.Password, config.DBName, config.Port, config.SSLMode, config.Timezone,
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		logger.Log.Fatal("Failed to connect to database", zap.Error(err))
+		return nil, err
 	}
 
-	DB = db
+	return db, nil
 }
 
-func AutoMigrate() {
-	err := DB.AutoMigrate(
+func AutoMigrate(db *gorm.DB) error {
+	return db.AutoMigrate(
 		&models.University{},
 		&models.Faculty{},
 		&models.User{},
@@ -38,7 +35,4 @@ func AutoMigrate() {
 		&models.Professor{},
 		&models.Semester{},
 	)
-	if err != nil {
-		logger.Log.Fatal("Database migration failed", zap.Error(err))
-	}
 }
