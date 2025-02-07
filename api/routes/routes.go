@@ -10,6 +10,7 @@ import (
 type Handlers struct {
 	Auth       *handlers.AuthHandler
 	University *handlers.UniversityHandler
+	Professor  *handlers.ProfessorHandler
 }
 
 func SetupRoutes(app *app.App, h *Handlers) {
@@ -40,6 +41,10 @@ func SetupRoutes(app *app.App, h *Handlers) {
 		admin.GET("/universities/:id", h.University.Get)
 		admin.PUT("/universities/:id", h.University.Update)
 		admin.DELETE("/universities/:id", h.University.Delete)
+		admin.DELETE("/universities/:id/professors", h.Professor.GetByUniversity)
+
+		// Professor routes
+		admin.GET("/professors/:id", h.Professor.Get)
 	}
 }
 
@@ -98,7 +103,7 @@ func SetupRoutesLegacy(router *gin.Engine) {
 
 		// Professor
 		admin.GET("/professors/:id", handlers.GetProfessor)
-		admin.PUT("/professors/:id", handlers.UpdateProfessor)
+		//admin.PUT("/professors/:id", handlers.UpdateProfessor) // do we need this?
 
 		// Course
 		admin.POST("/courses", handlers.CreateCourse)

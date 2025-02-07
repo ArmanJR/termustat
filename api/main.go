@@ -12,7 +12,7 @@ import (
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"log"
+	stdLog "log"
 	"os"
 	"time"
 )
@@ -21,17 +21,17 @@ func main() {
 	// Load configuration
 	cfg, err := config.LoadConfig(".")
 	if err != nil {
-		log.Fatal("Failed to load configuration:", err)
+		stdLog.Fatal("Failed to load configuration:", err)
 	}
 
 	// Set application timezone
 	if err := os.Setenv("TZ", cfg.Timezone); err != nil {
-		log.Fatal("Failed to set timezone:", err)
+		stdLog.Fatal("Failed to set timezone:", err)
 	}
 
 	// Initialize logger
-	logger.InitLogger()
-	defer logger.Log.Sync()
+	log := logger.NewLogger()
+	defer log.Sync()
 
 	// Set Gin mode based on environment
 	if cfg.Environment == "production" {
@@ -41,35 +41,38 @@ func main() {
 	// Initialize database
 	db, err := database.NewDatabase(cfg.GetDatabaseConfig())
 	if err != nil {
-		logger.Log.Fatal("Failed to connect to database", zap.Error(err))
+		log.Fatal("Failed to connect to database", zap.Error(err))
 	}
 
 	if err := database.AutoMigrate(db); err != nil {
-		logger.Log.Fatal("Database migration failed", zap.Error(err))
+		log.Fatal("Database migration failed", zap.Error(err))
 	}
 
 	// Initialize repositories
 	authRepo := repositories.NewAuthRepository(db)
+	professorRepo := repositories.NewProfessorRepository(db)
 	//universityRepo := repositories.NewUniversityRepository(db)
 	// other repositories
 
-	// Initialize services
+	// Third-party services
 	mailerConfig := services.MailerConfig{
 		Domain:  cfg.MailgunDomain,
 		APIKey:  cfg.MailgunAPIKey,
 		Sender:  "noreply@" + cfg.MailgunDomain,
 		TplPath: "templates/email/",
 	}
-	mailerService := services.NewMailerService(mailerConfig, logger.Log)
+	mailerService := services.NewMailerService(mailerConfig, log)
 
+	// Internal services
 	authService := services.NewAuthService(
 		authRepo,
 		mailerService,
-		logger.Log,
+		log,
 		cfg.JWTSecret,
 		cfg.JWTTTL,
 		cfg.FrontendURL,
 	)
+	professorService := services.NewProfessorService(professorRepo, log)
 
 	//universityService := services.NewUniversityService()
 
@@ -77,20 +80,21 @@ func main() {
 	router := gin.New()
 
 	// Setup middleware
-	router.Use(ginzap.Ginzap(logger.Log, time.RFC3339, true))
-	router.Use(ginzap.RecoveryWithZap(logger.Log, true))
+	router.Use(ginzap.Ginzap(log, time.RFC3339, true))
+	router.Use(ginzap.RecoveryWithZap(log, true))
 
 	// Initialize application
 	application := &app.App{
 		DB:     db,
 		Router: router,
 		Config: cfg,
-		Logger: logger.Log,
+		Logger: log,
 	}
 
 	// Initialize handlers
 	ginHandlers := &routes.Handlers{
-		Auth: handlers.NewAuthHandler(authService, logger.Log),
+		Auth:      handlers.NewAuthHandler(authService, log),
+		Professor: handlers.NewProfessorHandler(professorService, log),
 		//University: routes.NewUniversityHandler(universityRepo),
 		// Add other handlers as needed
 	}
@@ -100,14 +104,14 @@ func main() {
 
 	// Start server
 	serverAddr := ":" + cfg.Port
-	logger.Log.Info("Starting server",
+	log.Info("Starting server",
 		zap.String("port", cfg.Port),
 		zap.String("environment", cfg.Environment),
 		zap.String("timezone", cfg.Timezone),
 	)
 
 	if err := router.Run(serverAddr); err != nil {
-		logger.Log.Fatal("Failed to start server",
+		log.Fatal("Failed to start server",
 			zap.String("address", serverAddr),
 			zap.Error(err),
 		)

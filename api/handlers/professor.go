@@ -1,7 +1,9 @@
 package handlers
 
 import (
-	"errors"
+	"github.com/armanjr/termustat/api/dto"
+	"github.com/armanjr/termustat/api/errors"
+	"github.com/armanjr/termustat/api/services"
 	"net/http"
 	"time"
 
@@ -15,35 +17,59 @@ import (
 	"gorm.io/gorm"
 )
 
-// GetProfessorsByUniversity returns all professors for a university
-func GetProfessorsByUniversity(c *gin.Context) {
+type ProfessorHandler struct {
+	professorService services.ProfessorService
+	logger           *zap.Logger
+}
+
+func NewProfessorHandler(professorService services.ProfessorService, logger *zap.Logger) *ProfessorHandler {
+	return &ProfessorHandler{
+		professorService: professorService,
+		logger:           logger,
+	}
+}
+
+// GetByUniversity returns all professors for a university
+func (h *ProfessorHandler) GetByUniversity(c *gin.Context) {
 	universityID := c.Param("id")
 
-	_, err := uuid.Parse(universityID)
+	parsedUniversityID, err := uuid.Parse(universityID)
 	if err != nil {
-		logger.Log.Warn("Invalid university ID format", zap.String("university_id", universityID))
+		h.logger.Warn("Invalid university ID format", zap.String("university_id", universityID))
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid university ID"})
 		return
 	}
 
-	var professors []models.Professor
-	if err := config.DB.Where("university_id = ?", universityID).Find(&professors).Error; err != nil {
-		logger.Log.Error("Failed to fetch professors", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch professors"})
+	professors, err := h.professorService.GetProfessorsByUniversity(parsedUniversityID)
+	if err != nil {
+		h.logger.Error("Get professors error", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	c.JSON(http.StatusOK, professors)
+	c.JSON(http.StatusOK, *professors)
 }
 
-// GetProfessor returns a single professor
-func GetProfessor(c *gin.Context) {
+// Get returns a single professor
+func (h *ProfessorHandler) Get(c *gin.Context) {
 	id := c.Param("id")
-	var professor models.Professor
 
-	if err := config.DB.First(&professor, "id = ?", id).Error; err != nil {
-		logger.Log.Warn("Professor not found", zap.String("id", id))
-		c.JSON(http.StatusNotFound, gin.H{"error": "Professor not found"})
+	parsedID, err := uuid.Parse(id)
+	if err != nil {
+		h.logger.Warn("Invalid professor ID format", zap.String("professor_id", id))
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid professor ID"})
+		return
+	}
+
+	professor, err := h.professorService.GetProfessor(parsedID)
+	if err != nil {
+		switch {
+		case errors.Is(err, errors.ErrNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "Professor not found"})
+			return
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		}
 		return
 	}
 

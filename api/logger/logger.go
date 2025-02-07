@@ -6,14 +6,12 @@ import (
 	"log"
 )
 
-var Log *zap.Logger
-
-func InitLogger() {
+func NewLogger() *zap.Logger {
 	config := zap.NewProductionConfig()
 	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	logger, err := config.Build()
 	if err != nil {
 		log.Fatal("Failed to initialize logger:", err)
 	}
-	Log = logger
+	return logger
 }
