@@ -29,6 +29,10 @@ type NotValidError struct {
 	Entity string
 	err    error
 }
+type ConflictError struct {
+	Entity string
+	err    error
+}
 
 func (e *NotFoundError) Error() string {
 	return fmt.Sprintf("%s with ID %s not found", e.Entity, e.ID)
@@ -44,6 +48,13 @@ func (e *NotValidError) Unwrap() error {
 	return e.err
 }
 
+func (e *ConflictError) Error() string {
+	return fmt.Sprintf("%s is conflicting", e.Entity)
+}
+func (e *ConflictError) Unwrap() error {
+	return e.err
+}
+
 // Error constructors
 func NewNotFoundError(entity, id string) error {
 	return &NotFoundError{
@@ -54,6 +65,12 @@ func NewNotFoundError(entity, id string) error {
 }
 func NewValidationError(entity string) error {
 	return &NotValidError{
+		Entity: entity,
+		err:    ErrInvalid,
+	}
+}
+func NewConflictError(entity string) error {
+	return &ConflictError{
 		Entity: entity,
 		err:    ErrInvalid,
 	}

@@ -1,112 +1,152 @@
 package handlers
 
 import (
-	"github.com/armanjr/termustat/api/config"
-	"github.com/armanjr/termustat/api/logger"
-	"github.com/armanjr/termustat/api/models"
+	"github.com/armanjr/termustat/api/dto"
+	"github.com/armanjr/termustat/api/errors"
+	"github.com/armanjr/termustat/api/services"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"net/http"
 )
 
-// SemesterRequest represents semester create/update request
-type SemesterRequest struct {
-	Year int    `json:"year" binding:"required,min=1900,max=2200"`
-	Term string `json:"term" binding:"required,oneof=spring fall"`
+type SemesterHandler struct {
+	service services.SemesterService
+	logger  *zap.Logger
 }
 
-// CreateSemester creates a new semester
-func CreateSemester(c *gin.Context) {
-	var req SemesterRequest
+func NewSemesterHandler(service services.SemesterService, logger *zap.Logger) *SemesterHandler {
+	return &SemesterHandler{
+		service: service,
+		logger:  logger,
+	}
+}
+
+func (h *SemesterHandler) Create(c *gin.Context) {
+	var req dto.CreateSemesterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Log.Warn("Invalid semester request", zap.Error(err))
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		h.logger.Warn("Invalid semester request",
+			zap.Error(err),
+			zap.String("handler", "CreateSemester"))
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
 
-	semester := models.Semester{
-		Year: req.Year,
-		Term: req.Term,
-	}
-
-	if err := config.DB.Create(&semester).Error; err != nil {
-		logger.Log.Error("Failed to create semester", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create semester"})
+	semester, err := h.service.Create(&req)
+	if err != nil {
+		switch {
+		case errors.Is(err, errors.ErrInvalid):
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		case errors.Is(err, errors.ErrConflict):
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+		default:
+			h.logger.Error("Failed to create semester", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		}
 		return
 	}
 
 	c.JSON(http.StatusCreated, semester)
 }
 
-// GetSemester returns a single semester
-func GetSemester(c *gin.Context) {
-	id := c.Param("id")
-	var semester models.Semester
+func (h *SemesterHandler) Get(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.logger.Warn("Invalid semester ID format",
+			zap.String("id", c.Param("id")),
+			zap.String("handler", "GetSemester"))
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid semester ID"})
+		return
+	}
 
-	if err := config.DB.First(&semester, "id = ?", id).Error; err != nil {
-		logger.Log.Warn("Semester not found", zap.String("id", id))
-		c.JSON(http.StatusNotFound, gin.H{"error": "Semester not found"})
+	semester, err := h.service.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, errors.ErrNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "Semester not found"})
+		default:
+			h.logger.Error("Failed to get semester",
+				zap.String("id", id.String()),
+				zap.Error(err))
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		}
 		return
 	}
 
 	c.JSON(http.StatusOK, semester)
 }
 
-// GetAllSemesters returns all semesters
-func GetAllSemesters(c *gin.Context) {
-	var semesters []models.Semester
-	if err := config.DB.Order("year DESC, term DESC").Find(&semesters).Error; err != nil {
-		logger.Log.Error("Failed to fetch semesters", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch semesters"})
+func (h *SemesterHandler) GetAll(c *gin.Context) {
+	semesters, err := h.service.GetAll()
+	if err != nil {
+		h.logger.Error("Failed to fetch semesters", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
+
 	c.JSON(http.StatusOK, semesters)
 }
 
-// UpdateSemester updates semester details
-func UpdateSemester(c *gin.Context) {
-	id := c.Param("id")
-	var semester models.Semester
-
-	if err := config.DB.First(&semester, "id = ?", id).Error; err != nil {
-		logger.Log.Warn("Semester not found for update", zap.String("id", id))
-		c.JSON(http.StatusNotFound, gin.H{"error": "Semester not found"})
+func (h *SemesterHandler) Update(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.logger.Warn("Invalid semester ID format",
+			zap.String("id", c.Param("id")),
+			zap.String("handler", "UpdateSemester"))
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid semester ID"})
 		return
 	}
 
-	var req SemesterRequest
+	var req dto.UpdateSemesterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Log.Warn("Invalid semester update request", zap.Error(err))
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		h.logger.Warn("Invalid semester update request",
+			zap.Error(err),
+			zap.String("handler", "UpdateSemester"))
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
 
-	semester.Year = req.Year
-	semester.Term = req.Term
-
-	if err := config.DB.Save(&semester).Error; err != nil {
-		logger.Log.Error("Failed to update semester", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update semester"})
+	semester, err := h.service.Update(id, &req)
+	if err != nil {
+		switch {
+		case errors.Is(err, errors.ErrNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "Semester not found"})
+		case errors.Is(err, errors.ErrInvalid):
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		case errors.Is(err, errors.ErrConflict):
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+		default:
+			h.logger.Error("Failed to update semester",
+				zap.String("id", id.String()),
+				zap.Error(err))
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		}
 		return
 	}
 
 	c.JSON(http.StatusOK, semester)
 }
 
-// DeleteSemester deletes a semester
-func DeleteSemester(c *gin.Context) {
-	id := c.Param("id")
-	var semester models.Semester
-
-	if err := config.DB.First(&semester, "id = ?", id).Error; err != nil {
-		logger.Log.Warn("Semester not found for deletion", zap.String("id", id))
-		c.JSON(http.StatusNotFound, gin.H{"error": "Semester not found"})
+func (h *SemesterHandler) Delete(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.logger.Warn("Invalid semester ID format",
+			zap.String("id", c.Param("id")),
+			zap.String("handler", "DeleteSemester"))
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid semester ID"})
 		return
 	}
 
-	if err := config.DB.Delete(&semester).Error; err != nil {
-		logger.Log.Error("Failed to delete semester", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete semester"})
+	if err := h.service.Delete(id); err != nil {
+		switch {
+		case errors.Is(err, errors.ErrNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "Semester not found"})
+		default:
+			h.logger.Error("Failed to delete semester",
+				zap.String("id", id.String()),
+				zap.Error(err))
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		}
 		return
 	}
 

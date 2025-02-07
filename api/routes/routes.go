@@ -11,24 +11,31 @@ type Handlers struct {
 	Auth       *handlers.AuthHandler
 	University *handlers.UniversityHandler
 	Professor  *handlers.ProfessorHandler
+	Semester   *handlers.SemesterHandler
 }
 
 func SetupRoutes(app *app.App, h *Handlers) {
 	// Public routes
 	public := app.Router.Group("/v1")
 	{
-		public.POST("/auth/register", h.Auth.Register)
-		public.POST("/auth/login", h.Auth.Login)
-		public.POST("/auth/forgot-password", h.Auth.ForgotPassword)
-		public.POST("/auth/reset-password", h.Auth.ResetPassword)
-		public.POST("/auth/verify-email", h.Auth.VerifyEmail)
+		auth := public.Group("/auth")
+		{
+			auth.POST("/register", h.Auth.Register)
+			auth.POST("/login", h.Auth.Login)
+			auth.POST("/forgot-password", h.Auth.ForgotPassword)
+			auth.POST("/reset-password", h.Auth.ResetPassword)
+			auth.POST("/verify-email", h.Auth.VerifyEmail)
+		}
 	}
 
 	// Protected routes
 	protected := app.Router.Group("/v1")
 	protected.Use(middlewares.JWTAuthMiddleware())
 	{
-		protected.GET("/users/me", h.Auth.GetCurrentUser)
+		users := protected.Group("/users")
+		{
+			users.GET("/me", h.Auth.GetCurrentUser)
+		}
 	}
 
 	// Admin routes
@@ -36,16 +43,32 @@ func SetupRoutes(app *app.App, h *Handlers) {
 	admin.Use(middlewares.JWTAuthMiddleware(), middlewares.IsAdminMiddleware())
 	{
 		// University routes
-		admin.POST("/universities", h.University.Create)
-		admin.GET("/universities", h.University.GetAll)
-		admin.GET("/universities/:id", h.University.Get)
-		admin.PUT("/universities/:id", h.University.Update)
-		admin.DELETE("/universities/:id", h.University.Delete)
-		admin.DELETE("/universities/:id/professors", h.Professor.GetByUniversity)
+		universities := admin.Group("/universities")
+		{
+			universities.POST("", h.University.Create)
+			universities.GET("", h.University.GetAll)
+			universities.GET("/:id", h.University.Get)
+			universities.PUT("/:id", h.University.Update)
+			universities.DELETE("/:id", h.University.Delete)
+			universities.GET("/:id/professors", h.Professor.GetByUniversity)
+		}
 
 		// Professor routes
-		admin.GET("/professors/:id", h.Professor.Get)
-		admin.POST("/professors", h.Professor.Create)
+		professors := admin.Group("/professors")
+		{
+			professors.POST("", h.Professor.Create)
+			professors.GET("/:id", h.Professor.Get)
+		}
+
+		// Semester routes
+		semesters := admin.Group("/semesters")
+		{
+			semesters.POST("", h.Semester.Create)
+			semesters.GET("", h.Semester.GetAll)
+			semesters.GET("/:id", h.Semester.Get)
+			semesters.PUT("/:id", h.Semester.Update)
+			semesters.DELETE("/:id", h.Semester.Delete)
+		}
 	}
 }
 
@@ -96,11 +119,11 @@ func SetupRoutesLegacy(router *gin.Engine) {
 		admin.DELETE("/faculties/:id", handlers.DeleteFaculty)
 
 		// Semester
-		admin.POST("/semesters", handlers.CreateSemester)
-		admin.GET("/semesters", handlers.GetAllSemesters)
-		admin.GET("/semesters/:id", handlers.GetSemester)
-		admin.PUT("/semesters/:id", handlers.UpdateSemester)
-		admin.DELETE("/semesters/:id", handlers.DeleteSemester)
+		//admin.POST("/semesters", handlers.CreateSemester)
+		//admin.GET("/semesters", handlers.GetAllSemesters)
+		//admin.GET("/semesters/:id", handlers.GetSemester)
+		//admin.PUT("/semesters/:id", handlers.UpdateSemester)
+		//admin.DELETE("/semesters/:id", handlers.DeleteSemester)
 
 		// Professor
 		//admin.GET("/professors/:id", handlers.GetProfessor)

@@ -33,7 +33,7 @@ func (h *UniversityHandler) Create(c *gin.Context) {
 	university, err := h.service.Create(&req)
 	if err != nil {
 		switch {
-		case errors.Is(err, errors.ErrValidation):
+		case errors.Is(err, errors.ErrInvalid):
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		case errors.Is(err, errors.ErrConflict):
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
@@ -56,7 +56,7 @@ func (h *UniversityHandler) Get(c *gin.Context) {
 		return
 	}
 
-	university, err := h.service.GetByID(parsedID)
+	university, err := h.service.Get(parsedID)
 	if err != nil {
 		switch {
 		case errors.Is(err, errors.ErrNotFound):
@@ -103,7 +103,7 @@ func (h *UniversityHandler) Update(c *gin.Context) {
 		switch {
 		case errors.Is(err, errors.ErrNotFound):
 			c.JSON(http.StatusNotFound, gin.H{"error": "University not found"})
-		case errors.Is(err, errors.ErrValidation):
+		case errors.Is(err, errors.ErrInvalid):
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		default:
 			h.logger.Error("Failed to update university", zap.Error(err))
