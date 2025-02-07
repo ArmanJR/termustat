@@ -1,47 +1,46 @@
 package handlers
 
 import (
-	"github.com/armanjr/termustat/api/repositories"
-	"net/http"
-	"strings"
-
-	"github.com/armanjr/termustat/api/logger"
-	"github.com/armanjr/termustat/api/models"
+	"github.com/armanjr/termustat/api/dto"
+	"github.com/armanjr/termustat/api/errors"
+	"github.com/armanjr/termustat/api/services"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"net/http"
 )
 
 type UniversityHandler struct {
-	repo repositories.UniversityRepository
+	service services.UniversityService
+	logger  *zap.Logger
 }
 
-func NewUniversityHandler(repo repositories.UniversityRepository) *UniversityHandler {
-	return &UniversityHandler{repo: repo}
-}
-
-type UniversityRequest struct {
-	NameEn   string `json:"name_en" binding:"required"`
-	NameFa   string `json:"name_fa" binding:"required"`
-	IsActive *bool  `json:"is_active" binding:"required"`
+func NewUniversityHandler(service services.UniversityService, logger *zap.Logger) *UniversityHandler {
+	return &UniversityHandler{
+		service: service,
+		logger:  logger,
+	}
 }
 
 func (h *UniversityHandler) Create(c *gin.Context) {
-	var req UniversityRequest
+	var req dto.CreateUniversityRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Log.Warn("Invalid university request", zap.Error(err))
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		h.logger.Warn("Invalid university request", zap.Error(err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
 
-	university := models.University{
-		NameEn:   strings.TrimSpace(req.NameEn),
-		NameFa:   strings.TrimSpace(req.NameFa),
-		IsActive: *req.IsActive,
-	}
-
-	if err := h.repo.Create(&university); err != nil {
-		logger.Log.Error("Failed to create university", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create university"})
+	university, err := h.service.Create(&req)
+	if err != nil {
+		switch {
+		case errors.Is(err, errors.ErrValidation):
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		case errors.Is(err, errors.ErrConflict):
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+		default:
+			h.logger.Error("Failed to create university", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		}
 		return
 	}
 
@@ -50,10 +49,22 @@ func (h *UniversityHandler) Create(c *gin.Context) {
 
 func (h *UniversityHandler) Get(c *gin.Context) {
 	id := c.Param("id")
-	university, err := h.repo.GetByID(id)
+	parsedID, err := uuid.Parse(id)
 	if err != nil {
-		logger.Log.Warn("University not found", zap.String("id", id))
-		c.JSON(http.StatusNotFound, gin.H{"error": "University not found"})
+		h.logger.Warn("Invalid university ID format", zap.String("id", id))
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid university ID"})
+		return
+	}
+
+	university, err := h.service.GetByID(parsedID)
+	if err != nil {
+		switch {
+		case errors.Is(err, errors.ErrNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "University not found"})
+		default:
+			h.logger.Error("Failed to get university", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		}
 		return
 	}
 
@@ -61,38 +72,43 @@ func (h *UniversityHandler) Get(c *gin.Context) {
 }
 
 func (h *UniversityHandler) GetAll(c *gin.Context) {
-	universities, err := h.repo.GetAll()
+	universities, err := h.service.GetAll()
 	if err != nil {
-		logger.Log.Error("Failed to fetch universities", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch universities"})
+		h.logger.Error("Failed to fetch universities", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
+
 	c.JSON(http.StatusOK, universities)
 }
 
 func (h *UniversityHandler) Update(c *gin.Context) {
 	id := c.Param("id")
-	university, err := h.repo.GetByID(id)
+	parsedID, err := uuid.Parse(id)
 	if err != nil {
-		logger.Log.Warn("University not found for update", zap.String("id", id))
-		c.JSON(http.StatusNotFound, gin.H{"error": "University not found"})
+		h.logger.Warn("Invalid university ID format", zap.String("id", id))
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid university ID"})
 		return
 	}
 
-	var req UniversityRequest
+	var req dto.UpdateUniversityRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Log.Warn("Invalid university update request", zap.Error(err))
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		h.logger.Warn("Invalid university update request", zap.Error(err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
 
-	university.NameEn = strings.TrimSpace(req.NameEn)
-	university.NameFa = strings.TrimSpace(req.NameFa)
-	university.IsActive = *req.IsActive
-
-	if err := h.repo.Update(university); err != nil {
-		logger.Log.Error("Failed to update university", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update university"})
+	university, err := h.service.Update(parsedID, &req)
+	if err != nil {
+		switch {
+		case errors.Is(err, errors.ErrNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "University not found"})
+		case errors.Is(err, errors.ErrValidation):
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		default:
+			h.logger.Error("Failed to update university", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		}
 		return
 	}
 
@@ -101,9 +117,21 @@ func (h *UniversityHandler) Update(c *gin.Context) {
 
 func (h *UniversityHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
-	if err := h.repo.Delete(id); err != nil {
-		logger.Log.Error("Failed to delete university", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete university"})
+	parsedID, err := uuid.Parse(id)
+	if err != nil {
+		h.logger.Warn("Invalid university ID format", zap.String("id", id))
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid university ID"})
+		return
+	}
+
+	if err := h.service.Delete(parsedID); err != nil {
+		switch {
+		case errors.Is(err, errors.ErrNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": "University not found"})
+		default:
+			h.logger.Error("Failed to delete university", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		}
 		return
 	}
 

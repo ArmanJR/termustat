@@ -51,8 +51,7 @@ func main() {
 	// Initialize repositories
 	authRepo := repositories.NewAuthRepository(db)
 	professorRepo := repositories.NewProfessorRepository(db)
-	//universityRepo := repositories.NewUniversityRepository(db)
-	// other repositories
+	universityRepo := repositories.NewUniversityRepository(db)
 
 	// Third-party services
 	mailerConfig := services.MailerConfig{
@@ -72,9 +71,8 @@ func main() {
 		cfg.JWTTTL,
 		cfg.FrontendURL,
 	)
-	professorService := services.NewProfessorService(professorRepo, log)
-
-	//universityService := services.NewUniversityService()
+	universityService := services.NewUniversityService(universityRepo, log)
+	professorService := services.NewProfessorService(professorRepo, universityService, log)
 
 	// Initialize router
 	router := gin.New()
@@ -93,10 +91,9 @@ func main() {
 
 	// Initialize handlers
 	ginHandlers := &routes.Handlers{
-		Auth:      handlers.NewAuthHandler(authService, log),
-		Professor: handlers.NewProfessorHandler(professorService, log),
-		//University: routes.NewUniversityHandler(universityRepo),
-		// Add other handlers as needed
+		Auth:       handlers.NewAuthHandler(authService, log),
+		Professor:  handlers.NewProfessorHandler(professorService, log),
+		University: handlers.NewUniversityHandler(universityService, log),
 	}
 
 	// Setup routes

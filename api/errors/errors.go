@@ -25,12 +25,22 @@ type NotFoundError struct {
 	ID     string
 	err    error
 }
+type NotValidError struct {
+	Entity string
+	err    error
+}
 
 func (e *NotFoundError) Error() string {
 	return fmt.Sprintf("%s with ID %s not found", e.Entity, e.ID)
 }
-
 func (e *NotFoundError) Unwrap() error {
+	return e.err
+}
+
+func (e *NotValidError) Error() string {
+	return fmt.Sprintf("%s is not a valid input", e.Entity)
+}
+func (e *NotValidError) Unwrap() error {
 	return e.err
 }
 
@@ -40,6 +50,12 @@ func NewNotFoundError(entity, id string) error {
 		Entity: entity,
 		ID:     id,
 		err:    ErrNotFound,
+	}
+}
+func NewValidationError(entity string) error {
+	return &NotValidError{
+		Entity: entity,
+		err:    ErrInvalid,
 	}
 }
 

@@ -45,6 +45,7 @@ func SetupRoutes(app *app.App, h *Handlers) {
 
 		// Professor routes
 		admin.GET("/professors/:id", h.Professor.Get)
+		admin.POST("/professors", h.Professor.Create)
 	}
 }
 
@@ -86,7 +87,7 @@ func SetupRoutesLegacy(router *gin.Engine) {
 		//admin.GET("/universities/:id", handlers.GetUniversity)
 		//admin.PUT("/universities/:id", handlers.UpdateUniversity)
 		//admin.DELETE("/universities/:id", handlers.DeleteUniversity)
-		//admin.GET("/universities/:id/professors", handlers.GetProfessorsByUniversity)
+		//admin.GET("/universities/:id/professors", handlers.GetAllByUniversity)
 
 		// Faculty
 		admin.POST("/faculties", handlers.CreateFaculty)
@@ -102,7 +103,7 @@ func SetupRoutesLegacy(router *gin.Engine) {
 		admin.DELETE("/semesters/:id", handlers.DeleteSemester)
 
 		// Professor
-		admin.GET("/professors/:id", handlers.GetProfessor)
+		//admin.GET("/professors/:id", handlers.GetProfessor)
 		//admin.PUT("/professors/:id", handlers.UpdateProfessor) // do we need this?
 
 		// Course

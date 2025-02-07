@@ -195,7 +195,7 @@ func (s *authService) VerifyEmail(token string) error {
 }
 
 //func (s *authService) UpdateUser(userID uuid.UUID, req *dto.UpdateUserRequest) error {
-//	user, err := s.repo.FindUserByID(userID)
+//	user, err := s.professorRepository.FindUserByID(userID)
 //	if err != nil {
 //		return errors.Wrapf(err, "failed to find user")
 //	}
@@ -204,7 +204,7 @@ func (s *authService) VerifyEmail(token string) error {
 //	user.LastName = req.LastName
 //	user.Gender = req.Gender
 //
-//	if err := s.repo.UpdateUser(user); err != nil {
+//	if err := s.professorRepository.UpdateUser(user); err != nil {
 //		return errors.Wrapf(err, "failed to update user")
 //	}
 //
@@ -212,7 +212,7 @@ func (s *authService) VerifyEmail(token string) error {
 //}
 //
 //func (s *authService) ChangePassword(userID uuid.UUID, oldPassword, newPassword string) error {
-//	user, err := s.repo.FindUserByID(userID)
+//	user, err := s.professorRepository.FindUserByID(userID)
 //	if err != nil {
 //		return errors.Wrapf(err, "failed to find user")
 //	}
@@ -226,7 +226,7 @@ func (s *authService) VerifyEmail(token string) error {
 //		return errors.Wrapf(err, "failed to hash password")
 //	}
 //
-//	if err := s.repo.UpdateUserPassword(user.ID, string(hashedPassword)); err != nil {
+//	if err := s.professorRepository.UpdateUserPassword(user.ID, string(hashedPassword)); err != nil {
 //		return errors.Wrapf(err, "failed to update password")
 //	}
 //
