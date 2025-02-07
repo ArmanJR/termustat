@@ -12,6 +12,7 @@ type Handlers struct {
 	University *handlers.UniversityHandler
 	Professor  *handlers.ProfessorHandler
 	Semester   *handlers.SemesterHandler
+	Faculty    *handlers.FacultyHandler
 }
 
 func SetupRoutes(app *app.App, h *Handlers) {
@@ -50,7 +51,9 @@ func SetupRoutes(app *app.App, h *Handlers) {
 			universities.GET("/:id", h.University.Get)
 			universities.PUT("/:id", h.University.Update)
 			universities.DELETE("/:id", h.University.Delete)
-			universities.GET("/:id/professors", h.Professor.GetByUniversity)
+			universities.GET("/:id/professors", h.Professor.GetAllByUniversity)
+			universities.GET("/:id/faculties", h.Faculty.GetAllByUniversity)
+			universities.GET("/:id/faculty/:short_code", h.Faculty.GetByUniversityAndShortCode)
 		}
 
 		// Professor routes
@@ -68,6 +71,15 @@ func SetupRoutes(app *app.App, h *Handlers) {
 			semesters.GET("/:id", h.Semester.Get)
 			semesters.PUT("/:id", h.Semester.Update)
 			semesters.DELETE("/:id", h.Semester.Delete)
+		}
+
+		// Faculty routes
+		faculties := admin.Group("/faculties")
+		{
+			faculties.POST("", h.Faculty.Create)
+			faculties.GET("/:id", h.Faculty.GetByID)
+			faculties.PUT("/:id", h.Faculty.Update)
+			faculties.DELETE("/:id", h.Faculty.Delete)
 		}
 	}
 }
@@ -113,10 +125,10 @@ func SetupRoutesLegacy(router *gin.Engine) {
 		//admin.GET("/universities/:id/professors", handlers.GetAllByUniversity)
 
 		// Faculty
-		admin.POST("/faculties", handlers.CreateFaculty)
-		admin.GET("/faculties/:id", handlers.GetFaculty)
-		admin.PUT("/faculties/:id", handlers.UpdateFaculty)
-		admin.DELETE("/faculties/:id", handlers.DeleteFaculty)
+		//admin.POST("/faculties", handlers.CreateFaculty)
+		//admin.GET("/faculties/:id", handlers.GetFaculty)
+		//admin.PUT("/faculties/:id", handlers.UpdateFaculty)
+		//admin.DELETE("/faculties/:id", handlers.DeleteFaculty)
 
 		// Semester
 		//admin.POST("/semesters", handlers.CreateSemester)

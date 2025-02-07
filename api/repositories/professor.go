@@ -18,6 +18,10 @@ type professorRepository struct {
 	db *gorm.DB
 }
 
+func NewProfessorRepository(db *gorm.DB) ProfessorRepository {
+	return &professorRepository{db: db}
+}
+
 func (r *professorRepository) Find(id uuid.UUID) (*models.Professor, error) {
 	var professor models.Professor
 	if err := r.db.First(&professor, "id = ?", id).Error; err != nil {
@@ -58,10 +62,6 @@ func (r *professorRepository) Create(professor *models.Professor) (*models.Profe
 	}
 
 	return &created, nil
-}
-
-func NewProfessorRepository(db *gorm.DB) ProfessorRepository {
-	return &professorRepository{db: db}
 }
 
 func (r *professorRepository) FindAllByUniversity(universityID uuid.UUID) (*[]models.Professor, error) {

@@ -22,8 +22,8 @@ func NewProfessorHandler(professorService services.ProfessorService, logger *zap
 	}
 }
 
-// GetByUniversity returns all professors for a university
-func (h *ProfessorHandler) GetByUniversity(c *gin.Context) {
+// GetAllByUniversity returns all professors for a university
+func (h *ProfessorHandler) GetAllByUniversity(c *gin.Context) {
 	universityID := c.Param("id")
 
 	parsedUniversityID, err := uuid.Parse(universityID)
