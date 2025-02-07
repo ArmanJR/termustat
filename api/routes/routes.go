@@ -13,6 +13,7 @@ type Handlers struct {
 	Professor  *handlers.ProfessorHandler
 	Semester   *handlers.SemesterHandler
 	Faculty    *handlers.FacultyHandler
+	Course     *handlers.CourseHandler
 }
 
 func SetupRoutes(app *app.App, h *Handlers) {
@@ -80,6 +81,17 @@ func SetupRoutes(app *app.App, h *Handlers) {
 			faculties.GET("/:id", h.Faculty.GetByID)
 			faculties.PUT("/:id", h.Faculty.Update)
 			faculties.DELETE("/:id", h.Faculty.Delete)
+			faculties.GET("/:facultyID/courses", h.Course.GetByFaculty)
+		}
+
+		// Course routes
+		courses := admin.Group("/courses")
+		{
+			courses.POST("", h.Course.Create)
+			courses.GET("", h.Course.Search)
+			courses.GET("/:id", h.Course.Get)
+			courses.PUT("/:id", h.Course.Update)
+			courses.DELETE("/:id", h.Course.Delete)
 		}
 	}
 }
@@ -142,10 +154,10 @@ func SetupRoutesLegacy(router *gin.Engine) {
 		//admin.PUT("/professors/:id", handlers.UpdateProfessor) // do we need this?
 
 		// Course
-		admin.POST("/courses", handlers.CreateCourse)
-		admin.POST("/courses/batch", handlers.BatchCreateCourses)
-		admin.GET("/courses/:id", handlers.GetCourse)
-		admin.PUT("/courses/:id", handlers.UpdateCourse)
-		admin.DELETE("/courses/:id", handlers.DeleteCourse)
+		//admin.POST("/courses", handlers.CreateCourse)
+		//admin.POST("/courses/batch", handlers.BatchCreateCourses)
+		//admin.GET("/courses/:id", handlers.GetCourse)
+		//admin.PUT("/courses/:id", handlers.UpdateCourse)
+		//admin.DELETE("/courses/:id", handlers.DeleteCourse)
 	}
 }
