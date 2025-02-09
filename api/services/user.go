@@ -25,20 +25,20 @@ type UserService interface {
 }
 
 type userService struct {
-	repo              repositories.UserRepository
+	userRepository    repositories.UserRepository
 	universityService UniversityService
 	facultyService    FacultyService
 	logger            *zap.Logger
 }
 
 func NewUserService(
-	repo repositories.UserRepository,
+	userRepository repositories.UserRepository,
 	universityService UniversityService,
 	facultyService FacultyService,
 	logger *zap.Logger,
 ) UserService {
 	return &userService{
-		repo:              repo,
+		userRepository:    userRepository,
 		universityService: universityService,
 		facultyService:    facultyService,
 		logger:            logger,
@@ -46,7 +46,6 @@ func NewUserService(
 }
 
 func (s *userService) Create(req *dto.CreateUserRequest) (*dto.UserResponse, error) {
-	// Validate university exists
 	if _, err := s.universityService.Get(req.UniversityID); err != nil {
 		if errors.Is(err, errors.ErrNotFound) {
 			return nil, errors.NewValidationError("invalid university_id")
@@ -54,7 +53,6 @@ func (s *userService) Create(req *dto.CreateUserRequest) (*dto.UserResponse, err
 		return nil, fmt.Errorf("failed to validate university: %w", err)
 	}
 
-	// Validate faculty exists
 	if _, err := s.facultyService.Get(req.FacultyID); err != nil {
 		if errors.Is(err, errors.ErrNotFound) {
 			return nil, errors.NewValidationError("invalid faculty_id")
@@ -62,8 +60,7 @@ func (s *userService) Create(req *dto.CreateUserRequest) (*dto.UserResponse, err
 		return nil, fmt.Errorf("failed to validate faculty: %w", err)
 	}
 
-	// Check if email or student ID already exists
-	existing, err := s.repo.FindByEmailOrStudentID(req.Email, req.StudentID)
+	existing, err := s.userRepository.FindByEmailOrStudentID(req.Email, req.StudentID)
 	if err != nil && !errors.Is(err, errors.ErrNotFound) {
 		return nil, fmt.Errorf("failed to check existing user: %w", err)
 	}
@@ -90,7 +87,7 @@ func (s *userService) Create(req *dto.CreateUserRequest) (*dto.UserResponse, err
 		IsAdmin:       false,
 	}
 
-	created, err := s.repo.Create(user)
+	created, err := s.userRepository.Create(user)
 	if err != nil {
 		s.logger.Error("Failed to create user",
 			zap.String("email", req.Email),
@@ -102,7 +99,7 @@ func (s *userService) Create(req *dto.CreateUserRequest) (*dto.UserResponse, err
 }
 
 func (s *userService) Get(id uuid.UUID) (*dto.UserResponse, error) {
-	user, err := s.repo.FindByID(id)
+	user, err := s.userRepository.FindByID(id)
 	if err != nil {
 		if errors.Is(err, errors.ErrNotFound) {
 			return nil, err
@@ -117,7 +114,7 @@ func (s *userService) Get(id uuid.UUID) (*dto.UserResponse, error) {
 }
 
 func (s *userService) GetAll(pagination *dto.PaginationQuery) (*dto.PaginatedList[dto.UserResponse], error) {
-	result, err := s.repo.GetAll(pagination)
+	result, err := s.userRepository.GetAll(pagination)
 	if err != nil {
 		s.logger.Error("Failed to fetch users", zap.Error(err))
 		return nil, fmt.Errorf("failed to fetch users: %w", err)
@@ -141,12 +138,11 @@ func (s *userService) GetAll(pagination *dto.PaginationQuery) (*dto.PaginatedLis
 }
 
 func (s *userService) Update(id uuid.UUID, req *dto.UpdateUserRequest) (*dto.UserResponse, error) {
-	user, err := s.repo.FindByID(id)
+	user, err := s.userRepository.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	// Validate university if changed
 	if req.UniversityID != uuid.Nil && req.UniversityID != user.UniversityID {
 		if _, err := s.universityService.Get(req.UniversityID); err != nil {
 			if errors.Is(err, errors.ErrNotFound) {
@@ -157,7 +153,6 @@ func (s *userService) Update(id uuid.UUID, req *dto.UpdateUserRequest) (*dto.Use
 		user.UniversityID = req.UniversityID
 	}
 
-	// Validate faculty if changed
 	if req.FacultyID != uuid.Nil && req.FacultyID != user.FacultyID {
 		if _, err := s.facultyService.Get(req.FacultyID); err != nil {
 			if errors.Is(err, errors.ErrNotFound) {
@@ -168,7 +163,6 @@ func (s *userService) Update(id uuid.UUID, req *dto.UpdateUserRequest) (*dto.Use
 		user.FacultyID = req.FacultyID
 	}
 
-	// Update fields
 	if req.FirstName != "" {
 		user.FirstName = req.FirstName
 	}
@@ -179,7 +173,7 @@ func (s *userService) Update(id uuid.UUID, req *dto.UpdateUserRequest) (*dto.Use
 		user.Gender = req.Gender
 	}
 
-	updated, err := s.repo.Update(user)
+	updated, err := s.userRepository.Update(user)
 	if err != nil {
 		s.logger.Error("Failed to update user",
 			zap.String("id", id.String()),
@@ -191,7 +185,7 @@ func (s *userService) Update(id uuid.UUID, req *dto.UpdateUserRequest) (*dto.Use
 }
 
 func (s *userService) Delete(id uuid.UUID) error {
-	if err := s.repo.Delete(id); err != nil {
+	if err := s.userRepository.Delete(id); err != nil {
 		if errors.Is(err, errors.ErrNotFound) {
 			return err
 		}
@@ -204,13 +198,12 @@ func (s *userService) Delete(id uuid.UUID) error {
 }
 
 func (s *userService) UpdatePassword(id uuid.UUID, req *dto.UpdatePasswordRequest) error {
-	// Hash new password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	if err := s.repo.UpdatePassword(id, string(hashedPassword)); err != nil {
+	if err := s.userRepository.UpdatePassword(id, string(hashedPassword)); err != nil {
 		s.logger.Error("Failed to update password",
 			zap.String("id", id.String()),
 			zap.Error(err))
@@ -221,7 +214,7 @@ func (s *userService) UpdatePassword(id uuid.UUID, req *dto.UpdatePasswordReques
 }
 
 func (s *userService) VerifyEmail(id uuid.UUID) error {
-	if err := s.repo.UpdateEmailVerification(id, true); err != nil {
+	if err := s.userRepository.UpdateEmailVerification(id, true); err != nil {
 		s.logger.Error("Failed to verify email",
 			zap.String("id", id.String()),
 			zap.Error(err))
@@ -231,7 +224,7 @@ func (s *userService) VerifyEmail(id uuid.UUID) error {
 }
 
 func (s *userService) GetByUniversity(universityID uuid.UUID, pagination *dto.PaginationQuery) (*dto.PaginatedList[dto.UserResponse], error) {
-	result, err := s.repo.FindByUniversity(universityID, pagination)
+	result, err := s.userRepository.FindByUniversity(universityID, pagination)
 	if err != nil {
 		s.logger.Error("Failed to fetch users by university",
 			zap.String("university_id", universityID.String()),
@@ -257,7 +250,7 @@ func (s *userService) GetByUniversity(universityID uuid.UUID, pagination *dto.Pa
 }
 
 func (s *userService) GetByFaculty(facultyID uuid.UUID, pagination *dto.PaginationQuery) (*dto.PaginatedList[dto.UserResponse], error) {
-	result, err := s.repo.FindByFaculty(facultyID, pagination)
+	result, err := s.userRepository.FindByFaculty(facultyID, pagination)
 	if err != nil {
 		s.logger.Error("Failed to fetch users by faculty",
 			zap.String("faculty_id", facultyID.String()),
@@ -355,7 +348,6 @@ func (s *authService) sendPasswordResetEmail(user *models.User, token string) er
 	return nil
 }
 
-// Helper method to map User model to DTO
 func (s *userService) mapUserToDTO(user *models.User) (*dto.UserResponse, error) {
 	return &dto.UserResponse{
 		ID:            user.ID,

@@ -8,5 +8,5 @@ type AdminUpdateUserRequest struct {
 	UniversityID uuid.UUID `json:"university_id"`
 	FacultyID    uuid.UUID `json:"faculty_id"`
 	Gender       string    `json:"gender" binding:"omitempty,oneof=male female"`
-	Password     string    `json:"password" binding:"omitempty,min=8"` // Optional password update
+	Password     string    `json:"password" binding:"omitempty,min=8"`
 }

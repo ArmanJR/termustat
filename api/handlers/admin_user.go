@@ -23,14 +23,13 @@ func NewAdminUserHandler(userService services.UserService, logger *zap.Logger) *
 	}
 }
 
-// GetAllUsers returns a paginated list of all users
-func (h *AdminUserHandler) GetAllUsers(c *gin.Context) {
+// GetAll returns a paginated list of all users
+func (h *AdminUserHandler) GetAll(c *gin.Context) {
 	pagination := &dto.PaginationQuery{
 		Page:  parseInt(c.DefaultQuery("page", "1")),
 		Limit: parseInt(c.DefaultQuery("limit", "10")),
 	}
 
-	// Validate pagination
 	if pagination.Page < 1 {
 		pagination.Page = 1
 	}
@@ -50,8 +49,8 @@ func (h *AdminUserHandler) GetAllUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-// GetUser returns a single user by ID
-func (h *AdminUserHandler) GetUser(c *gin.Context) {
+// Get returns a single user by ID
+func (h *AdminUserHandler) Get(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		h.logger.Warn("Invalid user ID format",
@@ -77,8 +76,8 @@ func (h *AdminUserHandler) GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-// UpdateUser handles user updates by admin
-func (h *AdminUserHandler) UpdateUser(c *gin.Context) {
+// Update handles user updates by admin
+func (h *AdminUserHandler) Update(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		h.logger.Warn("Invalid user ID format",
@@ -95,7 +94,6 @@ func (h *AdminUserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	// Convert admin request to service request
 	updateReq := &dto.UpdateUserRequest{
 		FirstName:    req.FirstName,
 		LastName:     req.LastName,
@@ -122,7 +120,6 @@ func (h *AdminUserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	// If password update is requested
 	if req.Password != "" {
 		if err := h.userService.UpdatePassword(id, &dto.UpdatePasswordRequest{
 			NewPassword: req.Password,
@@ -142,8 +139,8 @@ func (h *AdminUserHandler) UpdateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-// DeleteUser handles user deletion by admin
-func (h *AdminUserHandler) DeleteUser(c *gin.Context) {
+// Delete handles user deletion by admin
+func (h *AdminUserHandler) Delete(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		h.logger.Warn("Invalid user ID format",
@@ -168,7 +165,6 @@ func (h *AdminUserHandler) DeleteUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
 
-// Helper function to parse int with default value
 func parseInt(str string) int {
 	val, err := strconv.Atoi(str)
 	if err != nil {

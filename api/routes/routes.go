@@ -14,6 +14,7 @@ type Handlers struct {
 	Semester   *handlers.SemesterHandler
 	Faculty    *handlers.FacultyHandler
 	Course     *handlers.CourseHandler
+	User       *handlers.AdminUserHandler
 }
 
 func SetupRoutes(app *app.App, h *Handlers) {
@@ -93,6 +94,15 @@ func SetupRoutes(app *app.App, h *Handlers) {
 			courses.PUT("/:id", h.Course.Update)
 			courses.DELETE("/:id", h.Course.Delete)
 		}
+
+		// Users routes
+		users := admin.Group("/users")
+		{
+			users.GET("", h.User.GetAll)
+			users.GET("/:id", h.User.Get)
+			users.PUT("/:id", h.User.Update)
+			users.DELETE("/:id", h.User.Delete)
+		}
 	}
 }
 
@@ -119,10 +129,10 @@ func SetupRoutesLegacy(router *gin.Engine) {
 	admin.Use(middlewares.JWTAuthMiddleware(), middlewares.IsAdminMiddleware())
 	{
 		// User
-		admin.GET("/users", handlers.GetAllUsers)
-		admin.GET("/users/:id", handlers.GetUser)
-		admin.PUT("/users/:id", handlers.UpdateUser)
-		admin.DELETE("/users/:id", handlers.DeleteUser)
+		//admin.GET("/users", handlers.GetAllUsers)
+		//admin.GET("/users/:id", handlers.GetUser)
+		//admin.PUT("/users/:id", handlers.UpdateUser)
+		//admin.DELETE("/users/:id", handlers.DeleteUser)
 
 		admin.GET("/users/:id/courses", handlers.GetUserCourses)
 		admin.POST("/users/:id/courses", handlers.AddUserCourse)
