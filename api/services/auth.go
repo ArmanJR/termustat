@@ -1,7 +1,6 @@
 package services
 
 import (
-	"fmt"
 	"github.com/armanjr/termustat/api/dto"
 	"github.com/armanjr/termustat/api/models"
 	"github.com/armanjr/termustat/api/repositories"
@@ -232,56 +231,3 @@ func (s *authService) VerifyEmail(token string) error {
 //
 //	return nil
 //}
-
-func (s *authService) sendVerificationEmail(user *models.User) error {
-	token := uuid.New().String()
-	expiresAt := time.Now().Add(24 * time.Hour)
-
-	verification := &models.EmailVerification{
-		Token:     token,
-		UserID:    user.ID,
-		ExpiresAt: expiresAt,
-	}
-
-	if err := s.repo.CreateEmailVerification(verification); err != nil {
-		return errors.Wrapf(err, "failed to create verification record")
-	}
-
-	verificationURL := fmt.Sprintf("%s/verify-email?token=%s", s.frontendURL, token)
-	tplData := struct {
-		Name            string
-		VerificationURL string
-	}{
-		Name:            user.FirstName,
-		VerificationURL: verificationURL,
-	}
-
-	emailContent, err := s.mailer.RenderTemplate("verification_email.html", tplData)
-	if err != nil {
-		return errors.Wrapf(err, "failed to render verification email template")
-	}
-
-	if err := s.mailer.SendEmail(user.Email, emailContent.Subject, emailContent.Body); err != nil {
-		return errors.Wrapf(err, "failed to send verification email")
-	}
-
-	return nil
-}
-
-func (s *authService) sendPasswordResetEmail(user *models.User, token string) error {
-	resetURL := fmt.Sprintf("%s/reset-password?token=%s", s.frontendURL, token)
-	tplData := struct {
-		ResetURL string
-	}{ResetURL: resetURL}
-
-	emailContent, err := s.mailer.RenderTemplate("password_reset_email.html", tplData)
-	if err != nil {
-		return errors.Wrapf(err, "failed to render password reset email template")
-	}
-
-	if err := s.mailer.SendEmail(user.Email, emailContent.Subject, emailContent.Body); err != nil {
-		return errors.Wrapf(err, "failed to send password reset email")
-	}
-
-	return nil
-}
