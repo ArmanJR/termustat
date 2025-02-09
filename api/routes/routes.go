@@ -14,7 +14,7 @@ type Handlers struct {
 	Semester   *handlers.SemesterHandler
 	Faculty    *handlers.FacultyHandler
 	Course     *handlers.CourseHandler
-	User       *handlers.AdminUserHandler
+	AdminUser  *handlers.AdminUserHandler
 }
 
 func SetupRoutes(app *app.App, h *Handlers) {
@@ -95,13 +95,13 @@ func SetupRoutes(app *app.App, h *Handlers) {
 			courses.DELETE("/:id", h.Course.Delete)
 		}
 
-		// Users routes
+		// Admin User routes
 		users := admin.Group("/users")
 		{
-			users.GET("", h.User.GetAll)
-			users.GET("/:id", h.User.Get)
-			users.PUT("/:id", h.User.Update)
-			users.DELETE("/:id", h.User.Delete)
+			users.GET("", h.AdminUser.GetAll)
+			users.GET("/:id", h.AdminUser.Get)
+			users.PUT("/:id", h.AdminUser.Update)
+			users.DELETE("/:id", h.AdminUser.Delete)
 		}
 	}
 }

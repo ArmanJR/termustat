@@ -55,7 +55,7 @@ func main() {
 	semesterRepo := repositories.NewSemesterRepository(db)
 	facultyRepo := repositories.NewFacultyRepository(db)
 	courseRepo := repositories.NewCourseRepository(db)
-	usersRepo := repositories.NewUserRepository(db)
+	adminUserRepo := repositories.NewAdminUserRepository(db)
 
 	// Third-party services
 	mailerConfig := services.MailerConfig{
@@ -80,7 +80,7 @@ func main() {
 	semesterService := services.NewSemesterService(semesterRepo, log)
 	facultyService := services.NewFacultyService(facultyRepo, universityService, log)
 	courseService := services.NewCourseService(courseRepo, universityService, facultyService, professorService, semesterService, log)
-	userService := services.NewUserService(usersRepo, universityService, facultyService, log)
+	adminUserService := services.NewAdminUserService(adminUserRepo, universityService, facultyService, log)
 
 	// Initialize router
 	router := gin.New()
@@ -105,7 +105,7 @@ func main() {
 		Semester:   handlers.NewSemesterHandler(semesterService, log),
 		Faculty:    handlers.NewFacultyHandler(facultyService, log),
 		Course:     handlers.NewCourseHandler(courseService, log),
-		User:       handlers.NewAdminUserHandler(userService, log),
+		AdminUser:  handlers.NewAdminUserHandler(adminUserService, log),
 	}
 
 	// Setup routes

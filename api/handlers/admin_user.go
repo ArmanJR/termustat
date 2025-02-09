@@ -12,14 +12,14 @@ import (
 )
 
 type AdminUserHandler struct {
-	userService services.UserService
-	logger      *zap.Logger
+	adminUserService services.AdminUserService
+	logger           *zap.Logger
 }
 
-func NewAdminUserHandler(userService services.UserService, logger *zap.Logger) *AdminUserHandler {
+func NewAdminUserHandler(adminUserService services.AdminUserService, logger *zap.Logger) *AdminUserHandler {
 	return &AdminUserHandler{
-		userService: userService,
-		logger:      logger,
+		adminUserService: adminUserService,
+		logger:           logger,
 	}
 }
 
@@ -38,7 +38,7 @@ func (h *AdminUserHandler) GetAll(c *gin.Context) {
 	}
 	pagination.Offset = (pagination.Page - 1) * pagination.Limit
 
-	result, err := h.userService.GetAll(pagination)
+	result, err := h.adminUserService.GetAll(pagination)
 	if err != nil {
 		h.logger.Error("Failed to fetch users",
 			zap.Error(err))
@@ -59,7 +59,7 @@ func (h *AdminUserHandler) Get(c *gin.Context) {
 		return
 	}
 
-	user, err := h.userService.Get(id)
+	user, err := h.adminUserService.Get(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, errors.ErrNotFound):
@@ -94,7 +94,7 @@ func (h *AdminUserHandler) Update(c *gin.Context) {
 		return
 	}
 
-	updateReq := &dto.UpdateUserRequest{
+	updateReq := &dto.AdminUpdateUserRequest{
 		FirstName:    req.FirstName,
 		LastName:     req.LastName,
 		UniversityID: req.UniversityID,
@@ -102,7 +102,7 @@ func (h *AdminUserHandler) Update(c *gin.Context) {
 		Gender:       req.Gender,
 	}
 
-	user, err := h.userService.Update(id, updateReq)
+	user, err := h.adminUserService.Update(id, updateReq)
 	if err != nil {
 		switch {
 		case errors.Is(err, errors.ErrNotFound):
@@ -121,7 +121,7 @@ func (h *AdminUserHandler) Update(c *gin.Context) {
 	}
 
 	if req.Password != "" {
-		if err := h.userService.UpdatePassword(id, &dto.UpdatePasswordRequest{
+		if err := h.adminUserService.UpdatePassword(id, &dto.AdminUpdatePasswordRequest{
 			NewPassword: req.Password,
 		}); err != nil {
 			h.logger.Error("Failed to update user password",
@@ -149,7 +149,7 @@ func (h *AdminUserHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.userService.Delete(id); err != nil {
+	if err := h.adminUserService.Delete(id); err != nil {
 		switch {
 		case errors.Is(err, errors.ErrNotFound):
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})

@@ -12,40 +12,40 @@ import (
 	"time"
 )
 
-type UserService interface {
-	Create(req *dto.CreateUserRequest) (*dto.UserResponse, error)
-	Get(id uuid.UUID) (*dto.UserResponse, error)
-	GetAll(pagination *dto.PaginationQuery) (*dto.PaginatedList[dto.UserResponse], error)
-	Update(id uuid.UUID, req *dto.UpdateUserRequest) (*dto.UserResponse, error)
+type AdminUserService interface {
+	Create(req *dto.AdminCreateUserRequest) (*dto.AdminUserResponse, error)
+	Get(id uuid.UUID) (*dto.AdminUserResponse, error)
+	GetAll(pagination *dto.PaginationQuery) (*dto.PaginatedList[dto.AdminUserResponse], error)
+	Update(id uuid.UUID, req *dto.AdminUpdateUserRequest) (*dto.AdminUserResponse, error)
 	Delete(id uuid.UUID) error
-	GetByUniversity(universityID uuid.UUID, pagination *dto.PaginationQuery) (*dto.PaginatedList[dto.UserResponse], error)
-	GetByFaculty(facultyID uuid.UUID, pagination *dto.PaginationQuery) (*dto.PaginatedList[dto.UserResponse], error)
-	UpdatePassword(id uuid.UUID, req *dto.UpdatePasswordRequest) error
+	GetByUniversity(universityID uuid.UUID, pagination *dto.PaginationQuery) (*dto.PaginatedList[dto.AdminUserResponse], error)
+	GetByFaculty(facultyID uuid.UUID, pagination *dto.PaginationQuery) (*dto.PaginatedList[dto.AdminUserResponse], error)
+	UpdatePassword(id uuid.UUID, req *dto.AdminUpdatePasswordRequest) error
 	VerifyEmail(id uuid.UUID) error
 }
 
-type userService struct {
-	userRepository    repositories.UserRepository
-	universityService UniversityService
-	facultyService    FacultyService
-	logger            *zap.Logger
+type adminUserService struct {
+	adminUserRepository repositories.AdminUserRepository
+	universityService   UniversityService
+	facultyService      FacultyService
+	logger              *zap.Logger
 }
 
-func NewUserService(
-	userRepository repositories.UserRepository,
+func NewAdminUserService(
+	adminUserRepository repositories.AdminUserRepository,
 	universityService UniversityService,
 	facultyService FacultyService,
 	logger *zap.Logger,
-) UserService {
-	return &userService{
-		userRepository:    userRepository,
-		universityService: universityService,
-		facultyService:    facultyService,
-		logger:            logger,
+) AdminUserService {
+	return &adminUserService{
+		adminUserRepository: adminUserRepository,
+		universityService:   universityService,
+		facultyService:      facultyService,
+		logger:              logger,
 	}
 }
 
-func (s *userService) Create(req *dto.CreateUserRequest) (*dto.UserResponse, error) {
+func (s *adminUserService) Create(req *dto.AdminCreateUserRequest) (*dto.AdminUserResponse, error) {
 	if _, err := s.universityService.Get(req.UniversityID); err != nil {
 		if errors.Is(err, errors.ErrNotFound) {
 			return nil, errors.NewValidationError("invalid university_id")
@@ -60,7 +60,7 @@ func (s *userService) Create(req *dto.CreateUserRequest) (*dto.UserResponse, err
 		return nil, fmt.Errorf("failed to validate faculty: %w", err)
 	}
 
-	existing, err := s.userRepository.FindByEmailOrStudentID(req.Email, req.StudentID)
+	existing, err := s.adminUserRepository.FindByEmailOrStudentID(req.Email, req.StudentID)
 	if err != nil && !errors.Is(err, errors.ErrNotFound) {
 		return nil, fmt.Errorf("failed to check existing user: %w", err)
 	}
@@ -87,7 +87,7 @@ func (s *userService) Create(req *dto.CreateUserRequest) (*dto.UserResponse, err
 		IsAdmin:       false,
 	}
 
-	created, err := s.userRepository.Create(user)
+	created, err := s.adminUserRepository.Create(user)
 	if err != nil {
 		s.logger.Error("Failed to create user",
 			zap.String("email", req.Email),
@@ -98,8 +98,8 @@ func (s *userService) Create(req *dto.CreateUserRequest) (*dto.UserResponse, err
 	return s.mapUserToDTO(created)
 }
 
-func (s *userService) Get(id uuid.UUID) (*dto.UserResponse, error) {
-	user, err := s.userRepository.FindByID(id)
+func (s *adminUserService) Get(id uuid.UUID) (*dto.AdminUserResponse, error) {
+	user, err := s.adminUserRepository.FindByID(id)
 	if err != nil {
 		if errors.Is(err, errors.ErrNotFound) {
 			return nil, err
@@ -113,14 +113,14 @@ func (s *userService) Get(id uuid.UUID) (*dto.UserResponse, error) {
 	return s.mapUserToDTO(user)
 }
 
-func (s *userService) GetAll(pagination *dto.PaginationQuery) (*dto.PaginatedList[dto.UserResponse], error) {
-	result, err := s.userRepository.GetAll(pagination)
+func (s *adminUserService) GetAll(pagination *dto.PaginationQuery) (*dto.PaginatedList[dto.AdminUserResponse], error) {
+	result, err := s.adminUserRepository.GetAll(pagination)
 	if err != nil {
 		s.logger.Error("Failed to fetch users", zap.Error(err))
 		return nil, fmt.Errorf("failed to fetch users: %w", err)
 	}
 
-	dtos := make([]dto.UserResponse, 0, len(result.Items))
+	dtos := make([]dto.AdminUserResponse, 0, len(result.Items))
 	for _, user := range result.Items {
 		dto, err := s.mapUserToDTO(&user)
 		if err != nil {
@@ -129,7 +129,7 @@ func (s *userService) GetAll(pagination *dto.PaginationQuery) (*dto.PaginatedLis
 		dtos = append(dtos, *dto)
 	}
 
-	return &dto.PaginatedList[dto.UserResponse]{
+	return &dto.PaginatedList[dto.AdminUserResponse]{
 		Items: dtos,
 		Total: result.Total,
 		Page:  result.Page,
@@ -137,8 +137,8 @@ func (s *userService) GetAll(pagination *dto.PaginationQuery) (*dto.PaginatedLis
 	}, nil
 }
 
-func (s *userService) Update(id uuid.UUID, req *dto.UpdateUserRequest) (*dto.UserResponse, error) {
-	user, err := s.userRepository.FindByID(id)
+func (s *adminUserService) Update(id uuid.UUID, req *dto.AdminUpdateUserRequest) (*dto.AdminUserResponse, error) {
+	user, err := s.adminUserRepository.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +173,7 @@ func (s *userService) Update(id uuid.UUID, req *dto.UpdateUserRequest) (*dto.Use
 		user.Gender = req.Gender
 	}
 
-	updated, err := s.userRepository.Update(user)
+	updated, err := s.adminUserRepository.Update(user)
 	if err != nil {
 		s.logger.Error("Failed to update user",
 			zap.String("id", id.String()),
@@ -184,8 +184,8 @@ func (s *userService) Update(id uuid.UUID, req *dto.UpdateUserRequest) (*dto.Use
 	return s.mapUserToDTO(updated)
 }
 
-func (s *userService) Delete(id uuid.UUID) error {
-	if err := s.userRepository.Delete(id); err != nil {
+func (s *adminUserService) Delete(id uuid.UUID) error {
+	if err := s.adminUserRepository.Delete(id); err != nil {
 		if errors.Is(err, errors.ErrNotFound) {
 			return err
 		}
@@ -197,13 +197,13 @@ func (s *userService) Delete(id uuid.UUID) error {
 	return nil
 }
 
-func (s *userService) UpdatePassword(id uuid.UUID, req *dto.UpdatePasswordRequest) error {
+func (s *adminUserService) UpdatePassword(id uuid.UUID, req *dto.AdminUpdatePasswordRequest) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	if err := s.userRepository.UpdatePassword(id, string(hashedPassword)); err != nil {
+	if err := s.adminUserRepository.UpdatePassword(id, string(hashedPassword)); err != nil {
 		s.logger.Error("Failed to update password",
 			zap.String("id", id.String()),
 			zap.Error(err))
@@ -213,8 +213,8 @@ func (s *userService) UpdatePassword(id uuid.UUID, req *dto.UpdatePasswordReques
 	return nil
 }
 
-func (s *userService) VerifyEmail(id uuid.UUID) error {
-	if err := s.userRepository.UpdateEmailVerification(id, true); err != nil {
+func (s *adminUserService) VerifyEmail(id uuid.UUID) error {
+	if err := s.adminUserRepository.UpdateEmailVerification(id, true); err != nil {
 		s.logger.Error("Failed to verify email",
 			zap.String("id", id.String()),
 			zap.Error(err))
@@ -223,8 +223,8 @@ func (s *userService) VerifyEmail(id uuid.UUID) error {
 	return nil
 }
 
-func (s *userService) GetByUniversity(universityID uuid.UUID, pagination *dto.PaginationQuery) (*dto.PaginatedList[dto.UserResponse], error) {
-	result, err := s.userRepository.FindByUniversity(universityID, pagination)
+func (s *adminUserService) GetByUniversity(universityID uuid.UUID, pagination *dto.PaginationQuery) (*dto.PaginatedList[dto.AdminUserResponse], error) {
+	result, err := s.adminUserRepository.FindByUniversity(universityID, pagination)
 	if err != nil {
 		s.logger.Error("Failed to fetch users by university",
 			zap.String("university_id", universityID.String()),
@@ -232,7 +232,7 @@ func (s *userService) GetByUniversity(universityID uuid.UUID, pagination *dto.Pa
 		return nil, fmt.Errorf("failed to fetch users: %w", err)
 	}
 
-	dtos := make([]dto.UserResponse, 0, len(result.Items))
+	dtos := make([]dto.AdminUserResponse, 0, len(result.Items))
 	for _, user := range result.Items {
 		dto, err := s.mapUserToDTO(&user)
 		if err != nil {
@@ -241,7 +241,7 @@ func (s *userService) GetByUniversity(universityID uuid.UUID, pagination *dto.Pa
 		dtos = append(dtos, *dto)
 	}
 
-	return &dto.PaginatedList[dto.UserResponse]{
+	return &dto.PaginatedList[dto.AdminUserResponse]{
 		Items: dtos,
 		Total: result.Total,
 		Page:  result.Page,
@@ -249,8 +249,8 @@ func (s *userService) GetByUniversity(universityID uuid.UUID, pagination *dto.Pa
 	}, nil
 }
 
-func (s *userService) GetByFaculty(facultyID uuid.UUID, pagination *dto.PaginationQuery) (*dto.PaginatedList[dto.UserResponse], error) {
-	result, err := s.userRepository.FindByFaculty(facultyID, pagination)
+func (s *adminUserService) GetByFaculty(facultyID uuid.UUID, pagination *dto.PaginationQuery) (*dto.PaginatedList[dto.AdminUserResponse], error) {
+	result, err := s.adminUserRepository.FindByFaculty(facultyID, pagination)
 	if err != nil {
 		s.logger.Error("Failed to fetch users by faculty",
 			zap.String("faculty_id", facultyID.String()),
@@ -258,7 +258,7 @@ func (s *userService) GetByFaculty(facultyID uuid.UUID, pagination *dto.Paginati
 		return nil, fmt.Errorf("failed to fetch users: %w", err)
 	}
 
-	dtos := make([]dto.UserResponse, 0, len(result.Items))
+	dtos := make([]dto.AdminUserResponse, 0, len(result.Items))
 	for _, user := range result.Items {
 		dto, err := s.mapUserToDTO(&user)
 		if err != nil {
@@ -267,7 +267,7 @@ func (s *userService) GetByFaculty(facultyID uuid.UUID, pagination *dto.Paginati
 		dtos = append(dtos, *dto)
 	}
 
-	return &dto.PaginatedList[dto.UserResponse]{
+	return &dto.PaginatedList[dto.AdminUserResponse]{
 		Items: dtos,
 		Total: result.Total,
 		Page:  result.Page,
@@ -348,8 +348,8 @@ func (s *authService) sendPasswordResetEmail(user *models.User, token string) er
 	return nil
 }
 
-func (s *userService) mapUserToDTO(user *models.User) (*dto.UserResponse, error) {
-	return &dto.UserResponse{
+func (s *adminUserService) mapUserToDTO(user *models.User) (*dto.AdminUserResponse, error) {
+	return &dto.AdminUserResponse{
 		ID:            user.ID,
 		Email:         user.Email,
 		StudentID:     user.StudentID,
