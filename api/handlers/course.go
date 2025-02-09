@@ -185,18 +185,3 @@ func (h *CourseHandler) Search(c *gin.Context) {
 
 	c.JSON(http.StatusOK, courses)
 }
-
-// RegisterRoutes registers all course routes
-func (h *CourseHandler) RegisterRoutes(r *gin.Engine) {
-	courses := r.Group("/api/courses")
-	{
-		courses.POST("", h.Create)
-		courses.GET("", h.Search) // With query parameters
-		courses.GET("/:id", h.Get)
-		courses.PUT("/:id", h.Update)
-		courses.DELETE("/:id", h.Delete)
-
-		// Additional routes
-		courses.GET("/faculty/:facultyID", h.GetByFaculty)
-	}
-}

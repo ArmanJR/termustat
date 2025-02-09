@@ -1,15 +1,27 @@
 package middlewares
 
 import (
-	"errors"
-	"github.com/armanjr/termustat/api/config"
-	"github.com/armanjr/termustat/api/utils"
+	"github.com/armanjr/termustat/api/errors"
+	"github.com/armanjr/termustat/api/services"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"net/http"
 	"strings"
 )
 
-func JWTAuthMiddleware() gin.HandlerFunc {
+type JWTMiddleware struct {
+	authService services.AuthService
+	logger      *zap.Logger
+}
+
+func NewJWTMiddleware(authService services.AuthService, logger *zap.Logger) *JWTMiddleware {
+	return &JWTMiddleware{
+		authService: authService,
+		logger:      logger,
+	}
+}
+
+func (m *JWTMiddleware) AuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -23,16 +35,21 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		claims, err := utils.ParseJWT(tokenString, config.Cfg.JWTSecret)
+		claims, err := m.authService.ValidateToken(tokenString)
 		if err != nil {
-			if errors.Is(err, utils.ErrExpiredToken) {
+			switch {
+			case errors.Is(err, errors.ErrExpiredToken):
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token expired"})
-				return
+			default:
+				m.logger.Warn("Invalid token",
+					zap.Error(err),
+					zap.String("token", tokenString))
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			}
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			return
 		}
 
+		// Store user ID in context
 		c.Set("userID", claims.UserID)
 		c.Next()
 	}

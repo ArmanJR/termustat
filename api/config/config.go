@@ -52,6 +52,7 @@ func (c *Config) GetDatabaseConfig() DatabaseConfig {
 		Password: c.DBPassword,
 		DBName:   c.DBName,
 		SSLMode:  c.SSLMode,
+		Timezone: c.Timezone,
 	}
 }
 

@@ -12,11 +12,12 @@ func (e Error) Error() string { return string(e) }
 
 // Predefined errors
 const (
-	ErrNotFound   = Error("record not found")
-	ErrConflict   = Error("record already exists")
-	ErrInvalid    = Error("invalid input")
-	ErrForbidden  = Error("forbidden")
-	ErrBadRequest = Error("bad request")
+	ErrNotFound     = Error("record not found")
+	ErrConflict     = Error("record already exists")
+	ErrInvalid      = Error("invalid input")
+	ErrExpiredToken = Error("expired token")
+	ErrForbidden    = Error("forbidden")
+	ErrBadRequest   = Error("bad request")
 )
 
 // Custom error types
@@ -30,6 +31,10 @@ type NotValidError struct {
 	err    error
 }
 type ConflictError struct {
+	Entity string
+	err    error
+}
+type ExpiredTokenError struct {
 	Entity string
 	err    error
 }
@@ -55,6 +60,13 @@ func (e *ConflictError) Unwrap() error {
 	return e.err
 }
 
+func (e *ExpiredTokenError) Error() string {
+	return fmt.Sprintf("%s is expired", e.Entity)
+}
+func (e *ExpiredTokenError) Unwrap() error {
+	return e.err
+}
+
 // Error constructors
 func NewNotFoundError(entity, id string) error {
 	return &NotFoundError{
@@ -72,7 +84,13 @@ func NewValidationError(entity string) error {
 func NewConflictError(entity string) error {
 	return &ConflictError{
 		Entity: entity,
-		err:    ErrInvalid,
+		err:    ErrConflict,
+	}
+}
+func NewExpiredTokenError(entity string) error {
+	return &ExpiredTokenError{
+		Entity: entity,
+		err:    ErrExpiredToken,
 	}
 }
 

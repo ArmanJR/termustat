@@ -19,8 +19,7 @@ type AuthService interface {
 	ResetPassword(token, newPassword string) error
 	GetCurrentUser(userID uuid.UUID) (*models.User, error)
 	VerifyEmail(token string) error
-	//UpdateUser(userID uuid.UUID, req *dto.UpdateUserRequest) error
-	//ChangePassword(userID uuid.UUID, oldPassword, newPassword string) error
+	ValidateToken(token string) (*utils.JWTClaims, error)
 }
 
 type authService struct {
@@ -193,41 +192,28 @@ func (s *authService) VerifyEmail(token string) error {
 	return nil
 }
 
-//func (s *authService) UpdateUser(userID uuid.UUID, req *dto.UpdateUserRequest) error {
-//	user, err := s.professorRepository.FindUserByID(userID)
-//	if err != nil {
-//		return errors.Wrapf(err, "failed to find user")
-//	}
-//
-//	user.FirstName = req.FirstName
-//	user.LastName = req.LastName
-//	user.Gender = req.Gender
-//
-//	if err := s.professorRepository.UpdateUser(user); err != nil {
-//		return errors.Wrapf(err, "failed to update user")
-//	}
-//
-//	return nil
-//}
-//
-//func (s *authService) ChangePassword(userID uuid.UUID, oldPassword, newPassword string) error {
-//	user, err := s.professorRepository.FindUserByID(userID)
-//	if err != nil {
-//		return errors.Wrapf(err, "failed to find user")
-//	}
-//
-//	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(oldPassword)); err != nil {
-//		return errors.New("invalid old password")
-//	}
-//
-//	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
-//	if err != nil {
-//		return errors.Wrapf(err, "failed to hash password")
-//	}
-//
-//	if err := s.professorRepository.UpdateUserPassword(user.ID, string(hashedPassword)); err != nil {
-//		return errors.Wrapf(err, "failed to update password")
-//	}
-//
-//	return nil
-//}
+func (s *authService) ValidateToken(token string) (*utils.JWTClaims, error) {
+	claims, err := utils.ParseJWT(token, s.jwtSecret)
+	if err != nil {
+		switch {
+		case errors.Is(err, utils.ErrExpiredToken):
+			s.logger.Warn("Token has expired")
+			return nil, errors.Wrap(err, "token has expired")
+		default:
+			s.logger.Warn("Invalid token",
+				zap.Error(err))
+			return nil, errors.Wrap(err, "invalid token")
+		}
+	}
+
+	// Verify user still exists and is active
+	_, err = s.repo.FindUserByID(uuid.MustParse(claims.UserID))
+	if err != nil {
+		s.logger.Warn("User from token not found",
+			zap.String("user_id", claims.UserID),
+			zap.Error(err))
+		return nil, errors.New("invalid token: user not found")
+	}
+
+	return claims, nil
+}

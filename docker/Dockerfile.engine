@@ -9,7 +9,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o termustat-engine engine/main.go
 FROM alpine:3.21.2
 WORKDIR /app
 COPY --from=builder /app/termustat-engine .
-COPY ../.env /app/.env
 
 EXPOSE 80
 ENTRYPOINT ["./termustat-engine"]

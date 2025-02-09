@@ -4,7 +4,8 @@ import (
 	"github.com/armanjr/termustat/api/app"
 	"github.com/armanjr/termustat/api/handlers"
 	"github.com/armanjr/termustat/api/middlewares"
-	"github.com/gin-gonic/gin"
+	"github.com/armanjr/termustat/api/services"
+	"go.uber.org/zap"
 )
 
 type Handlers struct {
@@ -15,9 +16,21 @@ type Handlers struct {
 	Faculty    *handlers.FacultyHandler
 	Course     *handlers.CourseHandler
 	AdminUser  *handlers.AdminUserHandler
+	UserCourse *handlers.UserCourseHandler
 }
 
-func SetupRoutes(app *app.App, h *Handlers) {
+type Middlewares struct {
+	JWT   *middlewares.JWTMiddleware
+	Admin *middlewares.AdminMiddleware
+}
+
+func SetupRoutes(app *app.App, h *Handlers, authService services.AuthService, adminUserService services.AdminUserService, logger *zap.Logger) {
+	// Initialize middlewares
+	mw := &Middlewares{
+		JWT:   middlewares.NewJWTMiddleware(authService, logger),
+		Admin: middlewares.NewAdminMiddleware(adminUserService, logger),
+	}
+
 	// Public routes
 	public := app.Router.Group("/v1")
 	{
@@ -33,17 +46,27 @@ func SetupRoutes(app *app.App, h *Handlers) {
 
 	// Protected routes
 	protected := app.Router.Group("/v1")
-	protected.Use(middlewares.JWTAuthMiddleware())
+	protected.Use(mw.JWT.AuthRequired())
 	{
-		users := protected.Group("/users")
+		// User routes
+		user := protected.Group("/user")
 		{
-			users.GET("/me", h.Auth.GetCurrentUser)
+			user.GET("/me", h.Auth.GetCurrentUser)
+		}
+
+		// User Course routes
+		userCourses := protected.Group("/courses")
+		{
+			userCourses.POST("/select", h.UserCourse.AddCourse)
+			userCourses.DELETE("/select/:courseId", h.UserCourse.RemoveCourse)
+			userCourses.GET("/selected", h.UserCourse.GetUserCourses)
+			userCourses.GET("/validate", h.UserCourse.ValidateTimeConflicts)
 		}
 	}
 
 	// Admin routes
 	admin := app.Router.Group("/v1/admin")
-	admin.Use(middlewares.JWTAuthMiddleware(), middlewares.IsAdminMiddleware())
+	admin.Use(mw.JWT.AuthRequired(), mw.Admin.IsAdmin())
 	{
 		// University routes
 		universities := admin.Group("/universities")
@@ -82,7 +105,7 @@ func SetupRoutes(app *app.App, h *Handlers) {
 			faculties.GET("/:id", h.Faculty.GetByID)
 			faculties.PUT("/:id", h.Faculty.Update)
 			faculties.DELETE("/:id", h.Faculty.Delete)
-			faculties.GET("/:facultyID/courses", h.Course.GetByFaculty)
+			faculties.GET("/courses/:facultyID", h.Course.GetByFaculty)
 		}
 
 		// Course routes
@@ -103,71 +126,5 @@ func SetupRoutes(app *app.App, h *Handlers) {
 			users.PUT("/:id", h.AdminUser.Update)
 			users.DELETE("/:id", h.AdminUser.Delete)
 		}
-	}
-}
-
-func SetupRoutesLegacy(router *gin.Engine) {
-	// an /api/ is already added by nginx
-	// Public routes
-	//public := router.Group("/v1")
-	//{
-	//	public.POST("/auth/register", handlers.Register)
-	//	public.POST("/auth/login", handlers.Login)
-	//	public.POST("/auth/forgot-password", handlers.ForgotPassword)
-	//	public.POST("/auth/reset-password", handlers.ResetPassword)
-	//}
-
-	// Protected routes
-	//protected := router.Group("/v1")
-	//protected.Use(middlewares.JWTAuthMiddleware())
-	//{
-	//	protected.GET("/users/me", handlers.GetCurrentUser)
-	//}
-
-	// Admin routes
-	admin := router.Group("/v1/admin")
-	admin.Use(middlewares.JWTAuthMiddleware(), middlewares.IsAdminMiddleware())
-	{
-		// User
-		//admin.GET("/users", handlers.GetAllUsers)
-		//admin.GET("/users/:id", handlers.GetUser)
-		//admin.PUT("/users/:id", handlers.UpdateUser)
-		//admin.DELETE("/users/:id", handlers.DeleteUser)
-
-		admin.GET("/users/:id/courses", handlers.GetUserCourses)
-		admin.POST("/users/:id/courses", handlers.AddUserCourse)
-		admin.DELETE("/users/:id/courses/:course_id", handlers.RemoveUserCourse)
-
-		// University
-		//admin.POST("/universities", handlers.CreateUniversity)
-		//admin.GET("/universities", handlers.GetAllUniversities)
-		//admin.GET("/universities/:id", handlers.GetUniversity)
-		//admin.PUT("/universities/:id", handlers.UpdateUniversity)
-		//admin.DELETE("/universities/:id", handlers.DeleteUniversity)
-		//admin.GET("/universities/:id/professors", handlers.GetAllByUniversity)
-
-		// Faculty
-		//admin.POST("/faculties", handlers.CreateFaculty)
-		//admin.GET("/faculties/:id", handlers.GetFaculty)
-		//admin.PUT("/faculties/:id", handlers.UpdateFaculty)
-		//admin.DELETE("/faculties/:id", handlers.DeleteFaculty)
-
-		// Semester
-		//admin.POST("/semesters", handlers.CreateSemester)
-		//admin.GET("/semesters", handlers.GetAllSemesters)
-		//admin.GET("/semesters/:id", handlers.GetSemester)
-		//admin.PUT("/semesters/:id", handlers.UpdateSemester)
-		//admin.DELETE("/semesters/:id", handlers.DeleteSemester)
-
-		// Professor
-		//admin.GET("/professors/:id", handlers.GetProfessor)
-		//admin.PUT("/professors/:id", handlers.UpdateProfessor) // do we need this?
-
-		// Course
-		//admin.POST("/courses", handlers.CreateCourse)
-		//admin.POST("/courses/batch", handlers.BatchCreateCourses)
-		//admin.GET("/courses/:id", handlers.GetCourse)
-		//admin.PUT("/courses/:id", handlers.UpdateCourse)
-		//admin.DELETE("/courses/:id", handlers.DeleteCourse)
 	}
 }

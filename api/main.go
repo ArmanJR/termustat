@@ -38,6 +38,15 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	// Third-party services
+	mailerConfig := services.MailerConfig{
+		Domain:  cfg.MailgunDomain,
+		APIKey:  cfg.MailgunAPIKey,
+		Sender:  "noreply@" + cfg.MailgunDomain,
+		TplPath: "templates/email/",
+	}
+	mailerService := services.NewMailerService(mailerConfig, log)
+
 	// Initialize database
 	db, err := database.NewDatabase(cfg.GetDatabaseConfig())
 	if err != nil {
@@ -56,15 +65,7 @@ func main() {
 	facultyRepo := repositories.NewFacultyRepository(db)
 	courseRepo := repositories.NewCourseRepository(db)
 	adminUserRepo := repositories.NewAdminUserRepository(db)
-
-	// Third-party services
-	mailerConfig := services.MailerConfig{
-		Domain:  cfg.MailgunDomain,
-		APIKey:  cfg.MailgunAPIKey,
-		Sender:  "noreply@" + cfg.MailgunDomain,
-		TplPath: "templates/email/",
-	}
-	mailerService := services.NewMailerService(mailerConfig, log)
+	userCourseRepo := repositories.NewUserCourseRepository(db)
 
 	// Internal services
 	authService := services.NewAuthService(
@@ -81,6 +82,7 @@ func main() {
 	facultyService := services.NewFacultyService(facultyRepo, universityService, log)
 	courseService := services.NewCourseService(courseRepo, universityService, facultyService, professorService, semesterService, log)
 	adminUserService := services.NewAdminUserService(adminUserRepo, universityService, facultyService, log)
+	userCourseService := services.NewUserCourseService(userCourseRepo, courseService, adminUserService, semesterService, log)
 
 	// Initialize router
 	router := gin.New()
@@ -106,10 +108,17 @@ func main() {
 		Faculty:    handlers.NewFacultyHandler(facultyService, log),
 		Course:     handlers.NewCourseHandler(courseService, log),
 		AdminUser:  handlers.NewAdminUserHandler(adminUserService, log),
+		UserCourse: handlers.NewUserCourseHandler(userCourseService, log),
 	}
 
 	// Setup routes
-	routes.SetupRoutes(application, ginHandlers)
+	routes.SetupRoutes(
+		application,
+		ginHandlers,
+		authService,
+		adminUserService,
+		log,
+	)
 
 	// Start server
 	serverAddr := ":" + cfg.Port
