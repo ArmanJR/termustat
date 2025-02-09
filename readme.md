@@ -12,6 +12,10 @@ The platform was created to address the common challenges students face when org
 
 Read ["From Hesarak to Abbaspur"](https://t.me/sefroyekpub/43): The story of Termustat, published in the 7th issue of Safar-o-Yek magazine.
 
+## How to use
+
+This repository is an ongoing rewrite of the original Termustat. It's currently not ready for production, please check back later for a full guide. Meanwhile, you are more than welcome to contribute.
+
 ## Architecture
 
 ### Backend
@@ -31,18 +35,6 @@ Acts as the data processing powerhouse
 - Parses course data exported from Golestan system
 - Transforms raw data into structured backend models
 - Ensures data compatibility and integrity
-
-## Project Evolution
-
-The original Termustat was built using
-- Backend: PHP & MySQL
-- Frontend: Materialize CSS framework & jQuery
-- Engine: Ruby on Rails
-
-The current version has been completely rewritten with performance and feature enrichment as primary goals
-- Backend: Go
-- Frontend: React
-- Engine: Go
 
 ## Contribution
 
