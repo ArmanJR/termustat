@@ -1,0 +1,24 @@
+# Build stage
+FROM node:18-alpine as builder
+
+WORKDIR /app
+
+# Copy package files
+COPY frontend/package*.json ./
+
+# Install dependencies with legacy peer deps flag
+RUN npm install --legacy-peer-deps
+
+# Copy source code
+COPY frontend/ ./
+
+# Build the application
+RUN npm run build
+
+# This stage is just for holding the build artifacts
+FROM alpine:latest
+
+WORKDIR /build
+
+# Copy only the built files from builder
+COPY --from=builder /app/build ./

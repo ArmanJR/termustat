@@ -147,13 +147,6 @@ func main() {
 		}
 	}()
 
-	if err := router.Run(serverAddr); err != nil {
-		log.Fatal("Failed to start server",
-			zap.String("address", serverAddr),
-			zap.Error(err),
-		)
-	}
-
 	// Wait for interrupt signal
 	<-quit
 
