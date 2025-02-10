@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"github.com/armanjr/termustat/api/app"
 	"github.com/armanjr/termustat/api/config"
 	"github.com/armanjr/termustat/api/database"
@@ -13,7 +15,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	stdLog "log"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -120,7 +125,7 @@ func main() {
 		log,
 	)
 
-	// Start server
+	// Setup server
 	serverAddr := ":" + cfg.Port
 	log.Info("Starting server",
 		zap.String("port", cfg.Port),
@@ -128,13 +133,72 @@ func main() {
 		zap.String("timezone", cfg.Timezone),
 	)
 
+	// Setup signal handling
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	// Start server in a goroutine
+	go func() {
+		if err := router.Run(serverAddr); err != nil {
+			log.Fatal("Failed to start server",
+				zap.String("address", serverAddr),
+				zap.Error(err),
+			)
+		}
+	}()
+
 	if err := router.Run(serverAddr); err != nil {
 		log.Fatal("Failed to start server",
 			zap.String("address", serverAddr),
 			zap.Error(err),
 		)
 	}
+
+	// Wait for interrupt signal
+	<-quit
+
+	// Handle graceful shutdown
+	gracefulShutdown(application)
 }
 
-// gracefulShutdown handles graceful shutdown of the server
-func gracefulShutdown(app *app.App) {}
+func gracefulShutdown(app *app.App) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	app.Logger.Info("Initiating graceful shutdown...")
+
+	// Close database connection
+	if app.DB != nil {
+		sqlDB, err := app.DB.DB()
+		if err != nil {
+			app.Logger.Error("Error getting underlying SQL DB instance", zap.Error(err))
+		} else {
+			if err := sqlDB.Close(); err != nil {
+				app.Logger.Error("Error closing database connection", zap.Error(err))
+			} else {
+				app.Logger.Info("Database connection closed successfully")
+			}
+		}
+	}
+
+	// Shutdown the HTTP server
+	if app.Router != nil {
+		srv := &http.Server{
+			Addr:    ":" + app.Config.Port,
+			Handler: app.Router,
+		}
+
+		// Shutdown the server with context timeout
+		if err := srv.Shutdown(ctx); err != nil {
+			app.Logger.Error("Server forced to shutdown", zap.Error(err))
+		} else {
+			app.Logger.Info("Server shutdown completed successfully")
+		}
+	}
+
+	if err := app.Logger.Sync(); err != nil {
+		fmt.Printf("Error flushing logs: %v\n", err)
+	}
+
+	app.Logger.Info("Graceful shutdown completed")
+}
