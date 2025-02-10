@@ -1,4 +1,5 @@
 .idea/
+api/.env
 .env
 
 # Created by https://www.toptal.com/developers/gitignore/api/goland,go,macos
