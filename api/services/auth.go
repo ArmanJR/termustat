@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/armanjr/termustat/api/dto"
+	"github.com/armanjr/termustat/api/infrastructure/mailer"
 	"github.com/armanjr/termustat/api/models"
 	"github.com/armanjr/termustat/api/repositories"
 	"github.com/armanjr/termustat/api/utils"
@@ -24,7 +25,7 @@ type AuthService interface {
 
 type authService struct {
 	repo        repositories.AuthRepository
-	mailer      MailerService
+	mailer      mailer.Mailer
 	logger      *zap.Logger
 	jwtSecret   string
 	jwtTTL      time.Duration
@@ -33,7 +34,7 @@ type authService struct {
 
 func NewAuthService(
 	repo repositories.AuthRepository,
-	mailer MailerService,
+	mailer mailer.Mailer,
 	logger *zap.Logger,
 	jwtSecret string,
 	jwtTTL time.Duration,
@@ -77,7 +78,19 @@ func (s *authService) Register(req *dto.RegisterServiceRequest) error {
 		return errors.Wrapf(err, "failed to create user")
 	}
 
-	if err := s.sendVerificationEmail(user); err != nil {
+	// Create and store the email verification record.
+	token := uuid.NewString()
+	verification := &models.EmailVerification{
+		Token:     token,
+		UserID:    user.ID,
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+	if err := s.repo.CreateEmailVerification(verification); err != nil {
+		return errors.Wrapf(err, "failed to create email verification")
+	}
+
+	// Pass the token to the mailer to include it in the verification email.
+	if err := s.mailer.SendVerificationEmail(user, token); err != nil {
 		s.logger.Error("Failed to send verification email",
 			zap.String("email", user.Email),
 			zap.Error(err))

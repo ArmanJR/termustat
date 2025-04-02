@@ -9,7 +9,6 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
-	"time"
 )
 
 type AdminUserService interface {
@@ -273,53 +272,6 @@ func (s *adminUserService) GetByFaculty(facultyID uuid.UUID, pagination *dto.Pag
 		Page:  result.Page,
 		Limit: result.Limit,
 	}, nil
-}
-
-func (s *authService) sendVerificationEmail(user *models.User) error {
-	token := uuid.New().String()
-	expiresAt := time.Now().Add(24 * time.Hour)
-
-	verification := &models.EmailVerification{
-		Token:     token,
-		UserID:    user.ID,
-		ExpiresAt: expiresAt,
-	}
-
-	if err := s.repo.CreateEmailVerification(verification); err != nil {
-		s.logger.Error("Failed to create verification record",
-			zap.String("user_id", user.ID.String()),
-			zap.String("operation", "sendVerificationEmail"),
-			zap.Error(err))
-		return fmt.Errorf("failed to reate verification record: %w", err)
-	}
-
-	verificationURL := fmt.Sprintf("%s/verify-email?token=%s", s.frontendURL, token)
-	tplData := struct {
-		Name            string
-		VerificationURL string
-	}{
-		Name:            user.FirstName,
-		VerificationURL: verificationURL,
-	}
-
-	emailContent, err := s.mailer.RenderTemplate("verification_email.html", tplData)
-	if err != nil {
-		s.logger.Error("Failed to render verification email template",
-			zap.String("user_id", user.ID.String()),
-			zap.String("operation", "sendVerificationEmail"),
-			zap.Error(err))
-		return fmt.Errorf("failed to render verification email template: %w", err)
-	}
-
-	if err = s.mailer.SendEmail(user.Email, emailContent.Subject, emailContent.Body); err != nil {
-		s.logger.Error("Failed to send verification email",
-			zap.String("user_id", user.ID.String()),
-			zap.String("operation", "sendVerificationEmail"),
-			zap.Error(err))
-		return fmt.Errorf("failed to send verification email: %w", err)
-	}
-
-	return nil
 }
 
 func (s *authService) sendPasswordResetEmail(user *models.User, token string) error {

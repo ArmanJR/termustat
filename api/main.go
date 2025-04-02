@@ -7,6 +7,7 @@ import (
 	"github.com/armanjr/termustat/api/config"
 	"github.com/armanjr/termustat/api/database"
 	"github.com/armanjr/termustat/api/handlers"
+	"github.com/armanjr/termustat/api/infrastructure/mailer"
 	"github.com/armanjr/termustat/api/logger"
 	"github.com/armanjr/termustat/api/repositories"
 	"github.com/armanjr/termustat/api/routes"
@@ -44,13 +45,13 @@ func main() {
 	}
 
 	// Third-party services
-	mailerConfig := services.MailerConfig{
+	mailerConfig := mailer.MailerConfig{
 		Domain:  cfg.MailgunDomain,
 		APIKey:  cfg.MailgunAPIKey,
 		Sender:  "noreply@" + cfg.MailgunDomain,
 		TplPath: "templates/email/",
 	}
-	mailerService := services.NewMailerService(mailerConfig, log)
+	mailerService := mailer.NewMailer(mailerConfig, log)
 
 	// Initialize database
 	db, err := database.NewDatabase(cfg.GetDatabaseConfig())
