@@ -115,6 +115,7 @@ func main() {
 		Course:     handlers.NewCourseHandler(courseService, log),
 		AdminUser:  handlers.NewAdminUserHandler(adminUserService, log),
 		UserCourse: handlers.NewUserCourseHandler(userCourseService, log),
+		Health:     handlers.NewHealthHandler(log),
 	}
 
 	// Setup routes

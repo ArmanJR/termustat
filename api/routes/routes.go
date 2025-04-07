@@ -17,6 +17,7 @@ type Handlers struct {
 	Course     *handlers.CourseHandler
 	AdminUser  *handlers.AdminUserHandler
 	UserCourse *handlers.UserCourseHandler
+	Health     *handlers.HealthHandler
 }
 
 type Middlewares struct {
@@ -34,6 +35,10 @@ func SetupRoutes(app *app.App, h *Handlers, authService services.AuthService, ad
 	// Public routes
 	public := app.Router.Group("/v1")
 	{
+		// Health check route
+		public.GET("/health", h.Health.HealthCheck)
+
+		// User routes
 		auth := public.Group("/auth")
 		{
 			auth.POST("/register", h.Auth.Register)
