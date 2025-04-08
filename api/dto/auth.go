@@ -9,8 +9,8 @@ type RegisterRequest struct {
 	StudentID    string `json:"student_id" binding:"required"`
 	FirstName    string `json:"first_name" binding:"required"`
 	LastName     string `json:"last_name" binding:"required"`
-	UniversityID string `json:"university_id" binding:"required,uuid4"`
-	FacultyID    string `json:"faculty_id" binding:"required,uuid4"`
+	UniversityID string `json:"university_id" binding:"omitempty,uuid4"`
+	FacultyID    string `json:"faculty_id" binding:"omitempty,uuid4"`
 	Gender       string `json:"gender" binding:"required,oneof=male female"`
 }
 

@@ -1,0 +1,24 @@
+### 1. Register a new user
+POST http://localhost:8080/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "strongpassword",
+  "student_id": "ST12345",
+  "first_name": "Test",
+  "last_name": "User",
+  "gender": "male"
+}
+
+
+### 2. Change `email_verified` in database to true (also if they are admin, change `is_admin` to true)
+
+### 3. Login and get token
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "strongpassword"
+}

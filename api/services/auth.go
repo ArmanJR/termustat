@@ -10,6 +10,7 @@ import (
 	"github.com/mailgun/errors"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -51,9 +52,13 @@ func NewAuthService(
 }
 
 func (s *authService) Register(req *dto.RegisterServiceRequest) error {
-	_, err := s.repo.FindUserByEmailOrStudentID(req.Email, req.StudentID)
-	if err == nil {
+	user, err := s.repo.FindUserByEmailOrStudentID(req.Email, req.StudentID)
+	if err == nil && user != nil {
 		return errors.New("email or student ID already exists")
+	}
+	// Handle err not being nil. If err is gorm.ErrRecordNotFound, then no duplicate exists.
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return err
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -61,7 +66,7 @@ func (s *authService) Register(req *dto.RegisterServiceRequest) error {
 		return errors.Wrapf(err, "failed to hash password")
 	}
 
-	user := &models.User{
+	user = &models.User{
 		Email:         req.Email,
 		PasswordHash:  string(hashedPassword),
 		StudentID:     req.StudentID,

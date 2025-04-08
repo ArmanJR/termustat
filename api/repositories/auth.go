@@ -41,11 +41,12 @@ func (r *authRepository) FindUserByEmail(email string) (*models.User, error) {
 }
 
 func (r *authRepository) FindUserByEmailOrStudentID(email, studentID string) (*models.User, error) {
-	var count int64
-	err := r.db.Model(&models.User{}).
-		Where("email = ? OR student_id = ?", email, studentID).
-		Count(&count).Error
-	return nil, err
+	var user models.User
+	err := r.db.Where("email = ? OR student_id = ?", email, studentID).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 func (r *authRepository) FindUserByID(id uuid.UUID) (*models.User, error) {

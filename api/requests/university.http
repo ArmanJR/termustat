@@ -1,0 +1,16 @@
+### [get token by login as an admin user]
+@auth_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOWQzNDY0NjEtMDFiNi00ZDFiLTkyNTEtY2E0ZjIyNDQ4NTQ1IiwiaXNzIjoidGVybXVzdGF0Iiwic3ViIjoiOWQzNDY0NjEtMDFiNi00ZDFiLTkyNTEtY2E0ZjIyNDQ4NTQ1IiwiZXhwIjoxNzQ0MTM5OTU4LCJuYmYiOjE3NDQxMzYzNTgsImlhdCI6MTc0NDEzNjM1OH0.sWZECECcF5pUj9ErwoLKi1R1kdLHDtp2blrXEF0yD6M
+
+### Add universities
+### Kharazmi
+POST http://localhost:8080/api/v1/admin/universities
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{ "name_en": "Kharazmi", "name_fa": "خوارزمی", "is_active": true }
+
+### Beheshti
+POST http://localhost:8080/api/v1/admin/universities
+Authorization: Bearer {{auth_token}}
+
+{ "name_en": "Beheshti", "name_fa": "بهشتی", "is_active": true }

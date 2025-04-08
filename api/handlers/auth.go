@@ -31,14 +31,36 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
+	// Parse UniversityID if provided
+	var universityID uuid.UUID
+	if req.UniversityID != "" {
+		uid, err := uuid.Parse(req.UniversityID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid university_id"})
+			return
+		}
+		universityID = uid
+	}
+
+	// Parse FacultyID if provided
+	var facultyID uuid.UUID
+	if req.FacultyID != "" {
+		fid, err := uuid.Parse(req.FacultyID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid faculty_id"})
+			return
+		}
+		facultyID = fid
+	}
+
 	serviceReq := &dto.RegisterServiceRequest{
 		Email:        req.Email,
 		Password:     req.Password,
 		StudentID:    req.StudentID,
 		FirstName:    req.FirstName,
 		LastName:     req.LastName,
-		UniversityID: uuid.MustParse(req.UniversityID),
-		FacultyID:    uuid.MustParse(req.FacultyID),
+		UniversityID: universityID,
+		FacultyID:    facultyID,
 		Gender:       req.Gender,
 	}
 
