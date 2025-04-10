@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   frontend:
     build:
@@ -18,4 +16,4 @@ services:
     command: npm start
 
 # To run:
-# $ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+# $ docker compose -f docker-compose.yml -f docker-compose.dev.yml up
