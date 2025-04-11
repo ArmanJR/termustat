@@ -12,6 +12,7 @@ import (
 	"github.com/armanjr/termustat/api/repositories"
 	"github.com/armanjr/termustat/api/routes"
 	"github.com/armanjr/termustat/api/services"
+	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -96,6 +97,16 @@ func main() {
 	// Setup middleware
 	router.Use(ginzap.Ginzap(log, time.RFC3339, true))
 	router.Use(ginzap.RecoveryWithZap(log, true))
+
+	// Allow frontend CORS
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{cfg.FrontendURL},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	// Initialize application
 	application := &app.App{

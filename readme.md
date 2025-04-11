@@ -16,6 +16,14 @@ Read ["From Hesarak to Abbaspur"](https://t.me/sefroyekpub/43): The story of Ter
 
 This repository is an ongoing rewrite of the original Termustat. It's currently not ready for production, please check back later for a full guide. Meanwhile, you are more than welcome to contribute.
 
+### Development
+
+Running via Docker (to build, add `--build`)
+
+```shell
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+```
+
 ## Architecture
 
 ### Backend
