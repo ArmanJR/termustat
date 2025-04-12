@@ -30,6 +30,9 @@ type Config struct {
 
 	// Frontend
 	FrontendURL string `mapstructure:"FRONTEND_URL"`
+
+	// Nginx
+	NginxURL string `mapstructure:"NGINX_URL"`
 }
 
 // DatabaseConfig Database configuration struct
