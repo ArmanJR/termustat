@@ -7,15 +7,15 @@ import { Link } from "react-router-dom";
 
 const AdminLoginPage = () => {
   const [formData, setFormData] = useState({
-    user_email: "",
-    user_password: "",
+    email: "",
+    password: "",
   });
 
   // Update state whenever user types into the input fields
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [e.target.name.slice(5)]: e.target.value,
     });
   };
 
@@ -40,7 +40,7 @@ const AdminLoginPage = () => {
             label="ایمیل"
             type="email"
             name="user_email"
-            value={formData.user_email}
+            value={formData.email}
             onChange={handleChange}
             required
           />
@@ -48,7 +48,7 @@ const AdminLoginPage = () => {
             label="رمز عبور"
             type="password"
             name="user_password"
-            value={formData.user_password}
+            value={formData.password}
             onChange={handleChange}
             required
           />
