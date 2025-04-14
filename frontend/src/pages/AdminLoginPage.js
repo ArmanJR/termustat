@@ -4,6 +4,7 @@ import Input from "../components/form/Input";
 import Button from "../components/form/Button";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { adminLogin } from "../api/adminAuth";
 
 const AdminLoginPage = () => {
   const [formData, setFormData] = useState({
@@ -22,6 +23,7 @@ const AdminLoginPage = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    adminLogin(formData);
   };
 
   return (
