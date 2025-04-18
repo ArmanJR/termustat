@@ -29,6 +29,13 @@ type AdminUpdatePasswordRequest struct {
 	NewPassword string `json:"new_password" binding:"required,min=8"`
 }
 
+type AdminUserListResponse struct {
+	Items []AdminUserResponse `json:"items"`
+	Total int64               `json:"total"`
+	Page  int                 `json:"page"`
+	Limit int                 `json:"limit"`
+}
+
 type AdminUserResponse struct {
 	ID            uuid.UUID `json:"id"`
 	Email         string    `json:"email"`

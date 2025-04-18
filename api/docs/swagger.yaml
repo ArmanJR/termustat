@@ -1,0 +1,1814 @@
+basePath: /api/v1
+definitions:
+  dto.AdminUpdateUserRequest:
+    properties:
+      faculty_id:
+        type: string
+      first_name:
+        type: string
+      gender:
+        enum:
+        - male
+        - female
+        type: string
+      last_name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      university_id:
+        type: string
+    type: object
+  dto.AdminUserListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.AdminUserResponse'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.AdminUserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      email_verified:
+        type: boolean
+      faculty_id:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      id:
+        type: string
+      is_admin:
+        type: boolean
+      last_name:
+        type: string
+      student_id:
+        type: string
+      university_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.CourseResponse:
+    properties:
+      capacity:
+        type: integer
+      code:
+        type: string
+      course_times:
+        items:
+          $ref: '#/definitions/dto.CourseTimeResponse'
+        type: array
+      created_at:
+        type: string
+      exam_end:
+        type: string
+      exam_start:
+        type: string
+      faculty_id:
+        type: string
+      faculty_name_en:
+        type: string
+      faculty_name_fa:
+        type: string
+      gender_restriction:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      professor_id:
+        type: string
+      professor_name:
+        type: string
+      semester_id:
+        type: string
+      university_id:
+        type: string
+      updated_at:
+        type: string
+      weight:
+        type: integer
+    type: object
+  dto.CourseTimeResponse:
+    properties:
+      course_id:
+        type: string
+      day_of_week:
+        type: integer
+      end_time:
+        type: string
+      id:
+        type: string
+      start_time:
+        type: string
+    type: object
+  dto.CreateCourseDTO:
+    properties:
+      capacity:
+        minimum: 0
+        type: integer
+      code:
+        type: string
+      date_exam:
+        type: string
+      faculty_id:
+        type: string
+      gender:
+        enum:
+        - male
+        - female
+        - mixed
+        type: string
+      name:
+        type: string
+      professor_name:
+        type: string
+      semester_id:
+        type: string
+      time_exam:
+        type: string
+      times:
+        items:
+          type: string
+        type: array
+      university_id:
+        type: string
+      weight:
+        minimum: 1
+        type: integer
+    required:
+    - code
+    - date_exam
+    - faculty_id
+    - gender
+    - name
+    - professor_name
+    - semester_id
+    - time_exam
+    - times
+    - university_id
+    - weight
+    type: object
+  dto.CreateFacultyDTO:
+    properties:
+      is_active:
+        type: boolean
+      name_en:
+        type: string
+      name_fa:
+        type: string
+      short_code:
+        maxLength: 10
+        type: string
+      university_id:
+        type: string
+    required:
+    - name_en
+    - name_fa
+    - short_code
+    - university_id
+    type: object
+  dto.CreateProfessorRequest:
+    properties:
+      name:
+        type: string
+      university_id:
+        type: string
+    required:
+    - name
+    - university_id
+    type: object
+  dto.CreateSemesterRequest:
+    properties:
+      term:
+        enum:
+        - spring
+        - fall
+        type: string
+      year:
+        maximum: 2200
+        minimum: 1900
+        type: integer
+    required:
+    - term
+    - year
+    type: object
+  dto.CreateUniversityRequest:
+    properties:
+      is_active:
+        type: boolean
+      name_en:
+        type: string
+      name_fa:
+        type: string
+    required:
+    - is_active
+    - name_en
+    - name_fa
+    type: object
+  dto.ErrorResponse:
+    properties:
+      error:
+        description: |-
+          error message
+          example: invalid request format
+        type: string
+    type: object
+  dto.FacultyResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name_en:
+        type: string
+      name_fa:
+        type: string
+      short_code:
+        type: string
+      university_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  dto.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.ProfessorResponse:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      normalizedName:
+        type: string
+      universityID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  dto.RegisterRequest:
+    properties:
+      email:
+        type: string
+      faculty_id:
+        type: string
+      first_name:
+        type: string
+      gender:
+        enum:
+        - male
+        - female
+        type: string
+      last_name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      student_id:
+        type: string
+      university_id:
+        type: string
+    required:
+    - email
+    - first_name
+    - gender
+    - last_name
+    - password
+    - student_id
+    type: object
+  dto.ResetPasswordRequest:
+    properties:
+      password:
+        minLength: 8
+        type: string
+      token:
+        type: string
+    required:
+    - password
+    - token
+    type: object
+  dto.SemesterResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      term:
+        type: string
+      updated_at:
+        type: string
+      year:
+        type: integer
+    type: object
+  dto.UniversityResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name_en:
+        type: string
+      name_fa:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.UpdateCourseDTO:
+    properties:
+      capacity:
+        minimum: 0
+        type: integer
+      code:
+        type: string
+      date_exam:
+        type: string
+      faculty_id:
+        type: string
+      gender:
+        enum:
+        - male
+        - female
+        - mixed
+        type: string
+      name:
+        type: string
+      professor_name:
+        type: string
+      semester_id:
+        type: string
+      time_exam:
+        type: string
+      times:
+        items:
+          type: string
+        type: array
+      university_id:
+        type: string
+      weight:
+        minimum: 1
+        type: integer
+    required:
+    - code
+    - date_exam
+    - faculty_id
+    - gender
+    - name
+    - professor_name
+    - semester_id
+    - time_exam
+    - times
+    - university_id
+    - weight
+    type: object
+  dto.UpdateFacultyDTO:
+    properties:
+      is_active:
+        type: boolean
+      name_en:
+        type: string
+      name_fa:
+        type: string
+      short_code:
+        maxLength: 10
+        type: string
+      university_id:
+        type: string
+    required:
+    - name_en
+    - name_fa
+    - short_code
+    - university_id
+    type: object
+  dto.UpdateSemesterRequest:
+    properties:
+      term:
+        enum:
+        - spring
+        - fall
+        type: string
+      year:
+        maximum: 2200
+        minimum: 1900
+        type: integer
+    required:
+    - term
+    - year
+    type: object
+  dto.UpdateUniversityRequest:
+    properties:
+      is_active:
+        type: boolean
+      name_en:
+        type: string
+      name_fa:
+        type: string
+    required:
+    - is_active
+    - name_en
+    - name_fa
+    type: object
+  dto.VerifyEmailRequest:
+    properties:
+      token:
+        type: string
+    required:
+    - token
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  title: Termustat API
+  version: "1.0"
+paths:
+  /courses:
+    get:
+      consumes:
+      - application/json
+      description: Searches for courses by faculty, professor, or keyword
+      parameters:
+      - description: Filter by Faculty ID
+        in: query
+        name: faculty_id
+        type: string
+      - description: Filter by Professor ID
+        in: query
+        name: professor_id
+        type: string
+      - description: Full‐text search query
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.CourseResponse'
+            type: array
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Search courses
+      tags:
+      - courses
+    post:
+      consumes:
+      - application/json
+      description: Creates a new course in the system
+      parameters:
+      - description: Course payload
+        in: body
+        name: course
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCourseDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.CourseResponse'
+        "400":
+          description: Invalid request or not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Conflict (e.g. duplicate code)
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Create a course
+      tags:
+      - courses
+  /courses/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes the course identified by its ID
+      parameters:
+      - description: Course ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: Course deleted successfully'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid ID format
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Course not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Delete a course
+      tags:
+      - courses
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a course by its ID
+      parameters:
+      - description: Course ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CourseResponse'
+        "400":
+          description: Invalid ID format
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Course not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Get a course
+      tags:
+      - courses
+    put:
+      consumes:
+      - application/json
+      description: Updates the course identified by its ID
+      parameters:
+      - description: Course ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated course payload
+        in: body
+        name: course
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateCourseDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CourseResponse'
+        "400":
+          description: Invalid request or not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Course not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update a course
+      tags:
+      - courses
+  /faculties/{facultyID}/courses:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all courses under the specified faculty
+      parameters:
+      - description: Faculty ID
+        in: path
+        name: facultyID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.CourseResponse'
+            type: array
+        "400":
+          description: Invalid faculty ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List courses by faculty
+      tags:
+      - courses
+  /v1/admin/faculties:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new faculty under a university
+      parameters:
+      - description: Create faculty payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateFacultyDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.FacultyResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: University not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Conflict (e.g. short code exists)
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Failed to create faculty
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create Faculty
+      tags:
+      - faculties
+  /v1/admin/faculties/{id}:
+    delete:
+      description: Deletes a faculty from the system
+      parameters:
+      - description: Faculty ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: Faculty deleted successfully'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid faculty ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Faculty not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Failed to delete faculty
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Faculty
+      tags:
+      - faculties
+    get:
+      description: Retrieves a faculty by its unique ID
+      parameters:
+      - description: Faculty ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.FacultyResponse'
+        "400":
+          description: Invalid faculty ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Faculty not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Failed to get faculty
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Faculty
+      tags:
+      - faculties
+    put:
+      consumes:
+      - application/json
+      description: Updates the details of an existing faculty
+      parameters:
+      - description: Faculty ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update faculty payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateFacultyDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.FacultyResponse'
+        "400":
+          description: Invalid request body or ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Faculty not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Conflict updating faculty
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Failed to update faculty
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update Faculty
+      tags:
+      - faculties
+  /v1/admin/professors:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new professor under a university, or returns existing
+        one
+      parameters:
+      - description: Create professor payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateProfessorRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ProfessorResponse'
+        "400":
+          description: Invalid payload or university not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create Professor
+      tags:
+      - professors
+  /v1/admin/professors/{id}:
+    get:
+      description: Retrieves a professor by their unique ID
+      parameters:
+      - description: Professor ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ProfessorResponse'
+        "400":
+          description: Invalid professor ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Professor not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Professor
+      tags:
+      - professors
+  /v1/admin/semesters:
+    get:
+      description: Retrieves all semesters, ordered by most recent
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.SemesterResponse'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List Semesters
+      tags:
+      - semesters
+    post:
+      consumes:
+      - application/json
+      description: Creates a new semester with year and term
+      parameters:
+      - description: Create semester payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateSemesterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.SemesterResponse'
+        "400":
+          description: Invalid input or duplicate year+term
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Semester already exists
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create Semester
+      tags:
+      - semesters
+  /v1/admin/semesters/{id}:
+    delete:
+      description: Deletes a semester by its ID
+      parameters:
+      - description: Semester ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: Semester deleted successfully'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid semester ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Semester not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Semester
+      tags:
+      - semesters
+    get:
+      description: Retrieves a semester by its ID
+      parameters:
+      - description: Semester ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SemesterResponse'
+        "400":
+          description: Invalid semester ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Semester not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Semester
+      tags:
+      - semesters
+    put:
+      consumes:
+      - application/json
+      description: Updates the year or term of an existing semester
+      parameters:
+      - description: Semester ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update semester payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateSemesterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SemesterResponse'
+        "400":
+          description: Invalid input or ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Semester not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Duplicate semester
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update Semester
+      tags:
+      - semesters
+  /v1/admin/universities:
+    get:
+      description: Retrieves all universities
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.UniversityResponse'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List Universities
+      tags:
+      - universities
+    post:
+      consumes:
+      - application/json
+      description: Creates a new university
+      parameters:
+      - description: Create university payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateUniversityRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.UniversityResponse'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Conflict (name already exists)
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create University
+      tags:
+      - universities
+  /v1/admin/universities/{id}:
+    delete:
+      description: Deletes the specified university
+      parameters:
+      - description: University ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: University deleted successfully'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid university ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: University not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete University
+      tags:
+      - universities
+    get:
+      description: Retrieves a university by its ID
+      parameters:
+      - description: University ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UniversityResponse'
+        "400":
+          description: Invalid university ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: University not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get University
+      tags:
+      - universities
+    put:
+      consumes:
+      - application/json
+      description: Updates the specified university’s details
+      parameters:
+      - description: University ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update university payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateUniversityRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UniversityResponse'
+        "400":
+          description: Invalid input or ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: University not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update University
+      tags:
+      - universities
+  /v1/admin/universities/{id}/faculties:
+    get:
+      description: Retrieves all faculties under the specified university
+      parameters:
+      - description: University ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.FacultyResponse'
+            type: array
+        "400":
+          description: Invalid university ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: University not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Failed to get faculties
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List Faculties
+      tags:
+      - faculties
+  /v1/admin/universities/{id}/faculty/{short_code}:
+    get:
+      description: Retrieves a faculty within a university by its short code
+      parameters:
+      - description: University ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Faculty short code
+        in: path
+        name: short_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.FacultyResponse'
+        "400":
+          description: Invalid university ID or short code missing
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Faculty not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Failed to get faculty
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Faculty by Short Code
+      tags:
+      - faculties
+  /v1/admin/universities/{id}/professors:
+    get:
+      description: Retrieves all professors associated with a given university
+      parameters:
+      - description: University ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.ProfessorResponse'
+            type: array
+        "400":
+          description: Invalid university ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List Professors
+      tags:
+      - professors
+  /v1/admin/users:
+    get:
+      description: Returns a paginated list of all admin users
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: paginated list of AdminUserResponse
+          schema:
+            $ref: '#/definitions/dto.AdminUserListResponse'
+        "500":
+          description: Failed to fetch users
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List users
+      tags:
+      - users
+  /v1/admin/users/{id}:
+    delete:
+      description: Deletes an admin user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: User deleted successfully'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Failed to delete user
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete user
+      tags:
+      - users
+    get:
+      description: Retrieves a single admin user by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.AdminUserResponse'
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Failed to get user
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing admin user's fields (and optionally password)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated user data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AdminUpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.AdminUserResponse'
+        "400":
+          description: Invalid request or user ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Conflict (e.g. duplicate student ID)
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Failed to update user
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user
+      tags:
+      - users
+  /v1/auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Sends a password reset link if the email exists
+      parameters:
+      - description: Forgot password payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: If the email exists, a reset link will be sent'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid payload
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Failed to process request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Forgot Password
+      tags:
+      - auth
+  /v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates user and returns a JWT token
+      parameters:
+      - description: Login payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'token: JWT token'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid payload
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Email not verified
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Failed to login
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Login
+      tags:
+      - auth
+  /v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account and sends a verification email
+      parameters:
+      - description: Registration payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'message: Registration successful'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid payload or IDs
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: email or student ID already exists
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Failed to register user
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Register
+      tags:
+      - auth
+  /v1/auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Resets the user's password using the provided token
+      parameters:
+      - description: Reset password payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: Password reset successful'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid payload or token
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Failed to reset password
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Reset Password
+      tags:
+      - auth
+  /v1/auth/verify-email:
+    post:
+      consumes:
+      - application/json
+      description: Verifies a user's email using the provided token
+      parameters:
+      - description: Verification payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.VerifyEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: Email verified successfully'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid or expired token
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Failed to verify email
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Verify Email
+      tags:
+      - auth
+  /v1/health:
+    get:
+      description: Returns a 200 OK if the service is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'status: ok'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health Check
+      tags:
+      - health
+  /v1/user/courses/select:
+    post:
+      consumes:
+      - application/json
+      description: Adds a course to the current user's schedule
+      parameters:
+      - description: course_id and semester_id
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: Course added successfully'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Course or semester not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Conflict (e.g. already selected)
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Select Course
+      tags:
+      - user-courses
+  /v1/user/courses/select/{courseId}:
+    delete:
+      description: Removes a course from the current user's schedule
+      parameters:
+      - description: Course ID
+        in: path
+        name: courseId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: Course removed successfully'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid course ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Course not found in user's schedule
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remove Course
+      tags:
+      - user-courses
+  /v1/user/courses/selected:
+    get:
+      description: Retrieves all courses selected by the user for a given semester
+      parameters:
+      - description: Semester ID
+        in: query
+        name: semester_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.CourseResponse'
+            type: array
+        "400":
+          description: Invalid semester ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get User Courses
+      tags:
+      - user-courses
+  /v1/user/courses/validate:
+    get:
+      description: Checks if adding the selected course causes any time conflicts
+      parameters:
+      - description: Course ID
+        in: query
+        name: course_id
+        required: true
+        type: string
+      - description: Semester ID
+        in: query
+        name: semester_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: No time conflicts found'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Time conflict exists
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Validate Time Conflicts
+      tags:
+      - user-courses
+  /v1/user/me:
+    get:
+      description: Retrieves information about the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.AdminUserResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Current User
+      tags:
+      - auth
+swagger: "2.0"

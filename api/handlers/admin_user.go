@@ -24,6 +24,16 @@ func NewAdminUserHandler(adminUserService services.AdminUserService, logger *zap
 }
 
 // GetAll returns a paginated list of all users
+// @Summary      List users
+// @Description  Returns a paginated list of all admin users
+// @Tags         users
+// @Produce      json
+// @Param        page   query     int                false  	"Page number"        default(1)
+// @Param        limit  query     int                false  	"Items per page"     default(10)
+// @Success      200    {object}  dto.AdminUserListResponse  	"paginated list of AdminUserResponse"
+// @Failure      500    {object}  dto.ErrorResponse  			"Failed to fetch users"
+// @Router       /v1/admin/users [get]
+// @Security     BearerAuth
 func (h *AdminUserHandler) GetAll(c *gin.Context) {
 	pagination := &dto.PaginationQuery{
 		Page:  parseInt(c.DefaultQuery("page", "1")),
@@ -50,6 +60,17 @@ func (h *AdminUserHandler) GetAll(c *gin.Context) {
 }
 
 // Get returns a single user by ID
+// @Summary      Get user
+// @Description  Retrieves a single admin user by their ID
+// @Tags         users
+// @Produce      json
+// @Param        id   path      string              true  "User ID"
+// @Success      200  {object}  dto.AdminUserResponse
+// @Failure      400  {object}  dto.ErrorResponse   "Invalid user ID"
+// @Failure      404  {object}  dto.ErrorResponse   "User not found"
+// @Failure      500  {object}  dto.ErrorResponse   "Failed to get user"
+// @Router       /v1/admin/users/{id} [get]
+// @Security     BearerAuth
 func (h *AdminUserHandler) Get(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -77,6 +98,20 @@ func (h *AdminUserHandler) Get(c *gin.Context) {
 }
 
 // Update handles user updates by admin
+// @Summary      Update user
+// @Description  Updates an existing admin user's fields (and optionally password)
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        id    path      string                     true  "User ID"
+// @Param        body  body      dto.AdminUpdateUserRequest true  "Updated user data"
+// @Success      200   {object}  dto.AdminUserResponse
+// @Failure      400   {object}  dto.ErrorResponse          "Invalid request or user ID"
+// @Failure      404   {object}  dto.ErrorResponse          "User not found"
+// @Failure      409   {object}  dto.ErrorResponse          "Conflict (e.g. duplicate student ID)"
+// @Failure      500   {object}  dto.ErrorResponse          "Failed to update user"
+// @Router       /v1/admin/users/{id} [put]
+// @Security     BearerAuth
 func (h *AdminUserHandler) Update(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -140,6 +175,17 @@ func (h *AdminUserHandler) Update(c *gin.Context) {
 }
 
 // Delete handles user deletion by admin
+// @Summary      Delete user
+// @Description  Deletes an admin user by ID
+// @Tags         users
+// @Produce      json
+// @Param        id   path      string              true  "User ID"
+// @Success      200  {object}  map[string]string   "message: User deleted successfully"
+// @Failure      400  {object}  dto.ErrorResponse   "Invalid user ID"
+// @Failure      404  {object}  dto.ErrorResponse   "User not found"
+// @Failure      500  {object}  dto.ErrorResponse   "Failed to delete user"
+// @Router       /v1/admin/users/{id} [delete]
+// @Security     BearerAuth
 func (h *AdminUserHandler) Delete(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {

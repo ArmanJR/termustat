@@ -1,15 +1,30 @@
-# Build stage
-FROM golang:1.23.5-alpine AS builder
+FROM golang:1.23-alpine AS builder
+
+RUN apk add --no-cache git
+RUN go install github.com/swaggo/swag/cmd/swag@latest
+
 WORKDIR /app
-COPY .. .
+
+COPY go.mod go.sum ./
 RUN go mod download
+
+COPY . .
+
+RUN swag init -g api/main.go -o api/docs
+
 RUN CGO_ENABLED=0 GOOS=linux go build -o termustat api/main.go
 
-# Runtime stage
-FROM alpine:3.21.2
+FROM alpine:3.21
+RUN apk add --no-cache ca-certificates
+
 WORKDIR /app
+
 COPY --from=builder /app/termustat .
-COPY .env /app/.env
+
+COPY .env .
+COPY api/templates ./api/templates
+COPY api/database/migrations ./api/database/migrations
 
 EXPOSE 80
+
 ENTRYPOINT ["./termustat"]

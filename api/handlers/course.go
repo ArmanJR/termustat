@@ -22,7 +22,18 @@ func NewCourseHandler(service services.CourseService, logger *zap.Logger) *Cours
 	}
 }
 
-// Create handles the creation of a new course
+// Create a new course
+// @Summary      Create a course
+// @Description  Creates a new course in the system
+// @Tags         courses
+// @Accept       json
+// @Produce      json
+// @Param        course  body      dto.CreateCourseDTO  true   "Course payload"
+// @Success      201     {object}  dto.CourseResponse
+// @Failure      400     {object}  dto.ErrorResponse     "Invalid request or not found"
+// @Failure      409     {object}  dto.ErrorResponse     "Conflict (e.g. duplicate code)"
+// @Failure      500     {object}  dto.ErrorResponse     "Internal server error"
+// @Router       /courses [post]
 func (h *CourseHandler) Create(c *gin.Context) {
 	var req dto.CreateCourseDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -53,6 +64,17 @@ func (h *CourseHandler) Create(c *gin.Context) {
 }
 
 // Get retrieves a course by ID
+// @Summary      Get a course
+// @Description  Retrieves a course by its ID
+// @Tags         courses
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string            true  "Course ID"
+// @Success      200  {object}  dto.CourseResponse
+// @Failure      400  {object}  dto.ErrorResponse  "Invalid ID format"
+// @Failure      404  {object}  dto.ErrorResponse  "Course not found"
+// @Failure      500  {object}  dto.ErrorResponse  "Internal server error"
+// @Router       /courses/{id} [get]
 func (h *CourseHandler) Get(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -80,6 +102,16 @@ func (h *CourseHandler) Get(c *gin.Context) {
 }
 
 // GetByFaculty retrieves all courses for a faculty
+// @Summary      List courses by faculty
+// @Description  Retrieves all courses under the specified faculty
+// @Tags         courses
+// @Accept       json
+// @Produce      json
+// @Param        facultyID  path      string            true  "Faculty ID"
+// @Success      200        {array}   dto.CourseResponse
+// @Failure      400        {object}  dto.ErrorResponse  "Invalid faculty ID"
+// @Failure      500        {object}  dto.ErrorResponse  "Internal server error"
+// @Router       /faculties/{facultyID}/courses [get]
 func (h *CourseHandler) GetByFaculty(c *gin.Context) {
 	facultyID, err := uuid.Parse(c.Param("facultyID"))
 	if err != nil {
@@ -102,6 +134,19 @@ func (h *CourseHandler) GetByFaculty(c *gin.Context) {
 }
 
 // Update handles course updates
+// @Summary      Update a course
+// @Description  Updates the course identified by its ID
+// @Tags         courses
+// @Accept       json
+// @Produce      json
+// @Param        id      path      string              true  "Course ID"
+// @Param        course  body      dto.UpdateCourseDTO true  "Updated course payload"
+// @Success      200     {object}  dto.CourseResponse
+// @Failure      400     {object}  dto.ErrorResponse     "Invalid request or not found"
+// @Failure      404     {object}  dto.ErrorResponse     "Course not found"
+// @Failure      409     {object}  dto.ErrorResponse     "Conflict"
+// @Failure      500     {object}  dto.ErrorResponse     "Internal server error"
+// @Router       /courses/{id} [put]
 func (h *CourseHandler) Update(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -141,6 +186,17 @@ func (h *CourseHandler) Update(c *gin.Context) {
 }
 
 // Delete handles course deletion
+// @Summary      Delete a course
+// @Description  Deletes the course identified by its ID
+// @Tags         courses
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string            true  "Course ID"
+// @Success      200  {object}  map[string]string  "message: Course deleted successfully"
+// @Failure      400  {object}  dto.ErrorResponse  "Invalid ID format"
+// @Failure      404  {object}  dto.ErrorResponse  "Course not found"
+// @Failure      500  {object}  dto.ErrorResponse  "Internal server error"
+// @Router       /courses/{id} [delete]
 func (h *CourseHandler) Delete(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -167,6 +223,18 @@ func (h *CourseHandler) Delete(c *gin.Context) {
 }
 
 // Search handles course search with filters
+// @Summary      Search courses
+// @Description  Searches for courses by faculty, professor, or keyword
+// @Tags         courses
+// @Accept       json
+// @Produce      json
+// @Param        faculty_id    query     string  false  "Filter by Faculty ID"
+// @Param        professor_id  query     string  false  "Filter by Professor ID"
+// @Param        q             query     string  false  "Full‐text search query"
+// @Success      200           {array}   dto.CourseResponse
+// @Failure      400           {object}  dto.ErrorResponse  "Invalid query parameters"
+// @Failure      500           {object}  dto.ErrorResponse  "Internal server error"
+// @Router       /courses [get]
 func (h *CourseHandler) Search(c *gin.Context) {
 	var filters dto.CourseSearchFilters
 	if err := c.ShouldBindQuery(&filters); err != nil {

@@ -21,6 +21,18 @@ func NewAuthHandler(authService services.AuthService, logger *zap.Logger) *AuthH
 	}
 }
 
+// Register a new user
+// @Summary      Register
+// @Description  Creates a new user account and sends a verification email
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        body  body      dto.RegisterRequest  true  "Registration payload"
+// @Success      201   {object}  map[string]string    "message: Registration successful"
+// @Failure      400   {object}  dto.ErrorResponse    "Invalid payload or IDs"
+// @Failure      409   {object}  dto.ErrorResponse    "email or student ID already exists"
+// @Failure      500   {object}  dto.ErrorResponse    "Failed to register user"
+// @Router       /v1/auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req dto.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -86,6 +98,17 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	})
 }
 
+// VerifyEmail confirms a user's email
+// @Summary      Verify Email
+// @Description  Verifies a user's email using the provided token
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        body  body      dto.VerifyEmailRequest  true  "Verification payload"
+// @Success      200   {object}  map[string]string       "message: Email verified successfully"
+// @Failure      400   {object}  dto.ErrorResponse       "Invalid or expired token"
+// @Failure      500   {object}  dto.ErrorResponse       "Failed to verify email"
+// @Router       /v1/auth/verify-email [post]
 func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 	var req dto.VerifyEmailRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -109,6 +132,19 @@ func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Email verified successfully"})
 }
 
+// Login authenticates a user
+// @Summary      Login
+// @Description  Authenticates user and returns a JWT token
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        body  body      dto.LoginRequest  true  "Login payload"
+// @Success      200   {object}  map[string]string "token: JWT token"
+// @Failure      400   {object}  dto.ErrorResponse  "Invalid payload"
+// @Failure      401   {object}  dto.ErrorResponse  "Invalid credentials"
+// @Failure      403   {object}  dto.ErrorResponse  "Email not verified"
+// @Failure      500   {object}  dto.ErrorResponse  "Failed to login"
+// @Router       /v1/auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req dto.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -135,6 +171,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }
 
+// ForgotPassword starts a password reset
+// @Summary      Forgot Password
+// @Description  Sends a password reset link if the email exists
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        body  body      dto.ForgotPasswordRequest  true  "Forgot password payload"
+// @Success      200   {object}  map[string]string          "message: If the email exists, a reset link will be sent"
+// @Failure      400   {object}  dto.ErrorResponse          "Invalid payload"
+// @Failure      500   {object}  dto.ErrorResponse          "Failed to process request"
+// @Router       /v1/auth/forgot-password [post]
 func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 	var req dto.ForgotPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -153,6 +200,17 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 	})
 }
 
+// ResetPassword completes a password reset
+// @Summary      Reset Password
+// @Description  Resets the user's password using the provided token
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        body  body      dto.ResetPasswordRequest  true  "Reset password payload"
+// @Success      200   {object}  map[string]string        "message: Password reset successful"
+// @Failure      400   {object}  dto.ErrorResponse        "Invalid payload or token"
+// @Failure      500   {object}  dto.ErrorResponse        "Failed to reset password"
+// @Router       /v1/auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	var req dto.ResetPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -176,6 +234,16 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Password reset successful"})
 }
 
+// GetCurrentUser returns the authenticated user's info
+// @Summary      Get Current User
+// @Description  Retrieves information about the authenticated user
+// @Tags         auth
+// @Produce      json
+// @Success      200  {object}  dto.AdminUserResponse
+// @Failure      401  {object}  dto.ErrorResponse  "User not authenticated"
+// @Failure      404  {object}  dto.ErrorResponse  "User not found"
+// @Router       /v1/user/me [get]
+// @Security     BearerAuth
 func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {

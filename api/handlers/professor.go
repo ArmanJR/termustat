@@ -23,6 +23,16 @@ func NewProfessorHandler(professorService services.ProfessorService, logger *zap
 }
 
 // GetAllByUniversity returns all professors for a university
+// @Summary      List Professors
+// @Description  Retrieves all professors associated with a given university
+// @Tags         professors
+// @Produce      json
+// @Param        id   path      string                  true  "University ID"
+// @Success      200  {array}   dto.ProfessorResponse
+// @Failure      400  {object}  dto.ErrorResponse       "Invalid university ID"
+// @Failure      500  {object}  dto.ErrorResponse       "Internal server error"
+// @Router       /v1/admin/universities/{id}/professors [get]
+// @Security     BearerAuth
 func (h *ProfessorHandler) GetAllByUniversity(c *gin.Context) {
 	universityID := c.Param("id")
 
@@ -44,6 +54,17 @@ func (h *ProfessorHandler) GetAllByUniversity(c *gin.Context) {
 }
 
 // Get returns a single professor
+// @Summary      Get Professor
+// @Description  Retrieves a professor by their unique ID
+// @Tags         professors
+// @Produce      json
+// @Param        id   path      string                  true  "Professor ID"
+// @Success      200  {object}  dto.ProfessorResponse
+// @Failure      400  {object}  dto.ErrorResponse       "Invalid professor ID"
+// @Failure      404  {object}  dto.ErrorResponse       "Professor not found"
+// @Failure      500  {object}  dto.ErrorResponse       "Internal server error"
+// @Router       /v1/admin/professors/{id} [get]
+// @Security     BearerAuth
 func (h *ProfessorHandler) Get(c *gin.Context) {
 	id := c.Param("id")
 
@@ -69,6 +90,18 @@ func (h *ProfessorHandler) Get(c *gin.Context) {
 	c.JSON(http.StatusOK, professor)
 }
 
+// Create adds a new professor (or returns existing)
+// @Summary      Create Professor
+// @Description  Creates a new professor under a university, or returns existing one
+// @Tags         professors
+// @Accept       json
+// @Produce      json
+// @Param        body  body      dto.CreateProfessorRequest  true  "Create professor payload"
+// @Success      201   {object}  dto.ProfessorResponse
+// @Failure      400   {object}  dto.ErrorResponse           "Invalid payload or university not found"
+// @Failure      500   {object}  dto.ErrorResponse           "Internal server error"
+// @Router       /v1/admin/professors [post]
+// @Security     BearerAuth
 func (h *ProfessorHandler) Create(c *gin.Context) {
 	var req dto.CreateProfessorRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

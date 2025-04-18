@@ -22,6 +22,19 @@ func NewUniversityHandler(service services.UniversityService, logger *zap.Logger
 	}
 }
 
+// Create a new university
+// @Summary      Create University
+// @Description  Creates a new university
+// @Tags         universities
+// @Accept       json
+// @Produce      json
+// @Param        body  body      dto.CreateUniversityRequest  true  "Create university payload"
+// @Success      201   {object}  dto.UniversityResponse
+// @Failure      400   {object}  dto.ErrorResponse           "Invalid input"
+// @Failure      409   {object}  dto.ErrorResponse           "Conflict (name already exists)"
+// @Failure      500   {object}  dto.ErrorResponse           "Internal server error"
+// @Router       /v1/admin/universities [post]
+// @Security     BearerAuth
 func (h *UniversityHandler) Create(c *gin.Context) {
 	var req dto.CreateUniversityRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -47,6 +60,18 @@ func (h *UniversityHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, university)
 }
 
+// Get retrieves a university by ID
+// @Summary      Get University
+// @Description  Retrieves a university by its ID
+// @Tags         universities
+// @Produce      json
+// @Param        id   path      string              true  "University ID"
+// @Success      200  {object}  dto.UniversityResponse
+// @Failure      400  {object}  dto.ErrorResponse   "Invalid university ID"
+// @Failure      404  {object}  dto.ErrorResponse   "University not found"
+// @Failure      500  {object}  dto.ErrorResponse   "Internal server error"
+// @Router       /v1/admin/universities/{id} [get]
+// @Security     BearerAuth
 func (h *UniversityHandler) Get(c *gin.Context) {
 	id := c.Param("id")
 	parsedID, err := uuid.Parse(id)
@@ -71,6 +96,15 @@ func (h *UniversityHandler) Get(c *gin.Context) {
 	c.JSON(http.StatusOK, university)
 }
 
+// GetAll lists all universities
+// @Summary      List Universities
+// @Description  Retrieves all universities
+// @Tags         universities
+// @Produce      json
+// @Success      200  {array}   dto.UniversityResponse
+// @Failure      500  {object}  dto.ErrorResponse   "Internal server error"
+// @Router       /v1/admin/universities [get]
+// @Security     BearerAuth
 func (h *UniversityHandler) GetAll(c *gin.Context) {
 	universities, err := h.service.GetAll()
 	if err != nil {
@@ -82,6 +116,20 @@ func (h *UniversityHandler) GetAll(c *gin.Context) {
 	c.JSON(http.StatusOK, universities)
 }
 
+// Update modifies an existing university
+// @Summary      Update University
+// @Description  Updates the specified university’s details
+// @Tags         universities
+// @Accept       json
+// @Produce      json
+// @Param        id    path      string                     true  "University ID"
+// @Param        body  body      dto.UpdateUniversityRequest true  "Update university payload"
+// @Success      200   {object}  dto.UniversityResponse
+// @Failure      400   {object}  dto.ErrorResponse          "Invalid input or ID"
+// @Failure      404   {object}  dto.ErrorResponse          "University not found"
+// @Failure      500   {object}  dto.ErrorResponse          "Internal server error"
+// @Router       /v1/admin/universities/{id} [put]
+// @Security     BearerAuth
 func (h *UniversityHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 	parsedID, err := uuid.Parse(id)
@@ -115,6 +163,18 @@ func (h *UniversityHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, university)
 }
 
+// Delete removes a university by ID
+// @Summary      Delete University
+// @Description  Deletes the specified university
+// @Tags         universities
+// @Produce      json
+// @Param        id   path      string              true  "University ID"
+// @Success      200  {object}  map[string]string   "message: University deleted successfully"
+// @Failure      400  {object}  dto.ErrorResponse   "Invalid university ID"
+// @Failure      404  {object}  dto.ErrorResponse   "University not found"
+// @Failure      500  {object}  dto.ErrorResponse   "Internal server error"
+// @Router       /v1/admin/universities/{id} [delete]
+// @Security     BearerAuth
 func (h *UniversityHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
 	parsedID, err := uuid.Parse(id)

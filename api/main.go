@@ -3,6 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	stdLog "log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"github.com/armanjr/termustat/api/app"
 	"github.com/armanjr/termustat/api/config"
 	"github.com/armanjr/termustat/api/database"
@@ -16,14 +23,12 @@ import (
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	stdLog "log"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 )
 
+// @title        Termustat API
+// @version      1.0
+// @host         localhost:8080
+// @BasePath     /api
 func main() {
 	// Load configuration
 	cfg, err := config.LoadConfig(".")

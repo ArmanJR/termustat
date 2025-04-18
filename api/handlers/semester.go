@@ -22,6 +22,19 @@ func NewSemesterHandler(service services.SemesterService, logger *zap.Logger) *S
 	}
 }
 
+// Create a new semester
+// @Summary      Create Semester
+// @Description  Creates a new semester with year and term
+// @Tags         semesters
+// @Accept       json
+// @Produce      json
+// @Param        body  body      dto.CreateSemesterRequest  true  "Create semester payload"
+// @Success      201   {object}  dto.SemesterResponse
+// @Failure      400   {object}  dto.ErrorResponse          "Invalid input or duplicate year+term"
+// @Failure      409   {object}  dto.ErrorResponse          "Semester already exists"
+// @Failure      500   {object}  dto.ErrorResponse          "Internal server error"
+// @Router       /v1/admin/semesters [post]
+// @Security     BearerAuth
 func (h *SemesterHandler) Create(c *gin.Context) {
 	var req dto.CreateSemesterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -49,6 +62,18 @@ func (h *SemesterHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, semester)
 }
 
+// Get retrieves a semester by ID
+// @Summary      Get Semester
+// @Description  Retrieves a semester by its ID
+// @Tags         semesters
+// @Produce      json
+// @Param        id   path      string              true  "Semester ID"
+// @Success      200  {object}  dto.SemesterResponse
+// @Failure      400  {object}  dto.ErrorResponse   "Invalid semester ID"
+// @Failure      404  {object}  dto.ErrorResponse   "Semester not found"
+// @Failure      500  {object}  dto.ErrorResponse   "Internal server error"
+// @Router       /v1/admin/semesters/{id} [get]
+// @Security     BearerAuth
 func (h *SemesterHandler) Get(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -76,6 +101,15 @@ func (h *SemesterHandler) Get(c *gin.Context) {
 	c.JSON(http.StatusOK, semester)
 }
 
+// GetAll lists all semesters
+// @Summary      List Semesters
+// @Description  Retrieves all semesters, ordered by most recent
+// @Tags         semesters
+// @Produce      json
+// @Success      200  {array}   dto.SemesterResponse
+// @Failure      500  {object}  dto.ErrorResponse   "Internal server error"
+// @Router       /v1/admin/semesters [get]
+// @Security     BearerAuth
 func (h *SemesterHandler) GetAll(c *gin.Context) {
 	semesters, err := h.service.GetAll()
 	if err != nil {
@@ -87,6 +121,21 @@ func (h *SemesterHandler) GetAll(c *gin.Context) {
 	c.JSON(http.StatusOK, semesters)
 }
 
+// Update modifies an existing semester
+// @Summary      Update Semester
+// @Description  Updates the year or term of an existing semester
+// @Tags         semesters
+// @Accept       json
+// @Produce      json
+// @Param        id    path      string                     true  "Semester ID"
+// @Param        body  body      dto.UpdateSemesterRequest  true  "Update semester payload"
+// @Success      200   {object}  dto.SemesterResponse
+// @Failure      400   {object}  dto.ErrorResponse          "Invalid input or ID"
+// @Failure      404   {object}  dto.ErrorResponse          "Semester not found"
+// @Failure      409   {object}  dto.ErrorResponse          "Duplicate semester"
+// @Failure      500   {object}  dto.ErrorResponse          "Internal server error"
+// @Router       /v1/admin/semesters/{id} [put]
+// @Security     BearerAuth
 func (h *SemesterHandler) Update(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -127,6 +176,18 @@ func (h *SemesterHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, semester)
 }
 
+// Delete removes a semester by ID
+// @Summary      Delete Semester
+// @Description  Deletes a semester by its ID
+// @Tags         semesters
+// @Produce      json
+// @Param        id   path      string              true  "Semester ID"
+// @Success      200  {object}  map[string]string   "message: Semester deleted successfully"
+// @Failure      400  {object}  dto.ErrorResponse   "Invalid semester ID"
+// @Failure      404  {object}  dto.ErrorResponse   "Semester not found"
+// @Failure      500  {object}  dto.ErrorResponse   "Internal server error"
+// @Router       /v1/admin/semesters/{id} [delete]
+// @Security     BearerAuth
 func (h *SemesterHandler) Delete(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {

@@ -2,9 +2,12 @@ package routes
 
 import (
 	"github.com/armanjr/termustat/api/app"
+	_ "github.com/armanjr/termustat/api/docs"
 	"github.com/armanjr/termustat/api/handlers"
 	"github.com/armanjr/termustat/api/middlewares"
 	"github.com/armanjr/termustat/api/services"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 )
 
@@ -37,6 +40,12 @@ func SetupRoutes(app *app.App, h *Handlers, authService services.AuthService, ad
 	{
 		// Health check route
 		public.GET("/health", h.Health.HealthCheck)
+
+		// Swagger UI route
+		public.GET("/swagger/*any", ginSwagger.WrapHandler(
+			swaggerFiles.Handler,
+			ginSwagger.URL("/api/v1/swagger/doc.json"),
+		))
 
 		// User routes
 		auth := public.Group("/auth")
