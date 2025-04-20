@@ -1,0 +1,36 @@
+.pageWrapper {
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 100dvw;
+  min-height: 100dvh;
+  padding: 30px;
+}
+
+.loginBox {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border-radius: 5px;
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 2px 4px, rgba(0, 0, 0, 0.1) 0px 0px 1px 1px;
+  width: 100%;
+  max-width: 360px;
+  padding: 30px 40px 40px;
+}
+
+/* Give every child element a top margin */
+.form > * {
+  margin-top: 28px;
+}
+.form > :last-child {
+  margin-top: 54px;
+}
+
+.logo {
+  display: block;
+  margin: auto;
+  height: 76px;
+  width: 76px;
+}

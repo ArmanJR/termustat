@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 
 // Page components
+import AdminLoginPage from './pages/AdminLoginPage';
 const HomePage = () => <div>Home Page</div>;
-const AdminLoginPage = () => <div>Admin Login Page</div>;
 
 function App() {
   // get the current route
