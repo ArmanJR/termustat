@@ -1,25 +1,40 @@
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+
+// Page components
+const HomePage = () => <div>Home Page</div>;
+const AdminLoginPage = () => <div>Admin Login Page</div>;
 
 function App() {
+  // get the current route
+  const location = useLocation();
+  // only show nav on HomePage
+  const showNav = location.pathname === '/';
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and Eeee.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      {showNav && (
+        <nav>
+          <ul>
+            <li><Link to="/">Home</Link></li>
+            <li><Link to="/admin-login">Admin Login Page</Link></li>
+          </ul>
+        </nav>
+      )}
+
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/admin-login" element={<AdminLoginPage />} />
+      </Routes>
     </div>
   );
 }
 
-export default App;
+function AppWithRouter() {
+  return (
+    <Router>
+      <App />
+    </Router>
+  );
+}
+
+export default AppWithRouter;
