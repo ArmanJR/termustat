@@ -1,8 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-
-// Page components
-import AdminLogin from './pages/admin/Login.js';
-const Home = () => <div>Home</div>;
+import { BrowserRouter as Router, Link, useLocation } from 'react-router-dom';
+import AppRoutes from './routes';
 
 function App() {
   // get the current route
@@ -16,15 +13,11 @@ function App() {
         <nav>
           <ul>
             <li><Link to="/">Home</Link></li>
-            <li><Link to="/admin-login">Admin Login</Link></li>
+            <li><Link to="/admin/login">Admin Login</Link></li>
           </ul>
         </nav>
       )}
-
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/admin-login" element={<AdminLogin />} />
-      </Routes>
+      <AppRoutes />
     </div>
   );
 }
