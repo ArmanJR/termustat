@@ -1,10 +1,10 @@
-import styles from "./AdminLoginPage.module.css";
-import logo from "../images/logo.png";
-import Input from "../components/form/Input";
-import Button from "../components/form/Button";
+import styles from "./Login.module.css";
+import logo from "../../images/logo.png";
+import Input from "../../components/form/Input";
+import Button from "../../components/form/Button";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { adminLogin } from "../api/adminAuth";
+import { adminLogin } from "../../api/adminAuth";
 
 const AdminLoginPage = () => {
   const [formData, setFormData] = useState({
