@@ -1,5 +1,8 @@
 import axios from "axios";
 
+/**
+  * Logs in the user with given credentials.
+  */
 export async function adminLogin(credentials, navigate) {
   try {
     const response = await axios.post(
@@ -23,3 +26,11 @@ export async function adminLogin(credentials, navigate) {
     alert("Login failed:", error.response?.data || error.message);
   }
 };
+
+/**
+ * Checks whether the user is currently logged in.
+ */
+export function getIsLoggedIn() {
+  const token = localStorage.getItem("token");
+  return token ? true : false;
+}
