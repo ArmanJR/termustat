@@ -5,12 +5,14 @@ import Button from "../../components/form/Button";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { adminLogin } from "../../api/adminAuth";
+import { useNavigate } from "react-router-dom";
 
 const AdminLoginPage = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const navigate = useNavigate();
 
   // Update state whenever user types into the input fields
   const handleChange = (e) => {
@@ -23,7 +25,7 @@ const AdminLoginPage = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    adminLogin(formData);
+    adminLogin(formData, navigate);
   };
 
   return (

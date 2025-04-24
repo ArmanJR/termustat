@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export async function adminLogin(credentials) {
+export async function adminLogin(credentials, navigate) {
   try {
     const response = await axios.post(
       "http://localhost:8080/api/v1/auth/login",
@@ -16,8 +16,8 @@ export async function adminLogin(credentials) {
     const token = response.data.token;
     localStorage.setItem("token", token);
 
-    console.log("Login successful, token saved!");
-    alert("Login successful, token saved!");
+    // Redirect to admin dashboard
+    navigate("/admin/dashboard");
   } catch (error) {
     console.error("Login failed:", error.response?.data || error.message);
     alert("Login failed:", error.response?.data || error.message);
