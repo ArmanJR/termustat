@@ -6,6 +6,7 @@ import (
 	"github.com/armanjr/termustat/api/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"time"
 )
 
 func NewDatabase(config config.DatabaseConfig) (*gorm.DB, error) {
@@ -18,6 +19,14 @@ func NewDatabase(config config.DatabaseConfig) (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, fmt.Errorf("getting raw DB: %w", err)
+	}
+	sqlDB.SetMaxOpenConns(50)
+	sqlDB.SetMaxIdleConns(25)
+	sqlDB.SetConnMaxLifetime(10 * time.Minute)
 
 	return db, nil
 }
