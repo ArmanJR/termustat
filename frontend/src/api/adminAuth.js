@@ -1,6 +1,9 @@
 import axios from "axios";
 
-export async function adminLogin(credentials) {
+/**
+  * Logs in the user with given credentials.
+  */
+export async function adminLogin(credentials, navigate) {
   try {
     const response = await axios.post(
       "http://localhost:8080/api/v1/auth/login",
@@ -16,10 +19,63 @@ export async function adminLogin(credentials) {
     const token = response.data.token;
     localStorage.setItem("token", token);
 
-    console.log("Login successful, token saved!");
-    alert("Login successful, token saved!");
+    // Redirect to admin dashboard
+    navigate("/admin/dashboard");
   } catch (error) {
     console.error("Login failed:", error.response?.data || error.message);
     alert("Login failed:", error.response?.data || error.message);
   }
 };
+
+/**
+ * Checks whether the user is currently logged in.
+ */
+export function getIsLoggedIn() {
+  const token = localStorage.getItem("token");
+  return token ? true : false;
+}
+
+/**
+  * Retrieves the JWT token.
+  * Used to authenticate API requests.
+  */
+export function getToken() {
+  return localStorage.getItem("token");
+}
+
+/**
+  * Checks if the currently logged-in user is an admin.
+  * Sends a request to a protected admin endpoint to verify access.
+  */
+let adminStatus = null;
+export async function checkAdminStatus() {
+  try {
+    const response = await axios.get("http://localhost:8080/api/v1/admin/semesters", {
+      headers: {
+        Authorization: `Bearer ${getToken()}`
+      }
+    });
+    adminStatus = response.status === 200;
+    return adminStatus;
+  } catch (error) {
+    console.error("Error checking admin:", error.response?.data || error.message);
+    adminStatus = false;
+    return false;
+  }
+}
+
+/**
+  * Returns the current admin status.
+  * Should be used after calling checkAdminStatus().
+  */
+export function getIsAdmin() {
+  return adminStatus === true;
+}
+
+/**
+  * Logs out the current admin user.
+  */
+export function adminLogout() {
+  localStorage.removeItem("token");
+  window.location.href = "/";
+}
