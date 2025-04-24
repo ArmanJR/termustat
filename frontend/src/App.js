@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Link, useLocation } from 'react-router-dom';
-import AppRoutes from './routes';
+import AppRoutes from './routes/index.js';
 
 function App() {
   // get the current route
