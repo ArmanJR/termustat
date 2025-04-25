@@ -3,9 +3,10 @@ import AuthRedirect from './AuthRedirect';
 import AdminRoute from './AdminRoute';
 
 import AdminLogin from '../pages/admin/Login';
+import AdminLayout from '../layouts/AdminLayout';
+import Dashboard from '../pages/admin/Dashboard';
 
 const Home = () => <div>Home</div>;
-const Dashboard = () => <div>Dashboard</div>;
 
 function AppRoutes() {
   return (
@@ -24,7 +25,9 @@ function AppRoutes() {
       
       {/* Admin Protected Routes */}
       <Route element={<AdminRoute />}>
-        <Route path="/admin/dashboard" element={<Dashboard />}/>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="dashboard" element={<Dashboard />} />
+        </Route>
       </Route>
     </Routes>
   );
