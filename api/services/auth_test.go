@@ -1,11 +1,11 @@
 package services_test
 
 import (
+	"gorm.io/gorm"
 	"testing"
 	"time"
 
 	"github.com/armanjr/termustat/api/dto"
-	"github.com/armanjr/termustat/api/errors"
 	infraMailer "github.com/armanjr/termustat/api/infrastructure/mailer"
 	"github.com/armanjr/termustat/api/models"
 	"github.com/armanjr/termustat/api/services"
@@ -96,6 +96,36 @@ func (m *MockAuthRepository) DeleteEmailVerification(verification *models.EmailV
 	return args.Error(0)
 }
 
+// --- Mock Refresh Token Repository ---
+
+type MockRefreshRepo struct {
+	mock.Mock
+}
+
+func (m *MockRefreshRepo) Create(rt *models.RefreshToken) error {
+	return m.Called(rt).Error(0)
+}
+
+func (m *MockRefreshRepo) Find(token string) (*models.RefreshToken, error) {
+	args := m.Called(token)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.RefreshToken), args.Error(1)
+}
+
+func (m *MockRefreshRepo) Revoke(id uuid.UUID) error {
+	return m.Called(id).Error(0)
+}
+
+func (m *MockRefreshRepo) RevokeAllForUser(userID uuid.UUID) error {
+	return m.Called(userID).Error(0)
+}
+
+func (m *MockRefreshRepo) CleanupExpired() error {
+	return m.Called().Error(0)
+}
+
 // --- Mock Mailer Implementation ---
 
 type MockMailerService struct {
@@ -130,15 +160,18 @@ func (m *MockMailerService) RenderTemplate(tplName string, data interface{}) (*i
 func TestRegisterService_Success(t *testing.T) {
 	// Setup mocks and logger.
 	mockRepo := new(MockAuthRepository)
+	mockRTRepo := new(MockRefreshRepo)
 	mockMailer := new(MockMailerService)
 	logger, _ := zap.NewDevelopment()
 
 	service := services.NewAuthService(
 		mockRepo,
+		mockRTRepo,
 		mockMailer,
 		logger,
 		"test-secret",
 		24*time.Hour,
+		720*time.Hour,
 		"http://localhost:3000",
 	)
 
@@ -155,7 +188,7 @@ func TestRegisterService_Success(t *testing.T) {
 
 	// Expect repository to indicate user not found.
 	mockRepo.On("FindUserByEmailOrStudentID", req.Email, req.StudentID).
-		Return(nil, errors.NewNotFoundError("user", ""))
+		Return(nil, gorm.ErrRecordNotFound)
 	mockRepo.On("CreateUser", mock.AnythingOfType("*models.User")).Return(nil)
 	// Expect CreateEmailVerification to be called.
 	mockRepo.On("CreateEmailVerification", mock.AnythingOfType("*models.EmailVerification")).Return(nil)
@@ -173,15 +206,18 @@ func TestRegisterService_Success(t *testing.T) {
 
 func TestRegisterService_UserAlreadyExists(t *testing.T) {
 	mockRepo := new(MockAuthRepository)
+	mockRTRepo := new(MockRefreshRepo)
 	mockMailer := new(MockMailerService)
 	logger, _ := zap.NewDevelopment()
 
 	service := services.NewAuthService(
 		mockRepo,
+		mockRTRepo,
 		mockMailer,
 		logger,
 		"test-secret",
 		24*time.Hour,
+		720*time.Hour,
 		"http://localhost:3000",
 	)
 
@@ -215,17 +251,19 @@ func TestRegisterService_UserAlreadyExists(t *testing.T) {
 }
 
 func TestRegisterService_MailerError(t *testing.T) {
-	// Even if the mailer fails, registration should return no error.
 	mockRepo := new(MockAuthRepository)
+	mockRTRepo := new(MockRefreshRepo)
 	mockMailer := new(MockMailerService)
 	logger, _ := zap.NewDevelopment()
 
 	service := services.NewAuthService(
 		mockRepo,
+		mockRTRepo,
 		mockMailer,
 		logger,
 		"test-secret",
 		24*time.Hour,
+		720*time.Hour,
 		"http://localhost:3000",
 	)
 
@@ -240,17 +278,26 @@ func TestRegisterService_MailerError(t *testing.T) {
 		Gender:       "male",
 	}
 
-	mockRepo.On("FindUserByEmailOrStudentID", req.Email, req.StudentID).
-		Return(nil, errors.NewNotFoundError("user", ""))
-	mockRepo.On("CreateUser", mock.AnythingOfType("*models.User")).Return(nil)
-	mockRepo.On("CreateEmailVerification", mock.AnythingOfType("*models.EmailVerification")).Return(nil)
+	mockRepo.
+		On("FindUserByEmailOrStudentID", req.Email, req.StudentID).
+		Return(nil, gorm.ErrRecordNotFound)
 
-	// Simulate mailer error.
-	mockMailer.On("SendVerificationEmail", mock.AnythingOfType("*models.User"), mock.AnythingOfType("string")).Return(nil)
+	mockRepo.
+		On("CreateUser", mock.AnythingOfType("*models.User")).
+		Return(nil)
+
+	mockRepo.
+		On("CreateEmailVerification", mock.AnythingOfType("*models.EmailVerification")).
+		Return(nil)
+
+	mockMailer.
+		On("SendVerificationEmail",
+			mock.AnythingOfType("*models.User"),
+			mock.AnythingOfType("string")).
+		Return(assert.AnError)
 
 	err := service.Register(req)
 
-	// Registration should succeed even if the mailer fails.
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 	mockMailer.AssertExpectations(t)
