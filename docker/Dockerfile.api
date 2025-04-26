@@ -22,8 +22,10 @@ WORKDIR /app
 COPY --from=builder /app/termustat .
 
 COPY .env .
-COPY api/templates ./api/templates
+
+COPY api/infrastructure/mailer/templates ./api/infrastructure/mailer/templates
 COPY api/database/migrations ./api/database/migrations
+COPY api/docs ./api/docs
 
 EXPOSE 80
 
