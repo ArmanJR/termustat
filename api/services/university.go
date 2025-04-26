@@ -16,6 +16,7 @@ type UniversityService interface {
 	Create(req *dto.CreateUniversityRequest) (*dto.UniversityResponse, error)
 	Get(id uuid.UUID) (*dto.UniversityResponse, error)
 	GetAll() ([]dto.UniversityResponse, error)
+	ExistsByName(nameEn, nameFa string) (bool, error)
 	Delete(id uuid.UUID) error
 }
 
@@ -160,6 +161,18 @@ func (s *universityService) Update(id uuid.UUID, req *dto.UpdateUniversityReques
 		UpdatedAt: updated.UpdatedAt,
 	}
 	return &response, nil
+}
+
+func (s *universityService) ExistsByName(nameEn, nameFa string) (bool, error) {
+	exists, err := s.repo.ExistsByName(nameEn, nameFa)
+	if err != nil {
+		s.logger.Error("Failed to check university existence",
+			zap.String("name_en", nameEn),
+			zap.String("name_fa", nameFa),
+			zap.Error(err))
+		return false, fmt.Errorf("failed to check university existence: %w", err)
+	}
+	return exists, nil
 }
 
 func (s *universityService) Delete(id uuid.UUID) error {

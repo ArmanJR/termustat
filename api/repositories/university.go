@@ -13,6 +13,7 @@ type UniversityRepository interface {
 	Update(university *models.University) (*models.University, error)
 	Find(id uuid.UUID) (*models.University, error)
 	FindAll() ([]models.University, error)
+	ExistsByName(nameEn, nameFa string) (bool, error)
 	Delete(id uuid.UUID) error
 }
 
@@ -78,6 +79,17 @@ func (r *universityRepository) Update(university *models.University) (*models.Un
 	}
 
 	return &updated, nil
+}
+
+func (r *universityRepository) ExistsByName(nameEn, nameFa string) (bool, error) {
+	var count int64
+	err := r.db.Model(&models.University{}).
+		Where("name_en = ? OR name_fa = ?", nameEn, nameFa).
+		Count(&count).Error
+	if err != nil {
+		return false, fmt.Errorf("failed to check university existence: %w", err)
+	}
+	return count > 0, nil
 }
 
 func (r *universityRepository) Delete(id uuid.UUID) error {

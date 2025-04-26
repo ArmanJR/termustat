@@ -43,6 +43,17 @@ func (h *UniversityHandler) Create(c *gin.Context) {
 		return
 	}
 
+	exists, err := h.service.ExistsByName(req.NameEn, req.NameFa)
+	if err != nil {
+		h.logger.Error("Failed to check university existence", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		return
+	}
+	if exists {
+		c.JSON(http.StatusConflict, gin.H{"error": "University with the same name already exists"})
+		return
+	}
+
 	university, err := h.service.Create(&req)
 	if err != nil {
 		switch {
