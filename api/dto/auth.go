@@ -48,3 +48,17 @@ type RegisterServiceRequest struct {
 	FacultyID    uuid.UUID
 	Gender       string
 }
+
+type LoginResponse struct {
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
+type RefreshResponse struct {
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
+}

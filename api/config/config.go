@@ -21,8 +21,9 @@ type Config struct {
 	SSLMode    string `mapstructure:"SSL_MODE"`
 
 	// JWT
-	JWTSecret string        `mapstructure:"JWT_SECRET"`
-	JWTTTL    time.Duration `mapstructure:"JWT_TTL"`
+	JWTSecret  string        `mapstructure:"JWT_SECRET"`
+	JWTTTL     time.Duration `mapstructure:"JWT_TTL"`
+	RefreshTTL time.Duration `mapstructure:"REFRESH_TTL"`
 
 	// Mailgun
 	MailgunAPIKey string `mapstructure:"MAILGUN_API_KEY"`
@@ -82,7 +83,11 @@ func LoadConfig(configPath string) (*Config, error) {
 	}
 
 	if config.JWTTTL == 0 {
-		config.JWTTTL = 24 * time.Hour // Default to 24 hours
+		config.JWTTTL = 48 * time.Hour // Default to 48 hours
+	}
+
+	if config.RefreshTTL == 0 {
+		config.RefreshTTL = 720 * time.Hour // Default to 30 days
 	}
 
 	// Validate required fields

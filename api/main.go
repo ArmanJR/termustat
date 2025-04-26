@@ -71,6 +71,7 @@ func main() {
 
 	// Initialize repositories
 	authRepo := repositories.NewAuthRepository(db)
+	refreshTokenRepo := repositories.NewRefreshTokenRepository(db)
 	professorRepo := repositories.NewProfessorRepository(db)
 	universityRepo := repositories.NewUniversityRepository(db)
 	semesterRepo := repositories.NewSemesterRepository(db)
@@ -82,10 +83,12 @@ func main() {
 	// Internal services
 	authService := services.NewAuthService(
 		authRepo,
+		refreshTokenRepo,
 		mailerService,
 		log,
 		cfg.JWTSecret,
 		cfg.JWTTTL,
+		cfg.RefreshTTL,
 		cfg.FrontendURL,
 	)
 	universityService := services.NewUniversityService(universityRepo, log)

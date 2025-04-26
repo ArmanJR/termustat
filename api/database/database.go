@@ -43,5 +43,6 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.PasswordReset{},
 		&models.Professor{},
 		&models.Semester{},
+		&models.RefreshToken{},
 	)
 }

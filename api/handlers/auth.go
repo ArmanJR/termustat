@@ -152,7 +152,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := h.authService.Login(req.Email, req.Password)
+	access, refresh, err := h.authService.Login(req.Email, req.Password)
 	if err != nil {
 		status := http.StatusInternalServerError
 		message := "Failed to login"
@@ -168,7 +168,52 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": token})
+	c.JSON(http.StatusOK, dto.LoginResponse{Token: access, RefreshToken: refresh})
+}
+
+// Refresh provides a new access-token / refresh-token pair
+// @Summary      Refresh token
+// @Description  Exchanges a valid refresh token for a fresh JWT pair
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        body  body      dto.RefreshRequest   true  "Refresh payload"
+// @Success      200   {object}  dto.RefreshResponse  "token & refresh_token"
+// @Failure      400   {object}  dto.ErrorResponse    "Invalid payload"
+// @Failure      401   {object}  dto.ErrorResponse    "Invalid or expired refresh token"
+// @Router       /v1/auth/refresh [post]
+func (h *AuthHandler) Refresh(c *gin.Context) {
+	var req dto.RefreshRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	access, refresh, err := h.authService.Refresh(req.RefreshToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, dto.RefreshResponse{Token: access, RefreshToken: refresh})
+}
+
+// Logout revokes a single device/session refresh token
+// @Summary      Logout
+// @Description  Revokes the provided refresh token (single-device logout)
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        body  body      dto.RefreshRequest  true  "Refresh payload"
+// @Success      200   {object}  map[string]string   "message: logged out"
+// @Failure      400   {object}  dto.ErrorResponse   "Invalid payload"
+// @Router       /v1/auth/logout [post]
+func (h *AuthHandler) Logout(c *gin.Context) {
+	var req dto.RefreshRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	_ = h.authService.Logout(req.RefreshToken)
+	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
 }
 
 // ForgotPassword starts a password reset

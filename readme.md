@@ -85,7 +85,7 @@ GET /api/docs/swagger.json
 Or browse the UI:
 
 ```
-GET /api/docs/index.html
+http://localhost:8080/api/v1/swagger/index.html
 ```
 
 ## Architecture

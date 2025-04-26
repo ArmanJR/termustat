@@ -99,6 +99,11 @@ func Wrap(err error, message string) error {
 	return fmt.Errorf("%s: %w", message, err)
 }
 
+// Wrapf wraps an error with additional context
+func Wrapf(err error, format string, args ...interface{}) error {
+	return Wrap(err, fmt.Sprintf(format, args...))
+}
+
 // Is reports whether any error in err's chain matches target
 func Is(err, target error) bool {
 	return stdErrors.Is(err, target)

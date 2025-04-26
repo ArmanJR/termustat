@@ -1,13 +1,15 @@
 package services
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"github.com/armanjr/termustat/api/dto"
+	"github.com/armanjr/termustat/api/errors"
 	"github.com/armanjr/termustat/api/infrastructure/mailer"
 	"github.com/armanjr/termustat/api/models"
 	"github.com/armanjr/termustat/api/repositories"
 	"github.com/armanjr/termustat/api/utils"
 	"github.com/google/uuid"
-	"github.com/mailgun/errors"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -16,12 +18,14 @@ import (
 
 type AuthService interface {
 	Register(req *dto.RegisterServiceRequest) error
-	Login(email, password string) (string, error)
+	Login(email, password string) (string, string, error)
 	ForgotPassword(email string) error
 	ResetPassword(token, newPassword string) error
 	GetCurrentUser(userID uuid.UUID) (*models.User, error)
 	VerifyEmail(token string) error
 	ValidateToken(token string) (*utils.JWTClaims, error)
+	Refresh(oldToken string) (string, string, error)
+	Logout(refreshToken string) error
 }
 
 type authService struct {
@@ -31,14 +35,18 @@ type authService struct {
 	jwtSecret   string
 	jwtTTL      time.Duration
 	frontendURL string
+	refreshRepo repositories.RefreshTokenRepository
+	refreshTTL  time.Duration
 }
 
 func NewAuthService(
 	repo repositories.AuthRepository,
+	refreshRepo repositories.RefreshTokenRepository,
 	mailer mailer.Mailer,
 	logger *zap.Logger,
 	jwtSecret string,
 	jwtTTL time.Duration,
+	refreshTTL time.Duration,
 	frontendURL string,
 ) AuthService {
 	return &authService{
@@ -48,6 +56,8 @@ func NewAuthService(
 		jwtSecret:   jwtSecret,
 		jwtTTL:      jwtTTL,
 		frontendURL: frontendURL,
+		refreshRepo: refreshRepo,
+		refreshTTL:  refreshTTL,
 	}
 }
 
@@ -104,26 +114,40 @@ func (s *authService) Register(req *dto.RegisterServiceRequest) error {
 	return nil
 }
 
-func (s *authService) Login(email, password string) (string, error) {
+func (s *authService) Login(email, password string) (string, string, error) {
 	user, err := s.repo.FindUserByEmail(email)
 	if err != nil {
-		return "", errors.New("invalid credentials")
+		return "", "", errors.New("invalid credentials")
 	}
 
 	if !user.EmailVerified {
-		return "", errors.New("email not verified")
+		return "", "", errors.New("email not verified")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		return "", errors.New("invalid credentials")
+		return "", "", errors.New("invalid credentials")
 	}
 
-	token, err := utils.GenerateJWT(user.ID.String(), s.jwtSecret, int(s.jwtTTL.Seconds()))
+	access, err := utils.GenerateJWT(user.ID.String(), s.jwtSecret, int(s.jwtTTL.Seconds()))
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to generate token")
+		return "", "", err
 	}
 
-	return token, nil
+	refreshStr, err := generateRefreshString()
+	if err != nil {
+		return "", "", err
+	}
+
+	rt := &models.RefreshToken{
+		Token:     refreshStr,
+		UserID:    user.ID,
+		ExpiresAt: time.Now().Add(s.refreshTTL),
+	}
+	if err := s.refreshRepo.Create(rt); err != nil {
+		return "", "", err
+	}
+
+	return access, refreshStr, nil
 }
 
 func (s *authService) ForgotPassword(email string) error {
@@ -234,4 +258,45 @@ func (s *authService) ValidateToken(token string) (*utils.JWTClaims, error) {
 	}
 
 	return claims, nil
+}
+
+func (s *authService) Refresh(old string) (string, string, error) {
+	rt, err := s.refreshRepo.Find(old)
+	if err != nil {
+		return "", "", errors.New("invalid refresh token")
+	}
+
+	// rotate
+	if err := s.refreshRepo.Revoke(rt.ID); err != nil {
+		return "", "", err
+	}
+
+	newAccess, _ := utils.GenerateJWT(rt.UserID.String(), s.jwtSecret, int(s.jwtTTL.Seconds()))
+	newRefresh, _ := generateRefreshString()
+	_ = s.refreshRepo.Create(&models.RefreshToken{
+		Token:     newRefresh,
+		UserID:    rt.UserID,
+		ExpiresAt: time.Now().Add(s.refreshTTL),
+	})
+
+	return newAccess, newRefresh, nil
+}
+
+func (s *authService) Logout(refreshToken string) error {
+	rt, err := s.refreshRepo.Find(refreshToken)
+	if err != nil {
+		return nil
+	} // idempotent
+	return s.refreshRepo.Revoke(rt.ID)
+}
+
+// Helpers
+const refreshByteLen = 64
+
+func generateRefreshString() (string, error) {
+	b := make([]byte, refreshByteLen)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(b), nil
 }

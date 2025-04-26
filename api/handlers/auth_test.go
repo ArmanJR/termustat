@@ -29,9 +29,9 @@ func (m *MockAuthService) Register(req *dto.RegisterServiceRequest) error {
 }
 
 // Implement other AuthService methods to satisfy the interface
-func (m *MockAuthService) Login(email, password string) (string, error) {
+func (m *MockAuthService) Login(email, password string) (string, string, error) {
 	args := m.Called(email, password)
-	return args.String(0), args.Error(1)
+	return args.String(0), args.String(1), args.Error(1)
 }
 
 func (m *MockAuthService) ForgotPassword(email string) error {
@@ -63,6 +63,16 @@ func (m *MockAuthService) ValidateToken(token string) (*utils.JWTClaims, error) 
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*utils.JWTClaims), args.Error(1)
+}
+
+func (m *MockAuthService) Refresh(old string) (string, string, error) {
+	args := m.Called(old)
+	return args.String(0), args.String(1), args.Error(2)
+}
+
+func (m *MockAuthService) Logout(refresh string) error {
+	args := m.Called(refresh)
+	return args.Error(0)
 }
 
 func TestRegisterHandler_Success(t *testing.T) {

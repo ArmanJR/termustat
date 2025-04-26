@@ -1,11 +1,11 @@
 -- Universities Table
 CREATE TABLE universities (
-                              id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                              name_en VARCHAR(255) NOT NULL,
-                              name_fa VARCHAR(255) NOT NULL,
-                              is_active BOOLEAN DEFAULT true NOT NULL,
-                              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                              updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+                          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                          name_en VARCHAR(255) NOT NULL,
+                          name_fa VARCHAR(255) NOT NULL,
+                          is_active BOOLEAN DEFAULT true NOT NULL,
+                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 -- Faculties Table
@@ -42,19 +42,19 @@ CREATE TABLE semesters (
 
 -- Users Table
 CREATE TABLE users (
-                       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                       email VARCHAR(255) NOT NULL UNIQUE,
-                       password_hash TEXT NOT NULL,
-                       student_id VARCHAR(20) NOT NULL UNIQUE,
-                       first_name VARCHAR(100),
-                       last_name VARCHAR(100),
-                       university_id UUID NOT NULL REFERENCES universities(id),
-                       faculty_id UUID NOT NULL REFERENCES faculties(id),
-                       gender VARCHAR(6) NOT NULL CHECK (gender IN ('male', 'female')),
-                       email_verified BOOLEAN DEFAULT false NOT NULL,
-                       is_admin BOOLEAN DEFAULT false NOT NULL,
-                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+                           id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                           email VARCHAR(255) NOT NULL UNIQUE,
+                           password_hash TEXT NOT NULL,
+                           student_id VARCHAR(20) NOT NULL UNIQUE,
+                           first_name VARCHAR(100),
+                           last_name VARCHAR(100),
+                           university_id UUID NOT NULL REFERENCES universities(id),
+                           faculty_id UUID NOT NULL REFERENCES faculties(id),
+                           gender VARCHAR(6) NOT NULL CHECK (gender IN ('male', 'female')),
+                           email_verified BOOLEAN DEFAULT false NOT NULL,
+                           is_admin BOOLEAN DEFAULT false NOT NULL,
+                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 -- Courses Table
@@ -99,18 +99,28 @@ CREATE TABLE user_courses (
 
 -- Password Resets Table
 CREATE TABLE password_resets (
-                                 token UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                                 user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                                 expires_at TIMESTAMP NOT NULL,
-                                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+                             token UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                             user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                             expires_at TIMESTAMP NOT NULL,
+                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 -- Email Verifications Table
 CREATE TABLE email_verifications (
-                                     token VARCHAR(36) PRIMARY KEY,
-                                     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                                     expires_at TIMESTAMP NOT NULL,
-                                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+                             token VARCHAR(36) PRIMARY KEY,
+                             user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                             expires_at TIMESTAMP NOT NULL,
+                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+-- Refresh Tokens Table
+CREATE TABLE refresh_tokens (
+                            id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                            token       VARCHAR(255) UNIQUE NOT NULL,
+                            user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                            expires_at  TIMESTAMP NOT NULL,
+                            revoked     BOOLEAN DEFAULT FALSE NOT NULL,
+                            created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 -- Indexes
@@ -130,3 +140,5 @@ CREATE INDEX idx_user_courses_semester_id ON user_courses(semester_id);
 CREATE INDEX idx_password_resets_user_id ON password_resets(user_id);
 CREATE INDEX idx_email_verifications_user_id ON email_verifications(user_id);
 CREATE INDEX idx_email_verifications_expires_at ON email_verifications(expires_at);
+CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
+CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
