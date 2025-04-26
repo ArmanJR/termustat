@@ -1,6 +1,6 @@
 # Termustat
 
-**An online timetabling tool for Iranian university students**  
+**The online timetabling tool for Iranian university students**  
 
 Termustat sits on top of the [Golestan Integrated University System](https://fa.wikipedia.org/wiki/%DA%AF%D9%84%D8%B3%D8%AA%D8%A7%D9%86_(%D9%86%D8%B1%D9%85_%D8%A7%D9%81%D8%B2%D8%A7%D8%B1)), powering course planning at many Iranian universities.
 
@@ -11,7 +11,6 @@ Termustat sits on top of the [Golestan Integrated University System](https://fa.
 - **Course Planner**: Easily add, remove, and rearrange courses on a visual calendar.
 - **Conflict Detection**: Highlights time overlaps and warns of schedule clashes.
 - **Dynamic Filtering**: Search and filter by faculty, professor, semester, or keywords.
-- **Email Notifications**: Built‑in support for password resets and email verification.
 - **Data Import/Export**: Uses the “engine” module to parse and transform Golestan exports into structured JSON.
 
 ## Tech Stack
@@ -29,23 +28,11 @@ Termustat sits on top of the [Golestan Integrated University System](https://fa.
 
 ### Configuration
 
-1. Copy the example environment file and fill in your values:
+Copy the example environment file and edit `.env` with your values:
 
-   ```bash
-   cp .env.example .env
-   ```
-2. Edit `.env`:
-
-   ```dotenv
-   DB_HOST=postgres
-   DB_NAME=termustat
-   DB_USER=your_user
-   DB_PASSWORD=your_password
-   TIMEZONE=Asia/Tehran
-   JWT_SECRET=supersecret
-   MAILGUN_DOMAIN=...
-   MAILGUN_API_KEY=...
-   ```
+```bash
+cp .env.example .env
+```
 
 ### Development (Docker)
 
@@ -68,10 +55,6 @@ Build and run all services:
 ```bash
 docker-compose up -d --build
 ```
-
-- **Nginx** serves the frontend on `http://localhost:8080`
-- **API**, **Engine**, and **PostgreSQL** run behind the scenes
-
 
 ## API Documentation
 
