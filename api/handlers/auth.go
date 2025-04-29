@@ -134,12 +134,14 @@ func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 
 // Login authenticates a user
 // @Summary      Login
-// @Description  Authenticates user and returns a JWT token
+// @Description  Authenticates user and returns an access token in Authorization header and refresh token as HTTP-only cookie
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        body  body      dto.LoginRequest  true  "Login payload"
-// @Success      200   {object}  map[string]string "token: JWT token"
+// @Param        body  body      dto.LoginRequest   true  "Login payload"
+// @Success      200   {object}  map[string]string  "message: logged in successfully"
+// @Header       200   {string}  Authorization      "Bearer <access_token>"
+// @Header       200   {string}  Set-Cookie         "refresh_token=<token>; Path=/; HttpOnly; Secure"
 // @Failure      400   {object}  dto.ErrorResponse  "Invalid payload"
 // @Failure      401   {object}  dto.ErrorResponse  "Invalid credentials"
 // @Failure      403   {object}  dto.ErrorResponse  "Email not verified"
@@ -168,52 +170,95 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.LoginResponse{Token: access, RefreshToken: refresh})
+	c.SetCookie(
+		"refresh_token",
+		refresh,
+		7*24*60*60, // 7 days in seconds
+		"/",
+		"",
+		true,
+		true,
+	)
+
+	c.Header("Authorization", "Bearer "+access)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "logged in successfully",
+	})
 }
 
 // Refresh provides a new access-token / refresh-token pair
 // @Summary      Refresh token
-// @Description  Exchanges a valid refresh token for a fresh JWT pair
+// @Description  Generate new access token using refresh token from HTTP-only cookie
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        body  body      dto.RefreshRequest   true  "Refresh payload"
-// @Success      200   {object}  dto.RefreshResponse  "token & refresh_token"
-// @Failure      400   {object}  dto.ErrorResponse    "Invalid payload"
+// @Success      200   {object}  map[string]string    "message: token refreshed"
+// @Header       200   {string}  Authorization        "Bearer <access_token>"
+// @Header       200   {string}  Set-Cookie           "refresh_token=<token>; Path=/; HttpOnly; Secure"
+// @Failure      400   {object}  dto.ErrorResponse    "Missing refresh token cookie"
 // @Failure      401   {object}  dto.ErrorResponse    "Invalid or expired refresh token"
 // @Router       /v1/auth/refresh [post]
 func (h *AuthHandler) Refresh(c *gin.Context) {
-	var req dto.RefreshRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	refresh, err := c.Cookie("refresh_token")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing refresh token"})
 		return
 	}
-	access, refresh, err := h.authService.Refresh(req.RefreshToken)
+
+	access, newRefresh, err := h.authService.Refresh(refresh)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, dto.RefreshResponse{Token: access, RefreshToken: refresh})
+
+	c.SetCookie(
+		"refresh_token",
+		newRefresh,
+		7*24*60*60,
+		"/",
+		"",
+		true,
+		true,
+	)
+
+	c.Header("Authorization", "Bearer "+access)
+	c.JSON(http.StatusOK, gin.H{"message": "token refreshed"})
 }
 
-// Logout revokes a single device/session refresh token
+// Logout revokes the current session's refresh token
 // @Summary      Logout
-// @Description  Revokes the provided refresh token (single-device logout)
+// @Description  Revokes the current refresh token and clears the cookie
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        body  body      dto.RefreshRequest  true  "Refresh payload"
-// @Success      200   {object}  map[string]string   "message: logged out"
-// @Failure      400   {object}  dto.ErrorResponse   "Invalid payload"
+// @Success      200   {object}  map[string]string   "message: logged out successfully"
+// @Header       200   {string}  Set-Cookie          "refresh_token=; Path=/; HttpOnly; Secure; MaxAge=0"
+// @Failure      400   {object}  dto.ErrorResponse   "Missing refresh token"
 // @Router       /v1/auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
-	var req dto.RefreshRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	refresh, err := c.Cookie("refresh_token")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing refresh token"})
 		return
 	}
-	_ = h.authService.Logout(req.RefreshToken)
-	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
+
+	if err := h.authService.Logout(refresh); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to logout"})
+		return
+	}
+
+	// Clear the refresh token cookie
+	c.SetCookie(
+		"refresh_token",
+		"",
+		-1,
+		"/",
+		"",
+		true,
+		true,
+	)
+
+	c.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
 }
 
 // ForgotPassword starts a password reset

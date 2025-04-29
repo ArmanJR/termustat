@@ -31,7 +31,7 @@ func (m *MockAuthService) Register(req *dto.RegisterServiceRequest) error {
 // Implement other AuthService methods to satisfy the interface
 func (m *MockAuthService) Login(email, password string) (string, string, error) {
 	args := m.Called(email, password)
-	return args.String(0), args.String(1), args.Error(1)
+	return args.String(0), args.String(1), args.Error(2)
 }
 
 func (m *MockAuthService) ForgotPassword(email string) error {
@@ -186,4 +186,179 @@ func TestRegisterHandler_ServiceError(t *testing.T) {
 	// Assertions
 	assert.Equal(t, http.StatusConflict, w.Code)
 	mockService.AssertExpectations(t)
+}
+
+func TestLoginHandler_Success(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	mockService := new(MockAuthService)
+	logger, _ := zap.NewDevelopment()
+	handler := handlers.NewAuthHandler(mockService, logger)
+
+	reqBody := dto.LoginRequest{
+		Email:    "test@example.com",
+		Password: "password123",
+	}
+	jsonBody, _ := json.Marshal(reqBody)
+
+	// Mock service to return both tokens
+	mockService.On("Login", reqBody.Email, reqBody.Password).
+		Return("access_token_123", "refresh_token_456", nil)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("POST", "/login", bytes.NewBuffer(jsonBody))
+	c.Request.Header.Set("Content-Type", "application/json")
+
+	handler.Login(c)
+
+	// Check status code
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	// Verify response body only contains success message
+	var response map[string]string
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "logged in successfully", response["message"])
+
+	// Verify authorization header
+	assert.Equal(t, "Bearer access_token_123", w.Header().Get("Authorization"))
+
+	// Verify cookie
+	cookies := w.Result().Cookies()
+	var refreshCookie *http.Cookie
+	for _, cookie := range cookies {
+		if cookie.Name == "refresh_token" {
+			refreshCookie = cookie
+			break
+		}
+	}
+	assert.NotNil(t, refreshCookie)
+	assert.Equal(t, "refresh_token_456", refreshCookie.Value)
+	assert.True(t, refreshCookie.HttpOnly)
+	assert.True(t, refreshCookie.Secure)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestRefreshHandler_Success(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	mockService := new(MockAuthService)
+	logger, _ := zap.NewDevelopment()
+	handler := handlers.NewAuthHandler(mockService, logger)
+
+	// Mock service to return new tokens
+	mockService.On("Refresh", "old_refresh_token").
+		Return("new_access_token", "new_refresh_token", nil)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("POST", "/refresh", nil)
+
+	// Set refresh token in cookie
+	c.Request.AddCookie(&http.Cookie{
+		Name:  "refresh_token",
+		Value: "old_refresh_token",
+	})
+
+	handler.Refresh(c)
+
+	// Check status code
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	// Verify response body
+	var response map[string]string
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "token refreshed", response["message"])
+
+	// Verify authorization header
+	assert.Equal(t, "Bearer new_access_token", w.Header().Get("Authorization"))
+
+	// Verify new refresh token cookie
+	cookies := w.Result().Cookies()
+	var refreshCookie *http.Cookie
+	for _, cookie := range cookies {
+		if cookie.Name == "refresh_token" {
+			refreshCookie = cookie
+			break
+		}
+	}
+	assert.NotNil(t, refreshCookie)
+	assert.Equal(t, "new_refresh_token", refreshCookie.Value)
+	assert.True(t, refreshCookie.HttpOnly)
+	assert.True(t, refreshCookie.Secure)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestLogoutHandler_Success(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	mockService := new(MockAuthService)
+	logger, _ := zap.NewDevelopment()
+	handler := handlers.NewAuthHandler(mockService, logger)
+
+	// Mock service expectations
+	mockService.On("Logout", "current_refresh_token").Return(nil)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("POST", "/logout", nil)
+
+	// Set refresh token in cookie
+	c.Request.AddCookie(&http.Cookie{
+		Name:  "refresh_token",
+		Value: "current_refresh_token",
+	})
+
+	handler.Logout(c)
+
+	// Check status code
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	// Verify response body
+	var response map[string]string
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "logged out successfully", response["message"])
+
+	// Verify cookie was cleared
+	cookies := w.Result().Cookies()
+	var refreshCookie *http.Cookie
+	for _, cookie := range cookies {
+		if cookie.Name == "refresh_token" {
+			refreshCookie = cookie
+			break
+		}
+	}
+	assert.NotNil(t, refreshCookie)
+	assert.Equal(t, "", refreshCookie.Value)
+	assert.True(t, refreshCookie.MaxAge < 0)
+	assert.True(t, refreshCookie.HttpOnly)
+	assert.True(t, refreshCookie.Secure)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestLogoutHandler_MissingToken(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	mockService := new(MockAuthService)
+	logger, _ := zap.NewDevelopment()
+	handler := handlers.NewAuthHandler(mockService, logger)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("POST", "/logout", nil)
+
+	handler.Logout(c)
+
+	// Check status code
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	// Verify response body
+	var response map[string]string
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "missing refresh token", response["error"])
+
+	mockService.AssertNotCalled(t, "Logout")
 }
