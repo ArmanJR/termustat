@@ -25,7 +25,7 @@
   margin-top: 28px;
 }
 .form > :last-child {
-  margin-top: 54px;
+  margin-top: 34px;
 }
 
 .logo {
@@ -33,4 +33,13 @@
   margin: auto;
   height: 76px;
   width: 76px;
+}
+
+.erorrMessage {
+  visibility: hidden;
+  color: red;
+  height: 6px;
+  line-height: 6px;
+  text-align: center;
+  font-size: 14px;
 }

@@ -3,7 +3,7 @@ import axios from "axios";
 /**
   * Logs in the user with given credentials.
   */
-export async function adminLogin(credentials, navigate) {
+export async function adminLogin(credentials, navigate, setError) {
   try {
     const response = await axios.post(
       "http://localhost:8080/api/v1/auth/login",
@@ -21,9 +21,9 @@ export async function adminLogin(credentials, navigate) {
 
     // Redirect to admin dashboard
     navigate("/admin/dashboard");
+    setError(null);
   } catch (error) {
-    console.error("Login failed:", error.response?.data || error.message);
-    alert("Login failed:", error.response?.data || error.message);
+    setError("نام کاربری یا رمز عبور اشتباه است");
   }
 };
 
