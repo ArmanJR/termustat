@@ -12,6 +12,7 @@ const AdminLoginPage = () => {
     email: "",
     password: "",
   });
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   // Update state whenever user types into the input fields
@@ -25,7 +26,7 @@ const AdminLoginPage = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    adminLogin(formData, navigate);
+    adminLogin(formData, navigate, setError);
   };
 
   return (
@@ -56,6 +57,12 @@ const AdminLoginPage = () => {
             onChange={handleChange}
             required
           />
+          <div
+            className={styles.erorrMessage}
+            style={error && {visibility: "visible"}}
+          >
+            {error}
+          </div>
           <Button type="submit" value="ورود" />
         </form>
       </div>
