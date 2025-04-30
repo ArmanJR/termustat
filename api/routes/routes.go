@@ -55,6 +55,7 @@ func SetupRoutes(app *app.App, h *Handlers, authService services.AuthService, ad
 			auth.POST("/forgot-password", h.Auth.ForgotPassword)
 			auth.POST("/reset-password", h.Auth.ResetPassword)
 			auth.POST("/verify-email", h.Auth.VerifyEmail)
+			auth.POST("/refresh", h.Auth.Refresh)
 		}
 	}
 
