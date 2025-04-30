@@ -18,13 +18,13 @@ import (
 
 type AuthService interface {
 	Register(req *dto.RegisterServiceRequest) error
-	Login(email, password string) (string, string, error)
+	Login(email, password string) (string, int, string, int, error)
 	ForgotPassword(email string) error
 	ResetPassword(token, newPassword string) error
 	GetCurrentUser(userID uuid.UUID) (*models.User, error)
 	VerifyEmail(token string) error
 	ValidateToken(token string) (*utils.JWTClaims, error)
-	Refresh(oldToken string) (string, string, error)
+	Refresh(oldToken string) (string, int, string, int, error)
 	Logout(refreshToken string) error
 }
 
@@ -114,40 +114,42 @@ func (s *authService) Register(req *dto.RegisterServiceRequest) error {
 	return nil
 }
 
-func (s *authService) Login(email, password string) (string, string, error) {
+func (s *authService) Login(email, password string) (string, int, string, int, error) {
 	user, err := s.repo.FindUserByEmail(email)
 	if err != nil {
-		return "", "", errors.New("invalid credentials")
+		return "", 0, "", 0, errors.New("invalid credentials")
 	}
 
 	if !user.EmailVerified {
-		return "", "", errors.New("email not verified")
+		return "", 0, "", 0, errors.New("email not verified")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		return "", "", errors.New("invalid credentials")
+		return "", 0, "", 0, errors.New("invalid credentials")
 	}
 
-	access, err := utils.GenerateJWT(user.ID.String(), s.jwtSecret, int(s.jwtTTL.Seconds()))
+	accessExpirySeconds := int(s.jwtTTL.Seconds())
+	access, err := utils.GenerateJWT(user.ID.String(), s.jwtSecret, accessExpirySeconds)
 	if err != nil {
-		return "", "", err
+		return "", 0, "", 0, err
 	}
 
 	refreshStr, err := generateRefreshString()
 	if err != nil {
-		return "", "", err
+		return "", 0, "", 0, err
 	}
 
+	refreshExpirySeconds := int(s.refreshTTL.Seconds())
 	rt := &models.RefreshToken{
 		Token:     refreshStr,
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(s.refreshTTL),
 	}
 	if err := s.refreshRepo.Create(rt); err != nil {
-		return "", "", err
+		return "", 0, "", 0, err
 	}
 
-	return access, refreshStr, nil
+	return access, accessExpirySeconds, refreshStr, refreshExpirySeconds, nil
 }
 
 func (s *authService) ForgotPassword(email string) error {
@@ -260,18 +262,20 @@ func (s *authService) ValidateToken(token string) (*utils.JWTClaims, error) {
 	return claims, nil
 }
 
-func (s *authService) Refresh(old string) (string, string, error) {
+func (s *authService) Refresh(old string) (string, int, string, int, error) {
 	rt, err := s.refreshRepo.Find(old)
 	if err != nil {
-		return "", "", errors.New("invalid refresh token")
+		return "", 0, "", 0, errors.New("invalid refresh token")
 	}
 
 	// rotate
 	if err := s.refreshRepo.Revoke(rt.ID); err != nil {
-		return "", "", err
+		return "", 0, "", 0, err
 	}
 
-	newAccess, _ := utils.GenerateJWT(rt.UserID.String(), s.jwtSecret, int(s.jwtTTL.Seconds()))
+	accessExpirySeconds := int(s.jwtTTL.Seconds())
+	refreshExpirySeconds := int(s.refreshTTL.Seconds())
+	newAccess, _ := utils.GenerateJWT(rt.UserID.String(), s.jwtSecret, accessExpirySeconds)
 	newRefresh, _ := generateRefreshString()
 	_ = s.refreshRepo.Create(&models.RefreshToken{
 		Token:     newRefresh,
@@ -279,7 +283,7 @@ func (s *authService) Refresh(old string) (string, string, error) {
 		ExpiresAt: time.Now().Add(s.refreshTTL),
 	})
 
-	return newAccess, newRefresh, nil
+	return newAccess, accessExpirySeconds, newRefresh, refreshExpirySeconds, nil
 }
 
 func (s *authService) Logout(refreshToken string) error {

@@ -63,12 +63,3 @@ func ParseJWT(tokenString, secret string) (*JWTClaims, error) {
 
 	return nil, ErrInvalidToken
 }
-
-// GetUserIDFromToken extracts the user ID from a valid JWT token
-func GetUserIDFromToken(tokenString, secret string) (string, error) {
-	claims, err := ParseJWT(tokenString, secret)
-	if err != nil {
-		return "", err
-	}
-	return claims.UserID, nil
-}

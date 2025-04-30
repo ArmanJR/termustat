@@ -134,13 +134,12 @@ func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 
 // Login authenticates a user
 // @Summary      Login
-// @Description  Authenticates user and returns an access token in Authorization header and refresh token as HTTP-only cookie
+// @Description  Authenticates user and returns access token in response body and refresh token as HTTP-only cookie
 // @Tags         auth
 // @Accept       json
 // @Produce      json
 // @Param        body  body      dto.LoginRequest   true  "Login payload"
-// @Success      200   {object}  map[string]string  "message: logged in successfully"
-// @Header       200   {string}  Authorization      "Bearer <access_token>"
+// @Success      200   {object}  dto.LoginResponse  "Contains access_token and expires_in"
 // @Header       200   {string}  Set-Cookie         "refresh_token=<token>; Path=/; HttpOnly; Secure"
 // @Failure      400   {object}  dto.ErrorResponse  "Invalid payload"
 // @Failure      401   {object}  dto.ErrorResponse  "Invalid credentials"
@@ -154,7 +153,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	access, refresh, err := h.authService.Login(req.Email, req.Password)
+	access, accessExpiry, refresh, refreshExpiry, err := h.authService.Login(req.Email, req.Password)
 	if err != nil {
 		status := http.StatusInternalServerError
 		message := "Failed to login"
@@ -173,16 +172,16 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	c.SetCookie(
 		"refresh_token",
 		refresh,
-		7*24*60*60, // 7 days in seconds
+		refreshExpiry,
 		"/",
 		"",
 		true,
 		true,
 	)
 
-	c.Header("Authorization", "Bearer "+access)
-	c.JSON(http.StatusOK, gin.H{
-		"message": "logged in successfully",
+	c.JSON(http.StatusOK, dto.LoginResponse{
+		AccessToken: access,
+		ExpiresIn:   accessExpiry,
 	})
 }
 
@@ -192,8 +191,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Success      200   {object}  map[string]string    "message: token refreshed"
-// @Header       200   {string}  Authorization        "Bearer <access_token>"
+// @Success      200   {object}  dto.LoginResponse    "Contains access_token and expires_in"
 // @Header       200   {string}  Set-Cookie           "refresh_token=<token>; Path=/; HttpOnly; Secure"
 // @Failure      400   {object}  dto.ErrorResponse    "Missing refresh token cookie"
 // @Failure      401   {object}  dto.ErrorResponse    "Invalid or expired refresh token"
@@ -205,7 +203,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	access, newRefresh, err := h.authService.Refresh(refresh)
+	access, accessExpiry, newRefresh, newRefreshExpiry, err := h.authService.Refresh(refresh)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -214,15 +212,17 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	c.SetCookie(
 		"refresh_token",
 		newRefresh,
-		7*24*60*60,
+		newRefreshExpiry,
 		"/",
 		"",
 		true,
 		true,
 	)
 
-	c.Header("Authorization", "Bearer "+access)
-	c.JSON(http.StatusOK, gin.H{"message": "token refreshed"})
+	c.JSON(http.StatusOK, dto.LoginResponse{
+		AccessToken: access,
+		ExpiresIn:   accessExpiry,
+	})
 }
 
 // Logout revokes the current session's refresh token
@@ -364,65 +364,3 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 		"verified":   user.EmailVerified,
 	})
 }
-
-//func (h *AuthHandler) UpdateUser(c *gin.Context) {
-//	userID, exists := c.Get("userID")
-//	if !exists {
-//		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
-//		return
-//	}
-//
-//	var req dto.UpdateUserRequest
-//	if err := c.ShouldBindJSON(&req); err != nil {
-//		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-//		return
-//	}
-//
-//	parsedID, err := uuid.Parse(userID.(string))
-//	if err != nil {
-//		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID"})
-//		return
-//	}
-//
-//	if err := h.authService.UpdateUser(parsedID, &req); err != nil {
-//		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
-//		return
-//	}
-//
-//	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully"})
-//}
-//
-//func (h *AuthHandler) ChangePassword(c *gin.Context) {
-//	userID, exists := c.Get("userID")
-//	if !exists {
-//		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
-//		return
-//	}
-//
-//	var req dto.ChangePasswordRequest
-//	if err := c.ShouldBindJSON(&req); err != nil {
-//		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-//		return
-//	}
-//
-//	parsedID, err := uuid.Parse(userID.(string))
-//	if err != nil {
-//		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID"})
-//		return
-//	}
-//
-//	if err := h.authService.ChangePassword(parsedID, req.OldPassword, req.NewPassword); err != nil {
-//		status := http.StatusInternalServerError
-//		message := "Failed to change password"
-//
-//		if err.Error() == "invalid old password" {
-//			status = http.StatusBadRequest
-//			message = err.Error()
-//		}
-//
-//		c.JSON(status, gin.H{"error": message})
-//		return
-//	}
-//
-//	c.JSON(http.StatusOK, gin.H{"message": "Password changed successfully"})
-//}

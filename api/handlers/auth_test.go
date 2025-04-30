@@ -29,9 +29,9 @@ func (m *MockAuthService) Register(req *dto.RegisterServiceRequest) error {
 }
 
 // Implement other AuthService methods to satisfy the interface
-func (m *MockAuthService) Login(email, password string) (string, string, error) {
+func (m *MockAuthService) Login(email, password string) (string, int, string, int, error) {
 	args := m.Called(email, password)
-	return args.String(0), args.String(1), args.Error(2)
+	return args.String(0), args.Int(1), args.String(2), args.Int(3), args.Error(4)
 }
 
 func (m *MockAuthService) ForgotPassword(email string) error {
@@ -65,9 +65,9 @@ func (m *MockAuthService) ValidateToken(token string) (*utils.JWTClaims, error) 
 	return args.Get(0).(*utils.JWTClaims), args.Error(1)
 }
 
-func (m *MockAuthService) Refresh(old string) (string, string, error) {
+func (m *MockAuthService) Refresh(old string) (string, int, string, int, error) {
 	args := m.Called(old)
-	return args.String(0), args.String(1), args.Error(2)
+	return args.String(0), args.Int(1), args.String(2), args.Int(3), args.Error(4)
 }
 
 func (m *MockAuthService) Logout(refresh string) error {
@@ -200,9 +200,13 @@ func TestLoginHandler_Success(t *testing.T) {
 	}
 	jsonBody, _ := json.Marshal(reqBody)
 
-	// Mock service to return both tokens
+	// Mock service to return tokens and expiry times
+	accessToken := "access_token_123"
+	accessExpiry := 3600
+	refreshToken := "refresh_token_456"
+	refreshExpiry := 7200
 	mockService.On("Login", reqBody.Email, reqBody.Password).
-		Return("access_token_123", "refresh_token_456", nil)
+		Return(accessToken, accessExpiry, refreshToken, refreshExpiry, nil)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -214,16 +218,14 @@ func TestLoginHandler_Success(t *testing.T) {
 	// Check status code
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	// Verify response body only contains success message
-	var response map[string]string
+	// Verify response body contains access token and expiry
+	var response dto.LoginResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, "logged in successfully", response["message"])
+	assert.Equal(t, accessToken, response.AccessToken)
+	assert.Equal(t, accessExpiry, response.ExpiresIn)
 
-	// Verify authorization header
-	assert.Equal(t, "Bearer access_token_123", w.Header().Get("Authorization"))
-
-	// Verify cookie
+	// Verify refresh token cookie
 	cookies := w.Result().Cookies()
 	var refreshCookie *http.Cookie
 	for _, cookie := range cookies {
@@ -233,7 +235,8 @@ func TestLoginHandler_Success(t *testing.T) {
 		}
 	}
 	assert.NotNil(t, refreshCookie)
-	assert.Equal(t, "refresh_token_456", refreshCookie.Value)
+	assert.Equal(t, refreshToken, refreshCookie.Value)
+	assert.Equal(t, refreshExpiry, refreshCookie.MaxAge)
 	assert.True(t, refreshCookie.HttpOnly)
 	assert.True(t, refreshCookie.Secure)
 
@@ -246,9 +249,13 @@ func TestRefreshHandler_Success(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 	handler := handlers.NewAuthHandler(mockService, logger)
 
-	// Mock service to return new tokens
+	// Mock service to return new tokens and expiry times
+	newAccessToken := "new_access_token"
+	newAccessExpiry := 3600
+	newRefreshToken := "new_refresh_token"
+	newRefreshExpiry := 7200
 	mockService.On("Refresh", "old_refresh_token").
-		Return("new_access_token", "new_refresh_token", nil)
+		Return(newAccessToken, newAccessExpiry, newRefreshToken, newRefreshExpiry, nil)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -265,14 +272,12 @@ func TestRefreshHandler_Success(t *testing.T) {
 	// Check status code
 	assert.Equal(t, http.StatusOK, w.Code)
 
-	// Verify response body
-	var response map[string]string
+	// Verify response body contains new access token and expiry
+	var response dto.LoginResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, "token refreshed", response["message"])
-
-	// Verify authorization header
-	assert.Equal(t, "Bearer new_access_token", w.Header().Get("Authorization"))
+	assert.Equal(t, newAccessToken, response.AccessToken)
+	assert.Equal(t, newAccessExpiry, response.ExpiresIn)
 
 	// Verify new refresh token cookie
 	cookies := w.Result().Cookies()
@@ -284,7 +289,8 @@ func TestRefreshHandler_Success(t *testing.T) {
 		}
 	}
 	assert.NotNil(t, refreshCookie)
-	assert.Equal(t, "new_refresh_token", refreshCookie.Value)
+	assert.Equal(t, newRefreshToken, refreshCookie.Value)
+	assert.Equal(t, newRefreshExpiry, refreshCookie.MaxAge)
 	assert.True(t, refreshCookie.HttpOnly)
 	assert.True(t, refreshCookie.Secure)
 

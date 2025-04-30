@@ -2,7 +2,6 @@ package dto
 
 import "github.com/google/uuid"
 
-// Request DTOs
 type RegisterRequest struct {
 	Email        string `json:"email" binding:"required,email"`
 	Password     string `json:"password" binding:"required,min=8"`
@@ -17,6 +16,11 @@ type RegisterRequest struct {
 type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
+}
+
+type LoginResponse struct {
+	AccessToken string `json:"access_token"`
+	ExpiresIn   int    `json:"expires_in"`
 }
 
 type ForgotPasswordRequest struct {
@@ -47,18 +51,4 @@ type RegisterServiceRequest struct {
 	UniversityID uuid.UUID
 	FacultyID    uuid.UUID
 	Gender       string
-}
-
-type LoginResponse struct {
-	Token        string `json:"token"`
-	RefreshToken string `json:"refresh_token"`
-}
-
-type RefreshRequest struct {
-	RefreshToken string `json:"refresh_token" binding:"required"`
-}
-
-type RefreshResponse struct {
-	Token        string `json:"token"`
-	RefreshToken string `json:"refresh_token"`
 }
