@@ -117,26 +117,40 @@ func (s *authService) Register(req *dto.RegisterServiceRequest) error {
 func (s *authService) Login(email, password string) (string, int, string, int, error) {
 	user, err := s.repo.FindUserByEmail(email)
 	if err != nil {
-		return "", 0, "", 0, errors.New("invalid credentials")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			s.logger.Warn("Login attempt failed: user not found", zap.String("email", email))
+			return "", 0, "", 0, errors.New("invalid credentials")
+		}
+		s.logger.Error("Database error during login", zap.String("email", email), zap.Error(err))
+		return "", 0, "", 0, errors.New("failed to login")
 	}
 
 	if !user.EmailVerified {
+		s.logger.Warn("Login attempt failed: email not verified", zap.String("email", email), zap.String("user_id", user.ID.String()))
 		return "", 0, "", 0, errors.New("email not verified")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+		s.logger.Warn("Login attempt failed: invalid password", zap.String("email", email), zap.String("user_id", user.ID.String()))
 		return "", 0, "", 0, errors.New("invalid credentials")
 	}
 
+	var scopes []string
+	if user.IsAdmin {
+		scopes = append(scopes, "admin-dashboard")
+	}
+
 	accessExpirySeconds := int(s.jwtTTL.Seconds())
-	access, err := utils.GenerateJWT(user.ID.String(), s.jwtSecret, accessExpirySeconds)
+	access, err := utils.GenerateJWT(user.ID.String(), scopes, s.jwtSecret, s.jwtTTL)
 	if err != nil {
-		return "", 0, "", 0, err
+		s.logger.Error("Failed to generate access token", zap.String("user_id", user.ID.String()), zap.Error(err))
+		return "", 0, "", 0, errors.New("failed to generate access token")
 	}
 
 	refreshStr, err := generateRefreshString()
 	if err != nil {
-		return "", 0, "", 0, err
+		s.logger.Error("Failed to generate refresh token string", zap.String("user_id", user.ID.String()), zap.Error(err))
+		return "", 0, "", 0, errors.New("failed to generate refresh token")
 	}
 
 	refreshExpirySeconds := int(s.refreshTTL.Seconds())
@@ -146,7 +160,8 @@ func (s *authService) Login(email, password string) (string, int, string, int, e
 		ExpiresAt: time.Now().Add(s.refreshTTL),
 	}
 	if err := s.refreshRepo.Create(rt); err != nil {
-		return "", 0, "", 0, err
+		s.logger.Error("Failed to store refresh token", zap.String("user_id", user.ID.String()), zap.Error(err))
+		return "", 0, "", 0, errors.New("failed to store refresh token")
 	}
 
 	return access, accessExpirySeconds, refreshStr, refreshExpirySeconds, nil
@@ -265,24 +280,48 @@ func (s *authService) ValidateToken(token string) (*utils.JWTClaims, error) {
 func (s *authService) Refresh(old string) (string, int, string, int, error) {
 	rt, err := s.refreshRepo.Find(old)
 	if err != nil {
+		s.logger.Warn("Invalid or expired refresh token provided", zap.String("token_prefix", old[:min(10, len(old))]))
 		return "", 0, "", 0, errors.New("invalid refresh token")
 	}
 
-	// rotate
 	if err := s.refreshRepo.Revoke(rt.ID); err != nil {
-		return "", 0, "", 0, err
+		s.logger.Error("Failed to revoke old refresh token", zap.String("token_id", rt.ID.String()), zap.Error(err))
+		return "", 0, "", 0, errors.Wrap(err, "failed to revoke token")
+	}
+
+	user := rt.User // Or user, err := s.repo.FindUserByID(rt.UserID); if err != nil { ... }
+
+	var scopes []string
+	if user.IsAdmin {
+		scopes = append(scopes, "admin-dashboard")
 	}
 
 	accessExpirySeconds := int(s.jwtTTL.Seconds())
+	newAccess, err := utils.GenerateJWT(rt.UserID.String(), scopes, s.jwtSecret, s.jwtTTL)
+	if err != nil {
+		s.logger.Error("Failed to generate new access token during refresh", zap.String("user_id", rt.UserID.String()), zap.Error(err))
+		return "", 0, "", 0, errors.Wrap(err, "failed to generate access token")
+	}
+
+	newRefresh, err := generateRefreshString()
+	if err != nil {
+		s.logger.Error("Failed to generate new refresh token string during refresh", zap.String("user_id", rt.UserID.String()), zap.Error(err))
+		return "", 0, "", 0, errors.Wrap(err, "failed to generate refresh token")
+	}
+
 	refreshExpirySeconds := int(s.refreshTTL.Seconds())
-	newAccess, _ := utils.GenerateJWT(rt.UserID.String(), s.jwtSecret, accessExpirySeconds)
-	newRefresh, _ := generateRefreshString()
-	_ = s.refreshRepo.Create(&models.RefreshToken{
+	newRT := &models.RefreshToken{
 		Token:     newRefresh,
 		UserID:    rt.UserID,
 		ExpiresAt: time.Now().Add(s.refreshTTL),
-	})
+	}
 
+	if err := s.refreshRepo.Create(newRT); err != nil {
+		s.logger.Error("Failed to store new refresh token during refresh", zap.String("user_id", rt.UserID.String()), zap.Error(err))
+		return "", 0, "", 0, errors.Wrap(err, "failed to store refresh token")
+	}
+
+	s.logger.Info("Token refreshed successfully", zap.String("user_id", rt.UserID.String()))
 	return newAccess, accessExpirySeconds, newRefresh, refreshExpirySeconds, nil
 }
 

@@ -129,7 +129,7 @@ func main() {
 
 	// Initialize handlers
 	ginHandlers := &routes.Handlers{
-		Auth:       handlers.NewAuthHandler(authService, log),
+		Auth:       handlers.NewAuthHandler(authService, universityService, facultyService, log),
 		Professor:  handlers.NewProfessorHandler(professorService, log),
 		University: handlers.NewUniversityHandler(universityService, log),
 		Semester:   handlers.NewSemesterHandler(semesterService, log),

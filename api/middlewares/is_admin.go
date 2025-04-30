@@ -1,10 +1,9 @@
 package middlewares
 
 import (
-	"github.com/armanjr/termustat/api/errors"
 	"github.com/armanjr/termustat/api/services"
+	"github.com/armanjr/termustat/api/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -23,43 +22,46 @@ func NewAdminMiddleware(adminUserService services.AdminUserService, logger *zap.
 
 func (m *AdminMiddleware) IsAdmin() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userID, exists := c.Get("userID")
-		if !exists {
+		// Check 1: Ensure user is authenticated (should be guaranteed by JWTMiddleware running first)
+		userID, userExists := c.Get("userID")
+		if !userExists {
+			m.logger.Error("IsAdmin middleware called without userID in context. Check middleware order.")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 			c.Abort()
 			return
 		}
 
-		parsedID, err := uuid.Parse(userID.(string))
-		if err != nil {
-			m.logger.Warn("Invalid user ID format in middleware",
-				zap.String("user_id", userID.(string)))
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID"})
+		// Check 2: Get scopes from context set by JWTMiddleware
+		scopesVal, scopesExist := c.Get("userScopes")
+		if !scopesExist {
+			m.logger.Warn("No scopes found in context for authenticated user", zap.Any("userID", userID))
+			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
 			c.Abort()
 			return
 		}
 
-		user, err := m.adminUserService.Get(parsedID)
-		if err != nil {
-			switch {
-			case errors.Is(err, errors.ErrNotFound):
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
-			default:
-				m.logger.Error("Failed to fetch user in admin middleware",
-					zap.String("user_id", parsedID.String()),
-					zap.Error(err))
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-			}
+		// Check 3: Assert type and check for the required scope
+		scopes, ok := scopesVal.([]string)
+		if !ok {
+			m.logger.Error("User scopes in context are not of type []string", zap.Any("userID", userID), zap.Any("scopesType", scopesVal))
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 			c.Abort()
 			return
 		}
 
-		if !user.IsAdmin {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Admin access required"})
+		// Check 4: Verify the "admin-dashboard" scope exists
+		requiredScope := "admin-dashboard"
+		if !utils.ContainsScope(scopes, requiredScope) {
+			m.logger.Warn("Admin access denied: missing required scope",
+				zap.Any("userID", userID),
+				zap.Strings("userScopes", scopes),
+				zap.String("requiredScope", requiredScope))
+			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
 			c.Abort()
 			return
 		}
 
+		//m.logger.Debug("Admin access granted", zap.Any("userID", userID), zap.Strings("scopes", scopes))
 		c.Next()
 	}
 }

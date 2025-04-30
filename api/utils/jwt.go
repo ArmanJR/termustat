@@ -14,16 +14,18 @@ var (
 
 // JWTClaims represents the custom claims we want to include in our JWT
 type JWTClaims struct {
-	UserID string `json:"user_id"`
+	UserID string   `json:"user_id"`
+	Scopes []string `json:"scp,omitempty"`
 	jwt.RegisteredClaims
 }
 
-// GenerateJWT creates a new JWT token with the given user ID and expiration time
-func GenerateJWT(userID, secret string, ttl int) (string, error) {
+// GenerateJWT creates a new JWT token with the given user ID, scopes, and expiration time
+func GenerateJWT(userID string, scopes []string, secret string, ttl time.Duration) (string, error) { // Modified function signature
 	claims := JWTClaims{
 		UserID: userID,
+		Scopes: scopes,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(ttl) * time.Second)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 			Issuer:    "termustat",
@@ -62,4 +64,14 @@ func ParseJWT(tokenString, secret string) (*JWTClaims, error) {
 	}
 
 	return nil, ErrInvalidToken
+}
+
+// ContainsScope to check if a slice contains a string
+func ContainsScope(scopes []string, scope string) bool {
+	for _, s := range scopes {
+		if s == scope {
+			return true
+		}
+	}
+	return false
 }

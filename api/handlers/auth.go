@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/armanjr/termustat/api/dto"
+	"github.com/armanjr/termustat/api/errors"
 	"github.com/armanjr/termustat/api/services"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -10,14 +11,23 @@ import (
 )
 
 type AuthHandler struct {
-	authService services.AuthService
-	logger      *zap.Logger
+	authService       services.AuthService
+	universityService services.UniversityService
+	facultyService    services.FacultyService
+	logger            *zap.Logger
 }
 
-func NewAuthHandler(authService services.AuthService, logger *zap.Logger) *AuthHandler {
+func NewAuthHandler(
+	authService services.AuthService,
+	universityService services.UniversityService,
+	facultyService services.FacultyService,
+	logger *zap.Logger,
+) *AuthHandler {
 	return &AuthHandler{
-		authService: authService,
-		logger:      logger,
+		authService:       authService,
+		universityService: universityService,
+		facultyService:    facultyService,
+		logger:            logger,
 	}
 }
 
@@ -324,43 +334,110 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Password reset successful"})
 }
 
-// GetCurrentUser returns the authenticated user's info
-// @Summary      Get Current User
-// @Description  Retrieves information about the authenticated user
+// GetCurrentUser returns the authenticated user's detailed info
+// @Summary      Get Current User Details
+// @Description  Retrieves detailed information about the authenticated user, including university and faculty names (if available)
 // @Tags         auth
 // @Produce      json
-// @Success      200  {object}  dto.AdminUserResponse
+// @Success      200  {object}  map[string]any     "Detailed user information, university/faculty may be null if lookup failed"
 // @Failure      401  {object}  dto.ErrorResponse  "User not authenticated"
-// @Failure      404  {object}  dto.ErrorResponse  "User not found"
+// @Failure      404  {object}  dto.ErrorResponse  "User not found" // Only if user lookup fails
+// @Failure      500  {object}  dto.ErrorResponse  "Internal server error"
 // @Router       /v1/user/me [get]
 // @Security     BearerAuth
 func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
-	userID, exists := c.Get("userID")
+	userIDVal, exists := c.Get("userID")
 	if !exists {
+		h.logger.Warn("userID not found in context for /me endpoint")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
 
-	parsedID, err := uuid.Parse(userID.(string))
+	userIDStr, ok := userIDVal.(string)
+	if !ok {
+		h.logger.Error("userID in context is not a string", zap.Any("userID", userIDVal))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error processing user ID"})
+		return
+	}
+
+	parsedID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID"})
+		h.logger.Error("Failed to parse userID from context", zap.String("userIDStr", userIDStr), zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID format"})
 		return
 	}
 
 	user, err := h.authService.GetCurrentUser(parsedID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		// If the user associated with a valid token isn't found, it's usually a 404.
+		logMsg := "User associated with token not found"
+		respStatus := http.StatusNotFound
+		respError := "User not found"
+		if !errors.Is(err, errors.ErrNotFound) {
+			logMsg = "Failed to fetch user"
+			respStatus = http.StatusInternalServerError
+			respError = "Failed to retrieve user data"
+		}
+		h.logger.Error(logMsg, zap.String("userID", parsedID.String()), zap.Error(err))
+		c.JSON(respStatus, gin.H{"error": respError})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"id":         user.ID,
-		"email":      user.Email,
-		"student_id": user.StudentID,
-		"first_name": user.FirstName,
-		"last_name":  user.LastName,
-		"university": user.UniversityID,
-		"faculty":    user.FacultyID,
-		"verified":   user.EmailVerified,
-	})
+	var universityResponse *dto.UniversityResponse
+	// Check if UniversityID is valid before attempting fetch
+	if user.UniversityID != uuid.Nil {
+		universityResponse, err = h.universityService.Get(user.UniversityID)
+		if err != nil {
+			h.logger.Warn("Failed to fetch university details for user (continuing)",
+				zap.String("userID", user.ID.String()),
+				zap.String("universityID", user.UniversityID.String()),
+				zap.Error(err))
+		}
+	} else {
+		h.logger.Info("User has nil UniversityID", zap.String("userID", user.ID.String()))
+	}
+
+	var facultyResponse *dto.FacultyResponse
+	// Check if FacultyID is valid before attempting fetch
+	if user.FacultyID != uuid.Nil {
+		facultyResponse, err = h.facultyService.Get(user.FacultyID)
+		if err != nil {
+			h.logger.Warn("Failed to fetch faculty details for user (continuing)",
+				zap.String("userID", user.ID.String()),
+				zap.String("facultyID", user.FacultyID.String()),
+				zap.Error(err))
+		}
+	} else {
+		h.logger.Info("User has nil FacultyID", zap.String("userID", user.ID.String()))
+	}
+
+	response := gin.H{
+		"id":             user.ID,
+		"email":          user.Email,
+		"student_id":     user.StudentID,
+		"first_name":     user.FirstName,
+		"last_name":      user.LastName,
+		"email_verified": user.EmailVerified,
+		"is_admin":       user.IsAdmin,
+		"university":     nil,
+		"faculty":        nil,
+	}
+
+	if universityResponse != nil {
+		response["university"] = gin.H{
+			"id":      universityResponse.ID,
+			"name_en": universityResponse.NameEn,
+			"name_fa": universityResponse.NameFa,
+		}
+	}
+
+	if facultyResponse != nil {
+		response["faculty"] = gin.H{
+			"id":      facultyResponse.ID,
+			"name_en": facultyResponse.NameEn,
+			"name_fa": facultyResponse.NameFa,
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
 }
