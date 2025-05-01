@@ -589,7 +589,7 @@ func TestGetCurrentUser_Success(t *testing.T) {
 
 	assert.Equal(t, mockUser.ID.String(), responseBody["id"])
 	assert.Equal(t, mockUser.Email, responseBody["email"])
-	assert.Equal(t, mockUser.IsAdmin, responseBody["is_admin"])
+	//assert.Equal(t, mockUser.IsAdmin, responseBody["is_admin"])
 
 	uniMap, ok := responseBody["university"].(map[string]interface{})
 	assert.True(t, ok)

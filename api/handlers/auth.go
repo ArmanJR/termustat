@@ -418,9 +418,9 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 		"first_name":     user.FirstName,
 		"last_name":      user.LastName,
 		"email_verified": user.EmailVerified,
-		"is_admin":       user.IsAdmin,
-		"university":     nil,
-		"faculty":        nil,
+		//"is_admin":       user.IsAdmin,
+		"university": nil,
+		"faculty":    nil,
 	}
 
 	if universityResponse != nil {
