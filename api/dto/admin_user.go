@@ -46,7 +46,7 @@ type AdminUserResponse struct {
 	FacultyID     uuid.UUID `json:"faculty_id"`
 	Gender        string    `json:"gender"`
 	EmailVerified bool      `json:"email_verified"`
-	//IsAdmin       bool      `json:"is_admin"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	IsAdmin       bool      `json:"is_admin"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
