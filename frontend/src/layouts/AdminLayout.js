@@ -1,13 +1,10 @@
 import { useState } from "react";
 import { Link as RouterLink, Outlet } from "react-router-dom";
-
-import { adminLogout } from "../api/adminAuth.js";
-
+import { useAuth } from "../contexts/AuthContext";
 import styles from "./AdminLayout.module.css";
 import logo_full from "../images/logo-full-white.png";
 import logo from "../images/logo.png";
 
-// Material UI components
 import {
   IconButton,
   Drawer,
@@ -19,19 +16,18 @@ import {
   useMediaQuery,
 } from "@mui/material";
 
-// Material UI icons
 import {
   Dashboard,
   Menu,
   ExitToApp,
 } from "@mui/icons-material";
 
-// Sidebar menu items
 const menuItems = [
   { label: "صفحه اصلی", icon: <Dashboard />, route: "/admin/dashboard" }
 ];
 
 export default function AdminLayout() {
+  const { logout } = useAuth();
 
   // State to toggle the sidebar on mobile devices
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -41,7 +37,7 @@ export default function AdminLayout() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Sidebar drawer content (menu and logout)
+  // Sidebar drawer content
   const drawer = (
     <List>
       {menuItems.map(({ label, icon, route }) => (
@@ -54,7 +50,7 @@ export default function AdminLayout() {
         </ListItemButton>
       ))}
       <hr />
-      <ListItemButton key={"خروج"} onClick={adminLogout}>
+      <ListItemButton key={"خروج"} onClick={logout}>
         <ListItemIcon>
           <ExitToApp />
         </ListItemIcon>
@@ -68,11 +64,9 @@ export default function AdminLayout() {
 
   return (
     <div className={styles.pageWrapper}>
-
-      {/* Topbar: logo and title */}
+      
+      {/* Topbar */}
       <div className={styles.topbar}>
-
-        {/* Mobile hamburger menu button */}
         {isMobile && (
           <IconButton
             color="inherit"
@@ -83,14 +77,12 @@ export default function AdminLayout() {
             <Menu />
           </IconButton>
         )}
-        {/* Panel title */}
         <h1>
           {!isMobile && (
             <span style={{ color: "#309a9a" }}>&#9699; &nbsp;</span>
           )}
           پنل مدیریت
         </h1>
-        {/* Logo based on screen size */}
         <img src={isMobile ? logo : logo_full} className={styles.logo} />
       </div>
 
@@ -129,9 +121,8 @@ export default function AdminLayout() {
 
         {/* Content */}
         <div className={styles.content}>
-          <Outlet /> {/* Routed page content gets injected here */}
+          <Outlet />
         </div>
-
       </div>
     </div>
   );

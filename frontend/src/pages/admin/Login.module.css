@@ -35,11 +35,9 @@
   width: 76px;
 }
 
-.erorrMessage {
+.errorMessage {
   visibility: hidden;
   color: red;
-  height: 6px;
-  line-height: 6px;
   text-align: center;
   font-size: 14px;
 }
