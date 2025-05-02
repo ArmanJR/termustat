@@ -1,19 +1,19 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import styles from "./Login.module.css";
 import logo from "../../images/logo.png";
 import Input from "../../components/form/Input";
 import Button from "../../components/form/Button";
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { adminLogin } from "../../api/adminAuth";
-import { useNavigate } from "react-router-dom";
 
 const AdminLoginPage = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
 
   // Update state whenever user types into the input fields
   const handleChange = (e) => {
@@ -26,7 +26,7 @@ const AdminLoginPage = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    adminLogin(formData, navigate, setError);
+    login(formData, setError, navigate);
   };
 
   return (
@@ -58,7 +58,7 @@ const AdminLoginPage = () => {
             required
           />
           <div
-            className={styles.erorrMessage}
+            className={styles.errorMessage}
             style={error && {visibility: "visible"}}
           >
             {error}

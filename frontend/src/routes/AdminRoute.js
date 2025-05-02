@@ -1,50 +1,51 @@
+import { useEffect, useState, useRef } from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { getIsLoggedIn, getIsAdmin, checkAdminStatus, adminLogout } from "../api/adminAuth";
-import { useEffect, useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 
 /**
  * A protected route component for admin-only pages.
  * Checks if the user is logged in and has admin privileges.
  */
 const AdminRoute = () => {
-  const [adminChecked, setAdminChecked] = useState(false); // Tracks if admin status has been verified
+  const isFirstRender = useRef(true);
+  const { isAdmin, isLoggingOut, isLoggedIn, tryRefreshToken } = useAuth();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const check = async () => {
-      await checkAdminStatus(); // Verify if the logged-in user is an admin
-      setAdminChecked(true);    // Mark the check as completed
-    };
-
-    // Only check admin status if user is logged in
-    if (getIsLoggedIn()) {
-      check();
-    } else {
-      setAdminChecked(true);
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return; // Skip the effect on first render (loading state)
     }
+    const refreshToken = async () => {
+      await tryRefreshToken();
+      setLoading(false);
+    };
+    refreshToken();
   }, []);
 
-  // Redirect to /admin/login if the user is not logged in
-  if (!getIsLoggedIn()) {
-    return <Navigate to="/admin/login" />;
-  }
-
-  // Prevent rendering until admin status check is complete
-  if (!adminChecked) {
+  if (loading) {
     return <div></div>;
   }
 
-  // Show permission error if user is not an admin
-  if (!getIsAdmin()) {
+  if (!isLoggedIn) {
+    return <Navigate to="/admin/login" />;
+  }
+
+  if (!isAdmin && !isLoggingOut) {
     return (
-      <div>
-        You do not have permission to access this page. <br/>
-        Your session may have expired.
-        <button onClick={() => adminLogout()}>Log out</button>
+      <div style={{direction: "rtl"}}>
+        <p>
+          شما مجوز دسترسی به این صفحه را ندارید. بازگشت به
+          &nbsp;
+          <a href="/">
+            صفحه اصلی
+          </a>
+          .
+        </p>
       </div>
     );
   }
 
-  // Render child routes if all checks pass
   return <Outlet />;
 };
 
