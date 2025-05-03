@@ -48,6 +48,9 @@ export function AuthProvider({ children }) {
       setIsLoggedIn(null);
       setAccessToken(null);
       setIsAdmin(null);
+      const channel = new BroadcastChannel('auth-channel');
+      channel.postMessage('logout');
+      channel.close();
       window.location.href = "/";
     } catch (error) {
       console.log("Logout failed:", error);
@@ -81,6 +84,10 @@ export function AuthProvider({ children }) {
         isLoggedIn,
         isLoggingOut,
         isAdmin,
+        setAccessToken,
+        setIsLoggedIn,
+        setIsLoggingOut,
+        setIsAdmin,
         login,
         logout,
         tryRefreshToken,
