@@ -1,10 +1,11 @@
 import styles from "./Input.module.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import IconButton from "@mui/material/IconButton";
 
 const Input = ({ type, name, label, value, onChange, required }) => {
+  const [direction, setDirection] = useState("ltr");
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === "password";
 
@@ -12,6 +13,15 @@ const Input = ({ type, name, label, value, onChange, required }) => {
   const handleToggle = () => {
     setShowPassword((prev) => !prev);
   };
+
+  // Detect input direction based on the first typed character
+  useEffect(() => {
+    const firstChar = value.trim().charAt(0);
+    const rtlChars = /[\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC]/;
+    if (firstChar) {
+      setDirection(rtlChars.test(firstChar) ? "rtl" : "ltr");
+    }
+  }, [value]);
 
   return (
     <div className={styles.container}>
@@ -37,6 +47,7 @@ const Input = ({ type, name, label, value, onChange, required }) => {
           value={value}
           onChange={onChange}
           required={required}
+          dir={direction}
         />
       </div>
     </div>
