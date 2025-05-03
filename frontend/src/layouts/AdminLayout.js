@@ -103,16 +103,10 @@ export default function AdminLayout() {
                 width: 240,
                 border: "none",
                 boxSizing: "border-box",
-                direction: "rtl",
-                ...(isMobile && {
-                  right: 0,
-                  left: "auto",
-                  position: "absolute",
-                }),
               },
               "& .MuiListItemText-root": {
                 textAlign: "right",
-              },
+              }
             }}
           >
             {drawer}
