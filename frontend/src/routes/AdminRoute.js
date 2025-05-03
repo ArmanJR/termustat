@@ -27,7 +27,7 @@ const AdminRoute = () => {
     return <div></div>;
   }
 
-  if (!isLoggedIn) {
+  if (!isLoggedIn && !isLoggingOut) {
     return <Navigate to="/admin/login" />;
   }
 
