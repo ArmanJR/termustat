@@ -17,14 +17,6 @@ const Input = ({ type, name, label, value, onChange, required }) => {
     <div className={styles.container}>
       <label className={styles.label}>{label}</label>
       <div className={styles.inputWrapper}>
-        <input
-          className={styles.input}
-          type={isPassword && showPassword ? "text" : type}
-          name={name}
-          value={value}
-          onChange={onChange}
-          required={required}
-        />
         {isPassword && (
           <IconButton
             onClick={handleToggle}
@@ -38,6 +30,14 @@ const Input = ({ type, name, label, value, onChange, required }) => {
             )}
           </IconButton>
         )}
+        <input
+          className={styles.input}
+          type={isPassword && showPassword ? "text" : type}
+          name={name}
+          value={value}
+          onChange={onChange}
+          required={required}
+        />
       </div>
     </div>
   );

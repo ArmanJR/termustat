@@ -33,7 +33,7 @@ const AdminRoute = () => {
 
   if (!isAdmin && !isLoggingOut) {
     return (
-      <div style={{direction: "rtl"}}>
+      <div>
         <p>
           شما مجوز دسترسی به این صفحه را ندارید. بازگشت به
           &nbsp;
