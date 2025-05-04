@@ -1,0 +1,29 @@
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.table {
+  border-collapse: collapse;
+  border: 1px solid #dddddd;
+  width: 100%; 
+  margin: 30px auto;
+}
+
+.td {
+  border-bottom: 1px solid #dddddd;
+  height: 40px;
+  padding: 10px;
+  padding-left: 0;
+}
+
+.td:nth-last-child(1), .td:nth-last-child(2) {
+  width: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.tr:hover {
+  background-color: #e1ebeb;
+}
