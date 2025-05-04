@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import AuthListener from '../services/AuthListener';
 import AuthRedirect from './AuthRedirect';
 import AdminRoute from './AdminRoute';
 
@@ -10,26 +11,29 @@ const Home = () => <div>Home</div>;
 
 function AppRoutes() {
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<Home />} />
-      <Route
-        path="/admin/login"
-        element={
-          /* Redirect to /admin/dashboard if logged in */
-          <AuthRedirect redirectTo="/admin/dashboard">
-            <AdminLogin />
-          </AuthRedirect>
-        }
-      />
-      
-      {/* Admin Protected Routes */}
-      <Route element={<AdminRoute />}>
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route path="dashboard" element={<Dashboard />} />
+    <>
+      <AuthListener />
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Home />} />
+        <Route
+          path="/admin/login"
+          element={
+            /* Redirect to /admin/dashboard if logged in */
+            <AuthRedirect redirectTo="/admin/dashboard">
+              <AdminLogin />
+            </AuthRedirect>
+          }
+        />
+
+        {/* Admin Protected Routes */}
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="dashboard" element={<Dashboard />} />
+          </Route>
         </Route>
-      </Route>
-    </Routes>
+      </Routes>
+    </>
   );
 }
 
