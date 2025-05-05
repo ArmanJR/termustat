@@ -4,8 +4,8 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import IconButton from "@mui/material/IconButton";
 
-const Input = ({ type, name, label, value, onChange, required }) => {
-  const [direction, setDirection] = useState("ltr");
+const Input = ({ type, name, label, value, dir = "rtl", onChange, required }) => {
+  const [direction, setDirection] = useState(dir);
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === "password";
 
