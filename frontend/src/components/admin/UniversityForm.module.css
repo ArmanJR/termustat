@@ -1,0 +1,35 @@
+.form {
+  padding: 5px 20px;
+}
+
+.form > * {
+  margin-top: 36px;
+}
+
+.form > :last-child, .form > :first-child  {
+  margin-top: 5px;
+}
+
+.select {
+  width: 100%;
+  height: 50px;
+  border: 2px solid #cccccc;
+  border-radius: 10px;
+  background-color: #ffffff;
+  cursor: pointer;
+}
+
+.select:focus {
+  border: 2px solid #cccccc;
+  border-radius: 10px;
+  outline: none;
+}
+
+.whiteButton, .whiteButton:hover {
+  background-color: #ffffff;
+  color: #222222;
+}
+
+.errorMessage {
+  color: red;
+}

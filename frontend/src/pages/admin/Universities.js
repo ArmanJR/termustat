@@ -1,4 +1,6 @@
+import { useState } from "react";
 import styles from "./Universities.module.css";
+import UniversityForm from "../../components/admin/UniversityForm";
 
 import {
   IconButton,
@@ -24,6 +26,23 @@ const Universities = () => {
   const theme = useTheme();
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
 
+  const [dialog, setDialog] = useState({
+    open: false,
+    mode: null,
+    university: null,
+  });
+
+  const openDialog = (mode, university = null) => {
+    setDialog({ open: true, mode, university });
+  };
+
+  const closeDialog = () => {
+    setDialog((prev) => ({ ...prev, open: false }));
+    setTimeout(() => {
+      setDialog({ open: false, mode: null, university: null });
+    }, 300);
+  };
+  
   return (
     <div>
       <div className={styles.top}>
@@ -37,6 +56,7 @@ const Universities = () => {
                 backgroundColor: "#42baba",
               },
             }}
+            onClick={() => openDialog("add")}
           >
             <Add sx={{fontSize: "1.2em"}} />
           </IconButton>
@@ -53,12 +73,27 @@ const Universities = () => {
               </td>
               { !isTablet && <td className={styles.td}>{ uni.name_en }</td> }
               { !isTablet && <td className={styles.td}>{ uni.is_active ? "فعال" : "غیرفعال" }</td> }
-              <td className={styles.td}><IconButton><Edit /></IconButton></td>
-              <td className={styles.td}><IconButton><Delete /></IconButton></td>
+              <td className={styles.td}>
+                <IconButton onClick={() => openDialog("edit", uni)}>
+                  <Edit />
+                </IconButton>
+              </td>
+              <td className={styles.td}>
+                <IconButton onClick={() => openDialog("delete", uni)}>
+                  <Delete />
+                </IconButton>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      <UniversityForm
+        open={dialog.open}
+        handleClose={closeDialog}
+        university={dialog.university}
+        mode={dialog.mode}
+      />
     </div>
   );
 };
