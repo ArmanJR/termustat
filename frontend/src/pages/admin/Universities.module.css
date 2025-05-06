@@ -1,16 +1,3 @@
-.addButton {
-  background-color: #309a9a !important;
-  color: #ffffff !important;
-}
-
-.addButton:hover {
-  background-color: #42baba !important;
-}
-
-.addButton * {
-  font-size: 1.2em !important;
-}
-
 .top {
   display: flex;
   justify-content: space-between;

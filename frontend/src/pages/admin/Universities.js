@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styles from "./Universities.module.css";
+import UniversitiesTheme from "./UniversitiesTheme";
 import UniversityForm from "../../components/admin/UniversityForm";
 
 import {
@@ -7,14 +8,10 @@ import {
   Tooltip,
   useTheme,
   useMediaQuery,
+  ThemeProvider,
 } from "@mui/material";
 
-import {
-  Add,
-  Edit,
-  Delete,
-  Block,
-} from "@mui/icons-material";
+import { Add, Edit, Delete, Block } from "@mui/icons-material";
 
 const universities = [
   { id: 1, name_en: "University 1", name_fa: "دانشگاه ۱", is_active: true },
@@ -42,71 +39,66 @@ const Universities = () => {
       setDialog({ open: false, mode: null, university: null });
     }, 300);
   };
-  
+
   return (
-    <div>
-      <div className={styles.top}>
-        <h1>دانشگاه‌ها</h1>
-        <Tooltip title="افزودن دانشگاه" placement="right" arrow>
-          <IconButton
-            className={styles.addButton}
-            onClick={() => openDialog("add")}
-          >
-            <Add />
-          </IconButton>
-        </Tooltip>
-      </div>
+    <ThemeProvider theme={UniversitiesTheme}>
+      <div>
+        <div className={styles.top}>
+          <h1>دانشگاه‌ها</h1>
+          <Tooltip title="افزودن دانشگاه" placement="right" arrow>
+            <IconButton variant="addButton" onClick={() => openDialog("add")}>
+              <Add />
+            </IconButton>
+          </Tooltip>
+        </div>
 
-      {universities.length === 0 ? (
-        <p>دانشگاهی برای نمایش وجود ندارد.</p>
-      ) : (
-        <>
-          <table className={styles.table}>
-            <tbody>
-              {universities.map((uni) => (
-                <tr key={uni.id} className={styles.tr}>
-                  <td className={styles.td}>
-                    {uni.name_fa}
-                    {isTablet && !uni.is_active && (
-                      <IconButton disabled>
-                        <Block />
-                      </IconButton>
+        {universities.length === 0 ? (
+          <p>دانشگاهی برای نمایش وجود ندارد.</p>
+        ) : (
+          <>
+            <table className={styles.table}>
+              <tbody>
+                {universities.map((uni) => (
+                  <tr key={uni.id} className={styles.tr}>
+                    <td className={styles.td}>
+                      {uni.name_fa}
+                      {isTablet && !uni.is_active && (
+                        <IconButton disabled>
+                          <Block />
+                        </IconButton>
+                      )}
+                    </td>
+                    {!isTablet && <td className={styles.td}>{uni.name_en}</td>}
+                    {!isTablet && (
+                      <td className={styles.td}>
+                        {uni.is_active ? "فعال" : "غیرفعال"}
+                      </td>
                     )}
-                  </td>
-                  {!isTablet && (
                     <td className={styles.td}>
-                      {uni.name_en}
+                      <IconButton onClick={() => openDialog("edit", uni)}>
+                        <Edit />
+                      </IconButton>
                     </td>
-                  )}
-                  {!isTablet && (
                     <td className={styles.td}>
-                      {uni.is_active ? "فعال" : "غیرفعال"}
+                      <IconButton onClick={() => openDialog("delete", uni)}>
+                        <Delete />
+                      </IconButton>
                     </td>
-                  )}
-                  <td className={styles.td}>
-                    <IconButton onClick={() => openDialog("edit", uni)}>
-                      <Edit />
-                    </IconButton>
-                  </td>
-                  <td className={styles.td}>
-                    <IconButton onClick={() => openDialog("delete", uni)}>
-                      <Delete />
-                    </IconButton>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
-          <UniversityForm
-            open={dialog.open}
-            handleClose={closeDialog}
-            university={dialog.university}
-            mode={dialog.mode}
-          />
-        </>
-      )}
-    </div>
+            <UniversityForm
+              open={dialog.open}
+              handleClose={closeDialog}
+              university={dialog.university}
+              mode={dialog.mode}
+            />
+          </>
+        )}
+      </div>
+    </ThemeProvider>
   );
 };
 
