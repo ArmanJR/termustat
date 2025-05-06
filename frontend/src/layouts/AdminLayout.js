@@ -41,11 +41,23 @@ export default function AdminLayout() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
+  // Close the drawer on mobile when a menu item is selected
+  const handleMenuItemClick = () => {
+    if (isMobile) {
+      setMobileOpen(false);
+    }
+  };
+
   // Sidebar drawer content
   const drawer = (
     <List>
       {menuItems.map(({ label, icon, route }) => (
-        <ListItemButton key={label} component={RouterLink} to={route}>
+        <ListItemButton
+          key={label}
+          component={RouterLink}
+          to={route}
+          onClick={handleMenuItemClick}
+        >
           <ListItemIcon>{icon}</ListItemIcon>
           <ListItemText primary={label} />
         </ListItemButton>
