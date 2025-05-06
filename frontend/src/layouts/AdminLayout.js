@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link as RouterLink, Outlet } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import styles from "./AdminLayout.module.css";
+import AdminLayoutTheme from "./AdminLayoutTheme";
 import logo_full from "../images/logo-full-white.png";
 import logo from "../images/logo.png";
 
@@ -14,6 +15,7 @@ import {
   ListItemText,
   useTheme,
   useMediaQuery,
+  ThemeProvider,
 } from "@mui/material";
 
 import {
@@ -45,10 +47,7 @@ export default function AdminLayout() {
       {menuItems.map(({ label, icon, route }) => (
         <ListItemButton key={label} component={RouterLink} to={route}>
           <ListItemIcon>{icon}</ListItemIcon>
-          <ListItemText
-            primary={label}
-            primaryTypographyProps={{ fontFamily: "Vazirmatn, sans-serif" }}
-          />
+          <ListItemText primary={label} />
         </ListItemButton>
       ))}
       <hr />
@@ -56,70 +55,52 @@ export default function AdminLayout() {
         <ListItemIcon>
           <ExitToApp />
         </ListItemIcon>
-        <ListItemText
-          primary={"خروج"}
-          primaryTypographyProps={{ fontFamily: "Vazirmatn, sans-serif" }}
-        />
+        <ListItemText primary={"خروج"} />
       </ListItemButton>
     </List>
   );
 
   return (
-    <div className={styles.pageWrapper}>
-      
-      {/* Topbar */}
-      <div className={styles.topbar}>
-        {isMobile && (
-          <IconButton
-            color="inherit"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2 }}
-          >
-            <Menu />
-          </IconButton>
-        )}
-        <h1>
-          {!isMobile && (
-            <span style={{ color: "#309a9a" }}>&#9699; &nbsp;</span>
+    <ThemeProvider theme={AdminLayoutTheme}>
+      <div className={styles.pageWrapper}>
+        
+        {/* Topbar */}
+        <div className={styles.topbar}>
+          {isMobile && (
+            <IconButton onClick={handleDrawerToggle}>
+              <Menu />
+            </IconButton>
           )}
-          پنل مدیریت
-        </h1>
-        <img src={isMobile ? logo : logo_full} className={styles.logo} />
-      </div>
-
-      {/* Main layout area: sidebar + content */}
-      <div className={styles.main}>
-
-        {/* Sidebar */}
-        <div className={styles.sidebar}>
-          <Drawer
-            anchor={"right"}
-            variant={isMobile ? "temporary" : "permanent"}
-            open={isMobile ? mobileOpen : true}
-            onClose={handleDrawerToggle}
-            ModalProps={{ keepMounted: true }}
-            sx={{
-              "& .MuiDrawer-paper": {
-                position: "relative",
-                width: 240,
-                border: "none",
-                boxSizing: "border-box",
-              },
-              "& .MuiListItemText-root": {
-                textAlign: "right",
-              }
-            }}
-          >
-            {drawer}
-          </Drawer>
+          <h1>
+            {!isMobile && (
+              <span style={{ color: "#309a9a" }}>&#9699; &nbsp;</span>
+            )}
+            پنل مدیریت
+          </h1>
+          <img src={isMobile ? logo : logo_full} className={styles.logo} />
         </div>
 
-        {/* Content */}
-        <div className={styles.content}>
-          <Outlet />
+        {/* Main layout area: sidebar + content */}
+        <div className={styles.main}>
+
+          {/* Sidebar */}
+          <div className={styles.sidebar}>
+            <Drawer
+              variant={isMobile ? "temporary" : "permanent"}
+              open={isMobile ? mobileOpen : true}
+              onClose={handleDrawerToggle}
+              ModalProps={{ keepMounted: true }}
+            >
+              {drawer}
+            </Drawer>
+          </div>
+
+          {/* Content */}
+          <div className={styles.content}>
+            <Outlet />
+          </div>
         </div>
       </div>
-    </div>
+    </ThemeProvider>
   );
 }
