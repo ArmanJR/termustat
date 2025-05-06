@@ -1,3 +1,8 @@
+.dialogPaper {
+  width: 100% !important;
+  max-width: 460px !important;
+}
+
 .form {
   padding: 5px 20px;
 }
@@ -8,21 +13,6 @@
 
 .form > :last-child, .form > :first-child  {
   margin-top: 5px;
-}
-
-.select {
-  width: 100%;
-  height: 50px;
-  border: 2px solid #cccccc;
-  border-radius: 10px;
-  background-color: #ffffff;
-  cursor: pointer;
-}
-
-.select:focus {
-  border: 2px solid #cccccc;
-  border-radius: 10px;
-  outline: none;
 }
 
 .whiteButton, .whiteButton:hover {

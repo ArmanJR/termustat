@@ -82,12 +82,7 @@ const UniversityForm = ({ open, handleClose, university, mode }) => {
     <Dialog
       open={open}
       onClose={handleClose}
-      sx={{
-        "& .MuiDialog-paper": {
-          width: "100%",
-          maxWidth: "460px",
-        },
-      }}
+      classes={{paper: styles.dialogPaper}}
     >
       <h1>
         <span style={{ color: "#309a9a" }}>&#9699; &nbsp;</span>
