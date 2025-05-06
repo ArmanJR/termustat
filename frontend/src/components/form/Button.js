@@ -1,8 +1,15 @@
 import styles from './Button.module.css';
 
-const Button = ({type, value}) => {
+const Button = ({type = "button", value, onClick = () => {}, style, className}) => {
   return (
-    <button className={styles.button} type={type}>{value}</button>
+    <button
+      className={`${styles.button} ${className || ''}`}
+      type={type}
+      onClick={onClick}
+      style={style}
+    >
+      {value}
+    </button>
   );
 };
 

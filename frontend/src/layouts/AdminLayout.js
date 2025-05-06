@@ -18,12 +18,14 @@ import {
 
 import {
   Dashboard,
+  School,
   Menu,
   ExitToApp,
 } from "@mui/icons-material";
 
 const menuItems = [
-  { label: "صفحه اصلی", icon: <Dashboard />, route: "/admin/dashboard" }
+  { label: "صفحه اصلی", icon: <Dashboard />, route: "/admin/dashboard" },
+  { label: "دانشگاه‌ها", icon: <School />, route: "/admin/universities" },
 ];
 
 export default function AdminLayout() {

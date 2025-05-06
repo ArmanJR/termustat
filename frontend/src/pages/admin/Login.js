@@ -46,6 +46,7 @@ const AdminLoginPage = () => {
             type="email"
             name="user_email"
             value={formData.email}
+            dir="ltr"
             onChange={handleChange}
             required
           />
@@ -54,6 +55,7 @@ const AdminLoginPage = () => {
             type="password"
             name="user_password"
             value={formData.password}
+            dir="ltr"
             onChange={handleChange}
             required
           />
