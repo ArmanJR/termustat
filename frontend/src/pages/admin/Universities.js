@@ -49,16 +49,10 @@ const Universities = () => {
         <h1>دانشگاه‌ها</h1>
         <Tooltip title="افزودن دانشگاه" placement="right" arrow>
           <IconButton
-            sx={{
-              backgroundColor: "#309a9a",
-              color: "#ffffff",
-              "&:hover": {
-                backgroundColor: "#42baba",
-              },
-            }}
+            className={styles.addButton}
             onClick={() => openDialog("add")}
           >
-            <Add sx={{fontSize: "1.2em"}} />
+            <Add />
           </IconButton>
         </Tooltip>
       </div>
