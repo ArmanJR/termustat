@@ -47,7 +47,7 @@ const Universities = () => {
     <div>
       <div className={styles.top}>
         <h1>دانشگاه‌ها</h1>
-        <Tooltip title="افزدون دانشگاه" placement="right" arrow>
+        <Tooltip title="افزودن دانشگاه" placement="right" arrow>
           <IconButton
             sx={{
               backgroundColor: "#309a9a",
