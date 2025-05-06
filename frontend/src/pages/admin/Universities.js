@@ -57,37 +57,55 @@ const Universities = () => {
         </Tooltip>
       </div>
 
-      <table className={styles.table}>
-        <tbody>
-          {universities.map((uni) => (
-            <tr key={uni.id} className={styles.tr}>
-              <td className={styles.td}>
-                { uni.name_fa }
-                { (isTablet && !uni.is_active) && <IconButton disabled><Block /></IconButton> }
-              </td>
-              { !isTablet && <td className={styles.td}>{ uni.name_en }</td> }
-              { !isTablet && <td className={styles.td}>{ uni.is_active ? "فعال" : "غیرفعال" }</td> }
-              <td className={styles.td}>
-                <IconButton onClick={() => openDialog("edit", uni)}>
-                  <Edit />
-                </IconButton>
-              </td>
-              <td className={styles.td}>
-                <IconButton onClick={() => openDialog("delete", uni)}>
-                  <Delete />
-                </IconButton>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {universities.length === 0 ? (
+        <p>دانشگاهی برای نمایش وجود ندارد.</p>
+      ) : (
+        <>
+          <table className={styles.table}>
+            <tbody>
+              {universities.map((uni) => (
+                <tr key={uni.id} className={styles.tr}>
+                  <td className={styles.td}>
+                    {uni.name_fa}
+                    {isTablet && !uni.is_active && (
+                      <IconButton disabled>
+                        <Block />
+                      </IconButton>
+                    )}
+                  </td>
+                  {!isTablet && (
+                    <td className={styles.td}>
+                      {uni.name_en}
+                    </td>
+                  )}
+                  {!isTablet && (
+                    <td className={styles.td}>
+                      {uni.is_active ? "فعال" : "غیرفعال"}
+                    </td>
+                  )}
+                  <td className={styles.td}>
+                    <IconButton onClick={() => openDialog("edit", uni)}>
+                      <Edit />
+                    </IconButton>
+                  </td>
+                  <td className={styles.td}>
+                    <IconButton onClick={() => openDialog("delete", uni)}>
+                      <Delete />
+                    </IconButton>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-      <UniversityForm
-        open={dialog.open}
-        handleClose={closeDialog}
-        university={dialog.university}
-        mode={dialog.mode}
-      />
+          <UniversityForm
+            open={dialog.open}
+            handleClose={closeDialog}
+            university={dialog.university}
+            mode={dialog.mode}
+          />
+        </>
+      )}
     </div>
   );
 };
