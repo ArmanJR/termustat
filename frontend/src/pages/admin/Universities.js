@@ -88,15 +88,14 @@ const Universities = () => {
                 ))}
               </tbody>
             </table>
-
-            <UniversityForm
-              open={dialog.open}
-              handleClose={closeDialog}
-              university={dialog.university}
-              mode={dialog.mode}
-            />
           </>
         )}
+        <UniversityForm
+          open={dialog.open}
+          handleClose={closeDialog}
+          university={dialog.university}
+          mode={dialog.mode}
+        />
       </div>
     </ThemeProvider>
   );
