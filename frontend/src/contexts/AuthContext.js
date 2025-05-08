@@ -1,5 +1,6 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
+import { tokenManager } from "../utils/tokenManager";
 
 const AuthContext = createContext();
 
@@ -76,6 +77,15 @@ export function AuthProvider({ children }) {
       return null;
     }
   };
+
+useEffect(() => {
+  tokenManager.onSet(setAccessToken);
+  tokenManager.onRefresh(tryRefreshToken);
+}, []);
+
+useEffect(() => {
+  tokenManager.set(accessToken);
+}, [accessToken]);
 
   return (
     <AuthContext.Provider
