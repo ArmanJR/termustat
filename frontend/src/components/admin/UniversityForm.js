@@ -3,22 +3,36 @@ import Input from "../form/Input";
 import Button from "../form/Button";
 import styles from "./UniversityForm.module.css";
 import UniversityFormTheme from "./UniversityFormTheme";
+import { Dialog, DialogContent, ThemeProvider, Snackbar, Alert } from "@mui/material";
+import { addUniversity, deleteUniversity, editUniversity } from "../../api/admin/universities";
 
-import { Dialog, DialogContent, ThemeProvider } from "@mui/material";
+const UniversityForm = ({ open, handleClose, university, mode, refetchUniversities }) => {
+  const [id, setId] = useState(null);
 
-const UniversityForm = ({ open, handleClose, university, mode }) => {
   const [formData, setFormData] = useState({
     name_fa: "",
     name_en: "",
     is_active: true,
   });
+
   const [error, setError] = useState({
     name_fa: "",
     name_en: "",
   });
 
-  const containsPersian = (text) => /[\u0600-\u06FF]/.test(text);
-  const containsEnglish = (text) => /[A-Za-z]/.test(text);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbar({
+      open: true,
+      message,
+      severity,
+    });
+  };
 
   useEffect(() => {
     setError({
@@ -26,12 +40,14 @@ const UniversityForm = ({ open, handleClose, university, mode }) => {
       name_en: "",
     });
     if ((mode == "edit" || mode == "delete") && university) {
+      setId(university.id);
       setFormData({
         name_fa: university.name_fa,
         name_en: university.name_en,
         is_active: university.is_active,
       });
     } else if (mode === "add") {
+      setId(null);
       setFormData({
         name_fa: "",
         name_en: "",
@@ -52,9 +68,12 @@ const UniversityForm = ({ open, handleClose, university, mode }) => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
   
+    const containsPersian = (text) => /[\u0600-\u06FF]/.test(text);
+    const containsEnglish = (text) => /[A-Za-z]/.test(text);
+
     const newErrors = {
       name_fa: "",
       name_en: "",
@@ -74,8 +93,25 @@ const UniversityForm = ({ open, handleClose, university, mode }) => {
       return;
     }
   
-    alert(JSON.stringify(formData));
-    handleClose();
+    try {
+      if (mode == "add") {
+        await addUniversity(formData);
+        showSnackbar("دانشگاه با موفقیت افزوده شد!", "success");
+      } else if (mode == "delete") {
+        await deleteUniversity(id);
+        showSnackbar("دانشگاه با موفقیت حذف شد!", "success");
+      } else if (mode == "edit") {
+        await editUniversity(id, formData);
+        showSnackbar("دانشگاه با موفقیت ویرایش شد!", "success");
+      }
+      refetchUniversities();
+      handleClose();
+    } catch (error) {
+      if (error.response?.status === 409)
+        showSnackbar("این دانشگاه قبلا در سیستم ثبت شده است.", "warning");
+      else
+        showSnackbar("خطا در افزودن دانشگاه. لطفا دوباره تلاش کنید.", "error");
+    }
   };
   
   return (
@@ -156,6 +192,18 @@ const UniversityForm = ({ open, handleClose, university, mode }) => {
           </form>
         </DialogContent>
       </Dialog>
+      
+      <Snackbar
+        open={snackbar.open}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </ThemeProvider>
   );
 };

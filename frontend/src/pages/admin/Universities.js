@@ -121,6 +121,7 @@ const Universities = () => {
           handleClose={closeDialog}
           university={dialog.university}
           mode={dialog.mode}
+          refetchUniversities={fetchUniversities}
         />
       </div>
     </ThemeProvider>
