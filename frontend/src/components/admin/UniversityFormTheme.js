@@ -10,6 +10,22 @@ const UniversityFormTheme = createTheme({
         },
       },
     },
+    MuiSnackbar: {
+      defaultProps: {
+        anchorOrigin: { vertical: "bottom", horizontal: "center" },
+        autoHideDuration: 3000,
+      },
+    },
+    MuiAlert: {
+      defaultProps: {
+        variant: "filled",
+      },
+      styleOverrides: {
+        filled: {
+          width: "100%",
+        },
+      },
+    },
   },
 });
 

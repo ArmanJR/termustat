@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import styles from "./Universities.module.css";
 import UniversitiesTheme from "./UniversitiesTheme";
 import UniversityForm from "../../components/admin/UniversityForm";
+import { getUniversities } from "../../api/admin/universities";
 
 import {
   IconButton,
@@ -12,12 +13,6 @@ import {
 } from "@mui/material";
 
 import { Add, Edit, Delete, Block } from "@mui/icons-material";
-
-const universities = [
-  { id: 1, name_en: "University 1", name_fa: "دانشگاه ۱", is_active: true },
-  { id: 2, name_en: "University 2", name_fa: "دانشگاه ۲", is_active: true },
-  { id: 3, name_en: "University 3", name_fa: "دانشگاه ۳", is_active: false },
-];
 
 const Universities = () => {
   const theme = useTheme();
@@ -40,6 +35,33 @@ const Universities = () => {
     }, 300);
   };
 
+  const [universities, setUniversities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const isFirstRender = useRef(true);
+
+  const fetchUniversities = async () => {
+    try {
+      const data = await getUniversities();
+      setUniversities(data);
+    } catch (error) {
+      if (error.response?.status === 500)
+        setError("مشکلی در سرور رخ داده است. لطفا دوباره تلاش کنید.");
+      else
+        setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return; // Skip the effect on first render (loading state)
+    }
+    fetchUniversities();
+  }, []);
+
   return (
     <ThemeProvider theme={UniversitiesTheme}>
       <div>
@@ -52,7 +74,11 @@ const Universities = () => {
           </Tooltip>
         </div>
 
-        {universities.length === 0 ? (
+        {loading ? (
+          <p></p>
+        ) : error ? (
+          <p>{error}</p>
+        ) : universities.length === 0 ? (
           <p>دانشگاهی برای نمایش وجود ندارد.</p>
         ) : (
           <>
@@ -88,15 +114,15 @@ const Universities = () => {
                 ))}
               </tbody>
             </table>
-
-            <UniversityForm
-              open={dialog.open}
-              handleClose={closeDialog}
-              university={dialog.university}
-              mode={dialog.mode}
-            />
           </>
         )}
+        <UniversityForm
+          open={dialog.open}
+          handleClose={closeDialog}
+          university={dialog.university}
+          mode={dialog.mode}
+          refetchUniversities={fetchUniversities}
+        />
       </div>
     </ThemeProvider>
   );
