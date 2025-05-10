@@ -6,8 +6,10 @@ Content-Type: application/json
   "email": "test@example.com",
   "password": "strongpassword",
   "student_id": "ST12345",
-  "first_name": "Test",
-  "last_name": "User",
+  "first_name": "ادمین",
+  "last_name": "ادمینی",
+  "university_id": "00000000-0000-4000-a000-000000000001",
+  "faculty_id": "00000000-0000-4000-a000-000000000002",
   "gender": "male"
 }
 
@@ -24,7 +26,7 @@ Content-Type: application/json
 }
 
 ### 4. Set the access token
-@auth_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMmExZmQyN2EtZTYyYS00ZGM4LWE4NWQtNmZlN2NlNTk4MDlmIiwic2NwIjpbImFkbWluLWRhc2hib2FyZCJdLCJpc3MiOiJ0ZXJtdXN0YXQiLCJzdWIiOiIyYTFmZDI3YS1lNjJhLTRkYzgtYTg1ZC02ZmU3Y2U1OTgwOWYiLCJleHAiOjE3NDY2NjA2NDcsIm5iZiI6MTc0NjA1NTg0NywiaWF0IjoxNzQ2MDU1ODQ3fQ.rb08qpsklLrhYiHzUmTH1cAuzxSaHxaF7uJC2ENjjDY
+@auth_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMmExZmQyN2EtZTYyYS00ZGM4LWE4NWQtNmZlN2NlNTk4MDlmIiwic2NwIjpbImFkbWluLWRhc2hib2FyZCJdLCJpc3MiOiJ0ZXJtdXN0YXQiLCJzdWIiOiIyYTFmZDI3YS1lNjJhLTRkYzgtYTg1ZC02ZmU3Y2U1OTgwOWYiLCJleHAiOjE3NDczNDI2NzYsIm5iZiI6MTc0NjczNzg3NiwiaWF0IjoxNzQ2NzM3ODc2fQ.FNB56hd1DwAME-qViUM_epYZrt9pxXeLNWOi77qe0bs
 
 ### 5. Get current user info
 GET http://localhost:8080/api/v1/user/me

@@ -11,7 +11,7 @@ type Faculty struct {
 	NameEn       string    `gorm:"not null"`
 	NameFa       string    `gorm:"not null"`
 	ShortCode    string    `gorm:"not null;size:10"`
-	IsActive     bool      `gorm:"default:true;index"`
+	IsActive     bool      `gorm:"not null"`
 	CreatedAt    time.Time `gorm:"autoCreateTime"`
 	UpdatedAt    time.Time `gorm:"autoUpdateTime"`
 }

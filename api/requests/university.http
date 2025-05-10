@@ -1,5 +1,5 @@
 ### [get token by login as an admin user]
-@auth_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiN2RlNzY4YjgtOWJlMS00NDVmLWJiZWMtMzQ5OTBjZTc0NGYxIiwiaXNzIjoidGVybXVzdGF0Iiwic3ViIjoiN2RlNzY4YjgtOWJlMS00NDVmLWJiZWMtMzQ5OTBjZTc0NGYxIiwiZXhwIjoxNzQ1ODAzMTI0LCJuYmYiOjE3NDU2MzAzMjQsImlhdCI6MTc0NTYzMDMyNH0.9Ph-AVgoLNf5J5r6jk-Cw_ovAoMIDFJ2SNbSb7Nfmf8
+@auth_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMmExZmQyN2EtZTYyYS00ZGM4LWE4NWQtNmZlN2NlNTk4MDlmIiwic2NwIjpbImFkbWluLWRhc2hib2FyZCJdLCJpc3MiOiJ0ZXJtdXN0YXQiLCJzdWIiOiIyYTFmZDI3YS1lNjJhLTRkYzgtYTg1ZC02ZmU3Y2U1OTgwOWYiLCJleHAiOjE3NDczNDI2NzYsIm5iZiI6MTc0NjczNzg3NiwiaWF0IjoxNzQ2NzM3ODc2fQ.FNB56hd1DwAME-qViUM_epYZrt9pxXeLNWOi77qe0bs
 
 ### Add universities
 ### Kharazmi
@@ -13,4 +13,4 @@ Authorization: Bearer {{auth_token}}
 POST http://localhost:8080/api/v1/admin/universities
 Authorization: Bearer {{auth_token}}
 
-{ "name_en": "Beheshti", "name_fa": "بهشتی", "is_active": true }
+{ "name_en": "Beheshti", "name_fa": "بهشتی", "is_active": false }

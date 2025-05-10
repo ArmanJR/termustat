@@ -65,8 +65,9 @@ func main() {
 		log.Fatal("Failed to connect to database", zap.Error(err))
 	}
 
-	if err := database.AutoMigrate(db); err != nil {
-		log.Fatal("Database migration failed", zap.Error(err))
+	// Run SQL migrations
+	if err := database.RunMigrationsWithPathResolution(db, log); err != nil {
+		log.Fatal("SQL migrations failed", zap.Error(err))
 	}
 
 	// Initialize repositories

@@ -3,8 +3,10 @@ package database
 import (
 	"fmt"
 	"github.com/armanjr/termustat/api/config"
-	"github.com/armanjr/termustat/api/models"
-	"gorm.io/driver/postgres"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	gormPostgres "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"time"
 )
@@ -15,7 +17,7 @@ func NewDatabase(config config.DatabaseConfig) (*gorm.DB, error) {
 		config.Host, config.User, config.Password, config.DBName, config.Port, config.SSLMode, config.Timezone,
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(gormPostgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
@@ -31,18 +33,29 @@ func NewDatabase(config config.DatabaseConfig) (*gorm.DB, error) {
 	return db, nil
 }
 
-func AutoMigrate(db *gorm.DB) error {
-	return db.AutoMigrate(
-		&models.University{},
-		&models.Faculty{},
-		&models.User{},
-		&models.EmailVerification{},
-		&models.Course{},
-		&models.CourseTime{},
-		&models.UserCourse{},
-		&models.PasswordReset{},
-		&models.Professor{},
-		&models.Semester{},
-		&models.RefreshToken{},
+func RunMigrations(db *gorm.DB, migrationsDir string) error {
+	sqlDB, err := db.DB()
+	if err != nil {
+		return fmt.Errorf("getting raw DB handle: %w", err)
+	}
+
+	driver, err := postgres.WithInstance(sqlDB, &postgres.Config{})
+	if err != nil {
+		return fmt.Errorf("creating postgres driver: %w", err)
+	}
+
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://"+migrationsDir,
+		"postgres",
+		driver,
 	)
+	if err != nil {
+		return fmt.Errorf("constructing migrate instance: %w", err)
+	}
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return fmt.Errorf("applying migrations: %w", err)
+	}
+
+	return nil
 }
