@@ -121,7 +121,7 @@ func SetupRoutes(app *app.App, h *Handlers, authService services.AuthService, ad
 			faculties.GET("/:id", h.Faculty.GetByID)
 			faculties.PUT("/:id", h.Faculty.Update)
 			faculties.DELETE("/:id", h.Faculty.Delete)
-			faculties.GET("/courses/:facultyID", h.Course.GetByFaculty)
+			faculties.GET("/:facultyID/courses", h.Course.GetByFaculty)
 		}
 
 		// Course routes
