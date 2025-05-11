@@ -166,7 +166,7 @@ func (s *courseService) GetAllByFaculty(facultyID uuid.UUID) ([]*dto.CourseRespo
 		return nil, err
 	}
 
-	courses, err := s.courseRepo.FindAllBySemester(facultyID)
+	courses, err := s.courseRepo.FindAllByFaculty(facultyID)
 	if err != nil {
 		s.logger.Error("Failed to fetch courses",
 			zap.String("faculty_id", facultyID.String()),
