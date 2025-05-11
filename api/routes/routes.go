@@ -94,7 +94,7 @@ func SetupRoutes(app *app.App, h *Handlers, authService services.AuthService, ad
 			universities.DELETE("/:id", h.University.Delete)
 			universities.GET("/:id/professors", h.Professor.GetAllByUniversity)
 			universities.GET("/:id/faculties", h.Faculty.GetAllByUniversity)
-			universities.GET("/:id/faculty/:short_code", h.Faculty.GetByUniversityAndShortCode)
+			universities.GET("/:id/faculties/:short_code", h.Faculty.GetByUniversityAndShortCode)
 		}
 
 		// Professor routes
