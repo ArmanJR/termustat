@@ -107,16 +107,16 @@ func (h *CourseHandler) Get(c *gin.Context) {
 // @Tags         courses
 // @Accept       json
 // @Produce      json
-// @Param        facultyID  path      string            true  "Faculty ID"
+// @Param        id         path      string             true  "Faculty ID"
 // @Success      200        {array}   dto.CourseResponse
 // @Failure      400        {object}  dto.ErrorResponse  "Invalid faculty ID"
 // @Failure      500        {object}  dto.ErrorResponse  "Internal server error"
-// @Router       /faculties/{facultyID}/courses [get]
+// @Router       /faculties/{id}/courses [get]
 func (h *CourseHandler) GetByFaculty(c *gin.Context) {
-	facultyID, err := uuid.Parse(c.Param("facultyID"))
+	facultyID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		h.logger.Warn("Invalid faculty ID format",
-			zap.String("faculty_id", c.Param("facultyID")))
+			zap.String("faculty_id", c.Param("id")))
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid faculty ID"})
 		return
 	}
