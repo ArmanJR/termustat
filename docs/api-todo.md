@@ -17,8 +17,6 @@
     * [ ] Only fetch newly created courses post-transaction instead of the entire dataset.
     * [ ] Write tests covering the batch creation scenario comprehensively.
 
----
-
 ## Error Handling & Validation (High Priority)
 
 ### 3. **Standardize and Improve Error Handling**
@@ -33,8 +31,6 @@
 * [ ] Implement validation for existence checks:
 
     * [ ] During user registration (`AuthService.Register`), verify university and faculty IDs explicitly through service-level checks or repositories, rather than relying on database constraints.
-
----
 
 ## Security Enhancements (High Priority)
 
@@ -52,8 +48,6 @@
     * [ ] Utilize the `revoked` flag on refresh tokens consistently.
     * [ ] Ensure logout endpoint invalidates tokens appropriately.
 
----
-
 ## Business Logic & Service Responsibilities (Medium Priority)
 
 ### 7. **Separate Concerns in AuthService**
@@ -68,15 +62,13 @@
 
     * [ ] Handle edge cases such as race conditions (use unique constraints in DB and catch corresponding errors).
 
----
-
 ## REST API & Endpoint Design (Medium Priority)
 
 ### 9. **Ensure RESTful Endpoint Consistency**
 
 * [ ] Adjust inconsistent endpoint definitions:
 
-    * [ ] Correct route from `/v1/admin/faculties/courses/:facultyID` to `/v1/admin/faculties/{facultyID}/courses`.
+    * [x] Correct route from `/v1/admin/faculties/courses/:facultyID` to `/v1/admin/faculties/{facultyID}/courses`.
     * [ ] Clarify access control for `/v1/courses` endpoint. Decide if it should remain admin-only or open to regular users.
 
 ### 10. **Improve Endpoint Naming Conventions**
@@ -85,8 +77,6 @@
 
     * [ ] Change `POST /v1/courses/select` to `POST /v1/user/courses`.
     * [ ] Change `DELETE /v1/courses/select/{courseId}` to `DELETE /v1/user/courses/{courseId}`.
-
----
 
 ## Input Validation & Error Detail Management (Medium Priority)
 
@@ -102,8 +92,6 @@
 
     * [ ] Explicitly handle validation errors, such as invalid UUID filters, and return 400 status codes.
 
----
-
 ## Documentation & Developer Experience (Medium Priority)
 
 ### 13. **Align Documentation with Implementation**
@@ -111,8 +99,6 @@
 * [ ] Audit API documentation and implementation thoroughly for inconsistencies:
 
     * [ ] Fix mismatches between documented endpoints and actual code implementation.
-
----
 
 ## Logging and Observability (Low Priority)
 
@@ -126,7 +112,6 @@
 
     * [ ] Create middleware for parsing and validating common request parameters.
 
----
 
 ## Code Maintenance & Stylistic Consistency (Low Priority)
 
@@ -135,18 +120,6 @@
 * [ ] Standardize singular vs. plural endpoint names (e.g., faculty vs. faculties):
 
     * [ ] Consider using consistently plural forms across the API.
-
----
-
-## Additional Recommendations for Future-proofing (Low Priority)
-
-### 17. **Prepare for API Versioning**
-
-* [ ] Plan for future API evolution by using proper versioning strategies:
-
-    * [ ] Clearly document and communicate API version increments when breaking changes are made.
-
----
 
 
 # API Flaws Full Analysis

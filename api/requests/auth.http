@@ -1,5 +1,8 @@
+### Set base URL
+@base_url = http://localhost:8080/api/v1
+
 ### 1. Register a new user
-POST http://localhost:8080/api/v1/auth/register
+POST {{base_url}}/auth/register
 Content-Type: application/json
 
 {
@@ -13,11 +16,10 @@ Content-Type: application/json
   "gender": "male"
 }
 
-
-### 2. Change `email_verified` in database to true (also if they are admin, change `is_admin` to true)
+### 2. (Manual) Set email_verified and is_admin in DB as needed
 
 ### 3. Login and get token
-POST http://localhost:8080/api/v1/auth/login
+POST {{base_url}}/auth/login
 Content-Type: application/json
 
 {
@@ -25,10 +27,10 @@ Content-Type: application/json
   "password": "strongpassword"
 }
 
-### 4. Set the access token
+### 4. Set the access token (replace with actual token after login)
 @auth_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMmExZmQyN2EtZTYyYS00ZGM4LWE4NWQtNmZlN2NlNTk4MDlmIiwic2NwIjpbImFkbWluLWRhc2hib2FyZCJdLCJpc3MiOiJ0ZXJtdXN0YXQiLCJzdWIiOiIyYTFmZDI3YS1lNjJhLTRkYzgtYTg1ZC02ZmU3Y2U1OTgwOWYiLCJleHAiOjE3NDczNDI2NzYsIm5iZiI6MTc0NjczNzg3NiwiaWF0IjoxNzQ2NzM3ODc2fQ.FNB56hd1DwAME-qViUM_epYZrt9pxXeLNWOi77qe0bs
 
 ### 5. Get current user info
-GET http://localhost:8080/api/v1/user/me
+GET {{base_url}}/user/me
 Authorization: Bearer {{auth_token}}
 Content-Type: application/json
