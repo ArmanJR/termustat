@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import Input from "../form/Input";
 import Button from "../form/Button";
 import styles from "./UniversityForm.module.css";
-import UniversityFormTheme from "./UniversityFormTheme";
-import { Dialog, DialogContent, ThemeProvider, Snackbar, Alert } from "@mui/material";
+import { Dialog, DialogContent, Snackbar, Alert } from "@mui/material";
 import { addUniversity, deleteUniversity, editUniversity } from "../../api/admin/universities";
 
 const UniversityForm = ({ open, handleClose, university, mode, refetchUniversities }) => {
@@ -115,7 +114,7 @@ const UniversityForm = ({ open, handleClose, university, mode, refetchUniversiti
   };
   
   return (
-    <ThemeProvider theme={UniversityFormTheme}>
+    <>
       <Dialog open={open} onClose={handleClose}>
         <h1>
           <span style={{ color: "#309a9a" }}>&#9699; &nbsp;</span>
@@ -204,7 +203,7 @@ const UniversityForm = ({ open, handleClose, university, mode, refetchUniversiti
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </ThemeProvider>
+    </>
   );
 };
 

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import styles from "./Universities.module.css";
-import UniversitiesTheme from "./UniversitiesTheme";
 import UniversityForm from "../../components/admin/UniversityForm";
 import { getUniversities } from "../../api/admin/universities";
 
@@ -9,7 +8,6 @@ import {
   Tooltip,
   useTheme,
   useMediaQuery,
-  ThemeProvider,
 } from "@mui/material";
 
 import { Add, Edit, Delete, Block } from "@mui/icons-material";
@@ -63,7 +61,7 @@ const Universities = () => {
   }, []);
 
   return (
-    <ThemeProvider theme={UniversitiesTheme}>
+    <>
       <div>
         <div className={styles.top}>
           <h1>دانشگاه‌ها</h1>
@@ -124,7 +122,7 @@ const Universities = () => {
           refetchUniversities={fetchUniversities}
         />
       </div>
-    </ThemeProvider>
+    </>
   );
 };
 
