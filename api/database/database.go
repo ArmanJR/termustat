@@ -1,15 +1,23 @@
 package database
 
 import (
+	"database/sql"
+	"embed"
+	"errors"
 	"fmt"
 	"github.com/armanjr/termustat/api/config"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
+	"go.uber.org/zap"
 	gormPostgres "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"time"
 )
+
+//go:embed migrations/*.sql
+var migrationFiles embed.FS
 
 func NewDatabase(config config.DatabaseConfig) (*gorm.DB, error) {
 	dsn := fmt.Sprintf(
@@ -33,29 +41,36 @@ func NewDatabase(config config.DatabaseConfig) (*gorm.DB, error) {
 	return db, nil
 }
 
-func RunMigrations(db *gorm.DB, migrationsDir string) error {
-	sqlDB, err := db.DB()
+func RunMigrations(gdb *gorm.DB, logger *zap.Logger) error {
+	sqlDB, err := gdb.DB()
 	if err != nil {
-		return fmt.Errorf("getting raw DB handle: %w", err)
+		logger.Error("Failed to get raw DB", zap.Error(err))
+		return fmt.Errorf("getting raw DB: %w", err)
+	}
+	return runMigrations(sqlDB)
+}
+
+func runMigrations(db *sql.DB) error {
+	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	if err != nil {
+		return err
 	}
 
-	driver, err := postgres.WithInstance(sqlDB, &postgres.Config{})
+	// Wrap the embed.FS in the iofs driver
+	d, err := iofs.New(migrationFiles, "migrations")
 	if err != nil {
-		return fmt.Errorf("creating postgres driver: %w", err)
+		return err
 	}
 
-	m, err := migrate.NewWithDatabaseInstance(
-		"file://"+migrationsDir,
-		"postgres",
-		driver,
+	m, err := migrate.NewWithInstance(
+		"iofs", d,
+		"postgres", driver,
 	)
 	if err != nil {
-		return fmt.Errorf("constructing migrate instance: %w", err)
+		return err
 	}
-
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		return fmt.Errorf("applying migrations: %w", err)
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return err
 	}
-
 	return nil
 }

@@ -66,7 +66,7 @@ func main() {
 	}
 
 	// Run SQL migrations
-	if err := database.RunMigrationsWithPathResolution(db, log); err != nil {
+	if err := database.RunMigrations(db, log); err != nil {
 		log.Fatal("SQL migrations failed", zap.Error(err))
 	}
 
