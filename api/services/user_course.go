@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"github.com/armanjr/termustat/api/dto"
 	"github.com/armanjr/termustat/api/errors"
@@ -161,7 +162,8 @@ func (s *userCourseService) ValidateTimeConflicts(userID, semesterID uuid.UUID, 
 }
 
 func (s *userCourseService) ValidateGenderRestriction(userID uuid.UUID, courseID uuid.UUID) error {
-	user, err := s.userService.Get(userID)
+	ctx := context.Background() // todo: remove and pass request context
+	user, err := s.userService.Get(ctx, userID)
 	if err != nil {
 		return errors.Wrap(err, "failed to fetch user")
 	}
