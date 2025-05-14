@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"github.com/armanjr/termustat/api/dto"
 	"github.com/armanjr/termustat/api/errors"
 	"github.com/armanjr/termustat/api/services"
@@ -9,6 +10,7 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type AdminUserHandler struct {
@@ -35,6 +37,9 @@ func NewAdminUserHandler(adminUserService services.AdminUserService, logger *zap
 // @Router       /v1/admin/users [get]
 // @Security     BearerAuth
 func (h *AdminUserHandler) GetAll(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
+	defer cancel()
+
 	pagination := &dto.PaginationQuery{
 		Page:  parseInt(c.DefaultQuery("page", "1")),
 		Limit: parseInt(c.DefaultQuery("limit", "10")),
@@ -48,7 +53,7 @@ func (h *AdminUserHandler) GetAll(c *gin.Context) {
 	}
 	pagination.Offset = (pagination.Page - 1) * pagination.Limit
 
-	result, err := h.adminUserService.GetAll(pagination)
+	result, err := h.adminUserService.GetAll(ctx, pagination)
 	if err != nil {
 		h.logger.Error("Failed to fetch users",
 			zap.Error(err))
@@ -72,6 +77,9 @@ func (h *AdminUserHandler) GetAll(c *gin.Context) {
 // @Router       /v1/admin/users/{id} [get]
 // @Security     BearerAuth
 func (h *AdminUserHandler) Get(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
+	defer cancel()
+
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		h.logger.Warn("Invalid user ID format",
@@ -80,7 +88,7 @@ func (h *AdminUserHandler) Get(c *gin.Context) {
 		return
 	}
 
-	user, err := h.adminUserService.Get(id)
+	user, err := h.adminUserService.Get(ctx, id)
 	if err != nil {
 		switch {
 		case errors.Is(err, errors.ErrNotFound):
@@ -113,6 +121,9 @@ func (h *AdminUserHandler) Get(c *gin.Context) {
 // @Router       /v1/admin/users/{id} [put]
 // @Security     BearerAuth
 func (h *AdminUserHandler) Update(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
+	defer cancel()
+
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		h.logger.Warn("Invalid user ID format",
@@ -137,7 +148,7 @@ func (h *AdminUserHandler) Update(c *gin.Context) {
 		Gender:       req.Gender,
 	}
 
-	user, err := h.adminUserService.Update(id, updateReq)
+	user, err := h.adminUserService.Update(ctx, id, updateReq)
 	if err != nil {
 		switch {
 		case errors.Is(err, errors.ErrNotFound):
@@ -156,7 +167,7 @@ func (h *AdminUserHandler) Update(c *gin.Context) {
 	}
 
 	if req.Password != "" {
-		if err := h.adminUserService.UpdatePassword(id, &dto.AdminUpdatePasswordRequest{
+		if err := h.adminUserService.UpdatePassword(ctx, id, &dto.AdminUpdatePasswordRequest{
 			NewPassword: req.Password,
 		}); err != nil {
 			h.logger.Error("Failed to update user password",
@@ -187,6 +198,9 @@ func (h *AdminUserHandler) Update(c *gin.Context) {
 // @Router       /v1/admin/users/{id} [delete]
 // @Security     BearerAuth
 func (h *AdminUserHandler) Delete(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
+	defer cancel()
+
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		h.logger.Warn("Invalid user ID format",
@@ -195,7 +209,7 @@ func (h *AdminUserHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.adminUserService.Delete(id); err != nil {
+	if err := h.adminUserService.Delete(ctx, id); err != nil {
 		switch {
 		case errors.Is(err, errors.ErrNotFound):
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})

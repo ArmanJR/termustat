@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"github.com/armanjr/termustat/api/dto"
 	"github.com/armanjr/termustat/api/errors"
 	"github.com/armanjr/termustat/api/models"
@@ -9,18 +10,18 @@ import (
 )
 
 type AdminUserRepository interface {
-	Create(user *models.User) (*models.User, error)
-	FindByID(id uuid.UUID) (*models.User, error)
-	FindByEmail(email string) (*models.User, error)
-	FindByStudentID(studentID string) (*models.User, error)
-	FindByEmailOrStudentID(email, studentID string) (*models.User, error)
-	Update(user *models.User) (*models.User, error)
-	Delete(id uuid.UUID) error
-	GetAll(pagination *dto.PaginationQuery) (*dto.PaginatedList[models.User], error)
-	UpdatePassword(userID uuid.UUID, hashedPassword string) error
-	UpdateEmailVerification(userID uuid.UUID, verified bool) error
-	FindByUniversity(universityID uuid.UUID, pagination *dto.PaginationQuery) (*dto.PaginatedList[models.User], error)
-	FindByFaculty(facultyID uuid.UUID, pagination *dto.PaginationQuery) (*dto.PaginatedList[models.User], error)
+	Create(ctx context.Context, user *models.User) (*models.User, error)
+	FindByID(ctx context.Context, id uuid.UUID) (*models.User, error)
+	FindByEmail(ctx context.Context, email string) (*models.User, error)
+	FindByStudentID(ctx context.Context, studentID string) (*models.User, error)
+	FindByEmailOrStudentID(ctx context.Context, email, studentID string) (*models.User, error)
+	Update(ctx context.Context, user *models.User) (*models.User, error)
+	Delete(ctx context.Context, id uuid.UUID) error
+	GetAll(ctx context.Context, pagination *dto.PaginationQuery) (*dto.PaginatedList[models.User], error)
+	UpdatePassword(ctx context.Context, userID uuid.UUID, hashedPassword string) error
+	UpdateEmailVerification(ctx context.Context, userID uuid.UUID, verified bool) error
+	FindByUniversity(ctx context.Context, universityID uuid.UUID, pagination *dto.PaginationQuery) (*dto.PaginatedList[models.User], error)
+	FindByFaculty(ctx context.Context, facultyID uuid.UUID, pagination *dto.PaginationQuery) (*dto.PaginatedList[models.User], error)
 }
 
 type adminUserRepository struct {
@@ -31,22 +32,22 @@ func NewAdminUserRepository(db *gorm.DB) AdminUserRepository {
 	return &adminUserRepository{db: db}
 }
 
-func (r *adminUserRepository) Create(user *models.User) (*models.User, error) {
-	if err := r.db.Create(user).Error; err != nil {
+func (r *adminUserRepository) Create(ctx context.Context, user *models.User) (*models.User, error) {
+	if err := r.db.WithContext(ctx).Create(user).Error; err != nil {
 		return nil, errors.Wrap(err, "failed to create user")
 	}
 
 	var created models.User
-	if err := r.db.First(&created, user.ID).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&created, user.ID).Error; err != nil {
 		return nil, errors.Wrap(err, "failed to fetch created user")
 	}
 
 	return &created, nil
 }
 
-func (r *adminUserRepository) FindByID(id uuid.UUID) (*models.User, error) {
+func (r *adminUserRepository) FindByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	var user models.User
-	if err := r.db.First(&user, "id = ?", id).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&user, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.NewNotFoundError("user", id.String())
 		}
@@ -55,9 +56,9 @@ func (r *adminUserRepository) FindByID(id uuid.UUID) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *adminUserRepository) FindByEmail(email string) (*models.User, error) {
+func (r *adminUserRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
 	var user models.User
-	if err := r.db.Where("email = ?", email).First(&user).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("email = ?", email).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.NewNotFoundError("user", "email: "+email)
 		}
@@ -66,9 +67,9 @@ func (r *adminUserRepository) FindByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *adminUserRepository) FindByStudentID(studentID string) (*models.User, error) {
+func (r *adminUserRepository) FindByStudentID(ctx context.Context, studentID string) (*models.User, error) {
 	var user models.User
-	if err := r.db.Where("student_id = ?", studentID).First(&user).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("student_id = ?", studentID).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.NewNotFoundError("user", "student_id: "+studentID)
 		}
@@ -77,9 +78,9 @@ func (r *adminUserRepository) FindByStudentID(studentID string) (*models.User, e
 	return &user, nil
 }
 
-func (r *adminUserRepository) FindByEmailOrStudentID(email, studentID string) (*models.User, error) {
+func (r *adminUserRepository) FindByEmailOrStudentID(ctx context.Context, email, studentID string) (*models.User, error) {
 	var user models.User
-	if err := r.db.Where("email = ? OR student_id = ?", email, studentID).First(&user).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("email = ? OR student_id = ?", email, studentID).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.NewNotFoundError("user", "email or student_id")
 		}
@@ -88,21 +89,21 @@ func (r *adminUserRepository) FindByEmailOrStudentID(email, studentID string) (*
 	return &user, nil
 }
 
-func (r *adminUserRepository) Update(user *models.User) (*models.User, error) {
-	if err := r.db.Save(user).Error; err != nil {
+func (r *adminUserRepository) Update(ctx context.Context, user *models.User) (*models.User, error) {
+	if err := r.db.WithContext(ctx).Save(user).Error; err != nil {
 		return nil, errors.Wrap(err, "failed to update user")
 	}
 
 	var updated models.User
-	if err := r.db.First(&updated, user.ID).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&updated, user.ID).Error; err != nil {
 		return nil, errors.Wrap(err, "failed to fetch updated user")
 	}
 
 	return &updated, nil
 }
 
-func (r *adminUserRepository) Delete(id uuid.UUID) error {
-	result := r.db.Delete(&models.User{}, "id = ?", id)
+func (r *adminUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	result := r.db.WithContext(ctx).Delete(&models.User{}, "id = ?", id)
 	if result.Error != nil {
 		return errors.Wrap(result.Error, "failed to delete user")
 	}
@@ -112,11 +113,11 @@ func (r *adminUserRepository) Delete(id uuid.UUID) error {
 	return nil
 }
 
-func (r *adminUserRepository) GetAll(pagination *dto.PaginationQuery) (*dto.PaginatedList[models.User], error) {
+func (r *adminUserRepository) GetAll(ctx context.Context, pagination *dto.PaginationQuery) (*dto.PaginatedList[models.User], error) {
 	var users []models.User
 	var total int64
 
-	query := r.db.Model(&models.User{})
+	query := r.db.WithContext(ctx).Model(&models.User{})
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, errors.Wrap(err, "failed to count users")
@@ -134,8 +135,8 @@ func (r *adminUserRepository) GetAll(pagination *dto.PaginationQuery) (*dto.Pagi
 	}, nil
 }
 
-func (r *adminUserRepository) UpdatePassword(userID uuid.UUID, hashedPassword string) error {
-	result := r.db.Model(&models.User{}).
+func (r *adminUserRepository) UpdatePassword(ctx context.Context, userID uuid.UUID, hashedPassword string) error {
+	result := r.db.WithContext(ctx).Model(&models.User{}).
 		Where("id = ?", userID).
 		Update("password_hash", hashedPassword)
 
@@ -148,8 +149,8 @@ func (r *adminUserRepository) UpdatePassword(userID uuid.UUID, hashedPassword st
 	return nil
 }
 
-func (r *adminUserRepository) UpdateEmailVerification(userID uuid.UUID, verified bool) error {
-	result := r.db.Model(&models.User{}).
+func (r *adminUserRepository) UpdateEmailVerification(ctx context.Context, userID uuid.UUID, verified bool) error {
+	result := r.db.WithContext(ctx).Model(&models.User{}).
 		Where("id = ?", userID).
 		Update("email_verified", verified)
 
@@ -162,11 +163,11 @@ func (r *adminUserRepository) UpdateEmailVerification(userID uuid.UUID, verified
 	return nil
 }
 
-func (r *adminUserRepository) FindByUniversity(universityID uuid.UUID, pagination *dto.PaginationQuery) (*dto.PaginatedList[models.User], error) {
+func (r *adminUserRepository) FindByUniversity(ctx context.Context, universityID uuid.UUID, pagination *dto.PaginationQuery) (*dto.PaginatedList[models.User], error) {
 	var users []models.User
 	var total int64
 
-	query := r.db.Model(&models.User{}).Where("university_id = ?", universityID)
+	query := r.db.WithContext(ctx).Model(&models.User{}).Where("university_id = ?", universityID)
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, errors.Wrap(err, "failed to count users")
@@ -184,11 +185,11 @@ func (r *adminUserRepository) FindByUniversity(universityID uuid.UUID, paginatio
 	}, nil
 }
 
-func (r *adminUserRepository) FindByFaculty(facultyID uuid.UUID, pagination *dto.PaginationQuery) (*dto.PaginatedList[models.User], error) {
+func (r *adminUserRepository) FindByFaculty(ctx context.Context, facultyID uuid.UUID, pagination *dto.PaginationQuery) (*dto.PaginatedList[models.User], error) {
 	var users []models.User
 	var total int64
 
-	query := r.db.Model(&models.User{}).Where("faculty_id = ?", facultyID)
+	query := r.db.WithContext(ctx).Model(&models.User{}).Where("faculty_id = ?", facultyID)
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, errors.Wrap(err, "failed to count users")
