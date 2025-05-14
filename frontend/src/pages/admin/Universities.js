@@ -42,8 +42,8 @@ const Universities = () => {
 
   const fetchUniversities = async () => {
     try {
-      const data = await getUniversities();
-      setUniversities(data);
+      const response = await getUniversities();
+      setUniversities(response.data);
     } catch (error) {
       if (error.response?.status === 500)
         setError("مشکلی در سرور رخ داده است. لطفا دوباره تلاش کنید.");
