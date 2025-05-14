@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import styles from "./Universities.module.css";
 import UniversityForm from "../../components/admin/UniversityForm";
 import { getUniversities } from "../../api/admin/universities";
+import useFetch from "../../hooks/useFetch";
 
 import {
   IconButton,
@@ -33,31 +34,15 @@ const Universities = () => {
     }, 300);
   };
 
-  const [universities, setUniversities] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const isFirstRender = useRef(true);
-
-  const fetchUniversities = async () => {
-    try {
-      const response = await getUniversities();
-      setUniversities(response.data);
-    } catch (error) {
-      if (error.response?.status === 500)
-        setError("مشکلی در سرور رخ داده است. لطفا دوباره تلاش کنید.");
-      else
-        setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: universities, loading, error, fetchData } = useFetch(getUniversities);
 
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return; // Skip the effect on first render (loading state)
     }
-    fetchUniversities();
+    fetchData();
   }, []);
 
   return (
@@ -119,7 +104,7 @@ const Universities = () => {
           handleClose={closeDialog}
           university={dialog.university}
           mode={dialog.mode}
-          refetchUniversities={fetchUniversities}
+          refetchUniversities={fetchData}
         />
       </div>
     </>
