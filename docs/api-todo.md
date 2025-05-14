@@ -1,5 +1,9 @@
 # API Flaws To Do list
 
+## Ongoing
+
+* [ ] Add request context to all repositories
+
 ## Architectural Improvements (High Priority)
 
 ### 1. **Reduce Service Coupling and Optimize Data Fetching**
