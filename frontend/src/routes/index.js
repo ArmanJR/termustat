@@ -6,7 +6,7 @@ import AdminRoute from './AdminRoute';
 import AdminLogin from '../pages/admin/Login';
 import AdminLayout from '../layouts/AdminLayout';
 import Dashboard from '../pages/admin/Dashboard';
-import Universities from '../pages/admin/Universities';
+import Universities from '../pages/admin/universities/Universities';
 
 const Home = () => <div>Home</div>;
 
