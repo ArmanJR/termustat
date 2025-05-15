@@ -1,6 +1,7 @@
 package services_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -24,78 +25,78 @@ type MockAuthRepository struct {
 	mock.Mock
 }
 
-func (m *MockAuthRepository) CreateUser(user *models.User) error {
-	args := m.Called(user)
+func (m *MockAuthRepository) CreateUser(ctx context.Context, user *models.User) error {
+	args := m.Called(ctx, user)
 	return args.Error(0)
 }
 
-func (m *MockAuthRepository) FindUserByEmail(email string) (*models.User, error) {
-	args := m.Called(email)
+func (m *MockAuthRepository) FindUserByEmail(ctx context.Context, email string) (*models.User, error) {
+	args := m.Called(ctx, email)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
-func (m *MockAuthRepository) FindUserByEmailOrStudentID(email, studentID string) (*models.User, error) {
-	args := m.Called(email, studentID)
+func (m *MockAuthRepository) FindUserByEmailOrStudentID(ctx context.Context, email, studentID string) (*models.User, error) {
+	args := m.Called(ctx, email, studentID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
-func (m *MockAuthRepository) FindUserByID(id uuid.UUID) (*models.User, error) {
-	args := m.Called(id)
+func (m *MockAuthRepository) FindUserByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
+	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
-func (m *MockAuthRepository) CreateEmailVerification(verification *models.EmailVerification) error {
-	args := m.Called(verification)
+func (m *MockAuthRepository) CreateEmailVerification(ctx context.Context, verification *models.EmailVerification) error {
+	args := m.Called(ctx, verification)
 	return args.Error(0)
 }
 
-func (m *MockAuthRepository) CreatePasswordReset(reset *models.PasswordReset) error {
-	args := m.Called(reset)
+func (m *MockAuthRepository) CreatePasswordReset(ctx context.Context, reset *models.PasswordReset) error {
+	args := m.Called(ctx, reset)
 	return args.Error(0)
 }
 
-func (m *MockAuthRepository) FindPasswordResetByToken(token string) (*models.PasswordReset, error) {
-	args := m.Called(token)
+func (m *MockAuthRepository) FindPasswordResetByToken(ctx context.Context, token string) (*models.PasswordReset, error) {
+	args := m.Called(ctx, token)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.PasswordReset), args.Error(1)
 }
 
-func (m *MockAuthRepository) UpdateUserPassword(userID uuid.UUID, hashedPassword string) error {
-	args := m.Called(userID, hashedPassword)
+func (m *MockAuthRepository) UpdateUserPassword(ctx context.Context, userID uuid.UUID, hashedPassword string) error {
+	args := m.Called(ctx, userID, hashedPassword)
 	return args.Error(0)
 }
 
-func (m *MockAuthRepository) DeletePasswordReset(reset *models.PasswordReset) error {
-	args := m.Called(reset)
+func (m *MockAuthRepository) DeletePasswordReset(ctx context.Context, reset *models.PasswordReset) error {
+	args := m.Called(ctx, reset)
 	return args.Error(0)
 }
 
-func (m *MockAuthRepository) FindEmailVerificationByToken(token string) (*models.EmailVerification, error) {
-	args := m.Called(token)
+func (m *MockAuthRepository) FindEmailVerificationByToken(ctx context.Context, token string) (*models.EmailVerification, error) {
+	args := m.Called(ctx, token)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.EmailVerification), args.Error(1)
 }
 
-func (m *MockAuthRepository) VerifyUserEmail(userID uuid.UUID) error {
-	args := m.Called(userID)
+func (m *MockAuthRepository) VerifyUserEmail(ctx context.Context, userID uuid.UUID) error {
+	args := m.Called(ctx, userID)
 	return args.Error(0)
 }
 
-func (m *MockAuthRepository) DeleteEmailVerification(verification *models.EmailVerification) error {
-	args := m.Called(verification)
+func (m *MockAuthRepository) DeleteEmailVerification(ctx context.Context, verification *models.EmailVerification) error {
+	args := m.Called(ctx, verification)
 	return args.Error(0)
 }
 
@@ -223,46 +224,46 @@ type MockAuthService struct {
 	mock.Mock
 }
 
-func (m *MockAuthService) Register(req *dto.RegisterServiceRequest) error {
-	args := m.Called(req)
+func (m *MockAuthService) Register(ctx context.Context, req *dto.RegisterServiceRequest) error {
+	args := m.Called(ctx, req)
 	return args.Error(0)
 }
-func (m *MockAuthService) Login(email, password string) (string, int, string, int, error) {
-	args := m.Called(email, password)
+func (m *MockAuthService) Login(ctx context.Context, email, password string) (string, int, string, int, error) {
+	args := m.Called(ctx, email, password)
 	return args.String(0), args.Int(1), args.String(2), args.Int(3), args.Error(4)
 }
-func (m *MockAuthService) ForgotPassword(email string) error {
-	args := m.Called(email)
+func (m *MockAuthService) ForgotPassword(ctx context.Context, email string) error {
+	args := m.Called(ctx, email)
 	return args.Error(0)
 }
-func (m *MockAuthService) ResetPassword(token, newPassword string) error {
-	args := m.Called(token, newPassword)
+func (m *MockAuthService) ResetPassword(ctx context.Context, token, newPassword string) error {
+	args := m.Called(ctx, token, newPassword)
 	return args.Error(0)
 }
-func (m *MockAuthService) GetCurrentUser(userID uuid.UUID) (*models.User, error) {
-	args := m.Called(userID)
+func (m *MockAuthService) GetCurrentUser(ctx context.Context, userID uuid.UUID) (*models.User, error) {
+	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.User), args.Error(1)
 }
-func (m *MockAuthService) VerifyEmail(token string) error {
-	args := m.Called(token)
+func (m *MockAuthService) VerifyEmail(ctx context.Context, token string) error {
+	args := m.Called(ctx, token)
 	return args.Error(0)
 }
-func (m *MockAuthService) ValidateToken(token string) (*utils.JWTClaims, error) {
-	args := m.Called(token)
+func (m *MockAuthService) ValidateToken(ctx context.Context, token string) (*utils.JWTClaims, error) {
+	args := m.Called(ctx, token)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*utils.JWTClaims), args.Error(1)
 }
-func (m *MockAuthService) Refresh(oldToken string) (string, int, string, int, error) {
-	args := m.Called(oldToken)
+func (m *MockAuthService) Refresh(ctx context.Context, oldToken string) (string, int, string, int, error) {
+	args := m.Called(ctx, oldToken)
 	return args.String(0), args.Int(1), args.String(2), args.Int(3), args.Error(4)
 }
-func (m *MockAuthService) Logout(refreshToken string) error {
-	args := m.Called(refreshToken)
+func (m *MockAuthService) Logout(ctx context.Context, refreshToken string) error {
+	args := m.Called(ctx, refreshToken)
 	return args.Error(0)
 }
 
@@ -315,6 +316,7 @@ func TestRegisterService_Success(t *testing.T) {
 		"http://localhost:3000",
 	)
 
+	ctx := context.Background()
 	req := &dto.RegisterServiceRequest{
 		Email:        "new@example.com",
 		Password:     "password123",
@@ -327,16 +329,16 @@ func TestRegisterService_Success(t *testing.T) {
 	}
 
 	// Expect repository to indicate user not found.
-	mockRepo.On("FindUserByEmailOrStudentID", req.Email, req.StudentID).
+	mockRepo.On("FindUserByEmailOrStudentID", ctx, req.Email, req.StudentID).
 		Return(nil, gorm.ErrRecordNotFound)
-	mockRepo.On("CreateUser", mock.AnythingOfType("*models.User")).Return(nil)
+	mockRepo.On("CreateUser", ctx, mock.AnythingOfType("*models.User")).Return(nil)
 	// Expect CreateEmailVerification to be called.
-	mockRepo.On("CreateEmailVerification", mock.AnythingOfType("*models.EmailVerification")).Return(nil)
+	mockRepo.On("CreateEmailVerification", ctx, mock.AnythingOfType("*models.EmailVerification")).Return(nil)
 	// Expect the mailer to send the verification email.
 	mockMailer.On("SendVerificationEmail", mock.AnythingOfType("*models.User"), mock.AnythingOfType("string")).Return(nil)
 
 	// Call Register.
-	err := service.Register(req)
+	err := service.Register(ctx, req)
 
 	// Assertions.
 	assert.NoError(t, err)
@@ -361,6 +363,7 @@ func TestRegisterService_UserAlreadyExists(t *testing.T) {
 		"http://localhost:3000",
 	)
 
+	ctx := context.Background()
 	req := &dto.RegisterServiceRequest{
 		Email:        "existing@example.com",
 		Password:     "password123",
@@ -379,9 +382,9 @@ func TestRegisterService_UserAlreadyExists(t *testing.T) {
 	}
 
 	// Repository returns an existing user.
-	mockRepo.On("FindUserByEmailOrStudentID", req.Email, req.StudentID).Return(existingUser, nil)
+	mockRepo.On("FindUserByEmailOrStudentID", ctx, req.Email, req.StudentID).Return(existingUser, nil)
 
-	err := service.Register(req)
+	err := service.Register(ctx, req)
 
 	assert.Error(t, err)
 	assert.Equal(t, "email or student ID already exists", err.Error())
@@ -419,15 +422,15 @@ func TestRegisterService_MailerError(t *testing.T) {
 	}
 
 	mockRepo.
-		On("FindUserByEmailOrStudentID", req.Email, req.StudentID).
+		On("FindUserByEmailOrStudentID", mock.Anything, req.Email, req.StudentID).
 		Return(nil, gorm.ErrRecordNotFound)
 
 	mockRepo.
-		On("CreateUser", mock.AnythingOfType("*models.User")).
+		On("CreateUser", mock.Anything, mock.AnythingOfType("*models.User")).
 		Return(nil)
 
 	mockRepo.
-		On("CreateEmailVerification", mock.AnythingOfType("*models.EmailVerification")).
+		On("CreateEmailVerification", mock.Anything, mock.AnythingOfType("*models.EmailVerification")).
 		Return(nil)
 
 	mockMailer.
@@ -436,7 +439,7 @@ func TestRegisterService_MailerError(t *testing.T) {
 			mock.AnythingOfType("string")).
 		Return(assert.AnError)
 
-	err := service.Register(req)
+	err := service.Register(context.Background(), req)
 
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
@@ -457,10 +460,10 @@ func TestLoginService_AdminScope(t *testing.T) {
 		IsAdmin:       true, // User is admin
 	}
 
-	mockRepo.On("FindUserByEmail", email).Return(adminUser, nil)
+	mockRepo.On("FindUserByEmail", mock.Anything, email).Return(adminUser, nil)
 	mockRTRepo.On("Create", mock.AnythingOfType("*models.RefreshToken")).Return(nil)
 
-	accessToken, _, refreshToken, _, err := service.Login(email, password)
+	accessToken, _, refreshToken, _, err := service.Login(context.Background(), email, password)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, accessToken)
@@ -492,10 +495,10 @@ func TestLoginService_NoAdminScope(t *testing.T) {
 		IsAdmin:       false, // User is NOT admin
 	}
 
-	mockRepo.On("FindUserByEmail", email).Return(nonAdminUser, nil)
+	mockRepo.On("FindUserByEmail", mock.Anything, email).Return(nonAdminUser, nil)
 	mockRTRepo.On("Create", mock.AnythingOfType("*models.RefreshToken")).Return(nil)
 
-	accessToken, _, refreshToken, _, err := service.Login(email, password)
+	accessToken, _, refreshToken, _, err := service.Login(context.Background(), email, password)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, accessToken)
@@ -534,7 +537,7 @@ func TestRefreshService_AdminScopePreserved(t *testing.T) {
 	mockRTRepo.On("Revoke", mockOldRT.ID).Return(nil)
 	mockRTRepo.On("Create", mock.AnythingOfType("*models.RefreshToken")).Return(nil)
 
-	newAccessToken, _, newRefreshToken, _, err := service.Refresh(oldRefreshToken)
+	newAccessToken, _, newRefreshToken, _, err := service.Refresh(context.Background(), oldRefreshToken)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, newAccessToken)
@@ -574,7 +577,7 @@ func TestRefreshService_NoAdminScopePreserved(t *testing.T) {
 	mockRTRepo.On("Revoke", mockOldRT.ID).Return(nil)
 	mockRTRepo.On("Create", mock.AnythingOfType("*models.RefreshToken")).Return(nil)
 
-	newAccessToken, _, newRefreshToken, _, err := service.Refresh(oldRefreshToken)
+	newAccessToken, _, newRefreshToken, _, err := service.Refresh(context.Background(), oldRefreshToken)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, newAccessToken)
@@ -597,7 +600,7 @@ func TestRefreshService_InvalidToken(t *testing.T) {
 
 	mockRTRepo.On("Find", invalidToken).Return(nil, errors.New("simulated find error")) // Simulate token not found or other error
 
-	_, _, _, _, err := service.Refresh(invalidToken)
+	_, _, _, _, err := service.Refresh(context.Background(), invalidToken)
 
 	assert.Error(t, err)
 	assert.Equal(t, "invalid refresh token", err.Error())

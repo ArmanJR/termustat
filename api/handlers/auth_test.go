@@ -2,6 +2,7 @@ package handlers_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -25,54 +26,54 @@ type MockAuthService struct {
 	mock.Mock
 }
 
-func (m *MockAuthService) Register(req *dto.RegisterServiceRequest) error {
-	args := m.Called(req)
+func (m *MockAuthService) Register(ctx context.Context, req *dto.RegisterServiceRequest) error {
+	args := m.Called(ctx, req)
 	return args.Error(0)
 }
 
-func (m *MockAuthService) Login(email, password string) (string, int, string, int, error) {
-	args := m.Called(email, password)
+func (m *MockAuthService) Login(ctx context.Context, email, password string) (string, int, string, int, error) {
+	args := m.Called(ctx, email, password)
 	return args.String(0), args.Int(1), args.String(2), args.Int(3), args.Error(4)
 }
 
-func (m *MockAuthService) ForgotPassword(email string) error {
-	args := m.Called(email)
+func (m *MockAuthService) ForgotPassword(ctx context.Context, email string) error {
+	args := m.Called(ctx, email)
 	return args.Error(0)
 }
 
-func (m *MockAuthService) ResetPassword(token, password string) error {
-	args := m.Called(token, password)
+func (m *MockAuthService) ResetPassword(ctx context.Context, token, password string) error {
+	args := m.Called(ctx, token, password)
 	return args.Error(0)
 }
 
-func (m *MockAuthService) VerifyEmail(token string) error {
-	args := m.Called(token)
+func (m *MockAuthService) VerifyEmail(ctx context.Context, token string) error {
+	args := m.Called(ctx, token)
 	return args.Error(0)
 }
 
-func (m *MockAuthService) GetCurrentUser(id uuid.UUID) (*models.User, error) {
-	args := m.Called(id)
+func (m *MockAuthService) GetCurrentUser(ctx context.Context, id uuid.UUID) (*models.User, error) {
+	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
-func (m *MockAuthService) ValidateToken(token string) (*utils.JWTClaims, error) {
-	args := m.Called(token)
+func (m *MockAuthService) ValidateToken(ctx context.Context, token string) (*utils.JWTClaims, error) {
+	args := m.Called(ctx, token)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*utils.JWTClaims), args.Error(1)
 }
 
-func (m *MockAuthService) Refresh(old string) (string, int, string, int, error) {
-	args := m.Called(old)
+func (m *MockAuthService) Refresh(ctx context.Context, old string) (string, int, string, int, error) {
+	args := m.Called(ctx, old)
 	return args.String(0), args.Int(1), args.String(2), args.Int(3), args.Error(4)
 }
 
-func (m *MockAuthService) Logout(refresh string) error {
-	args := m.Called(refresh)
+func (m *MockAuthService) Logout(ctx context.Context, refresh string) error {
+	args := m.Called(ctx, refresh)
 	return args.Error(0)
 }
 
@@ -167,7 +168,7 @@ func TestRegisterHandler_Success(t *testing.T) {
 	}
 	jsonBody, _ := json.Marshal(reqBody)
 
-	mockAuthSvc.On("Register", mock.MatchedBy(func(req *dto.RegisterServiceRequest) bool {
+	mockAuthSvc.On("Register", mock.Anything, mock.MatchedBy(func(req *dto.RegisterServiceRequest) bool {
 		// Perform detailed checks on the service request object
 		return req.Email == reqBody.Email &&
 			req.Password == reqBody.Password && // Consider if you want to check password here
@@ -239,7 +240,7 @@ func TestRegisterHandler_ServiceError_Conflict(t *testing.T) {
 
 	// Setup expectation - service returns a conflict error
 	// Use specific error message string the service returns
-	mockAuthSvc.On("Register", mock.AnythingOfType("*dto.RegisterServiceRequest")).
+	mockAuthSvc.On("Register", mock.Anything, mock.AnythingOfType("*dto.RegisterServiceRequest")).
 		Return(errors.New("email or student ID already exists"))
 
 	w := httptest.NewRecorder()
@@ -272,7 +273,7 @@ func TestLoginHandler_Success(t *testing.T) {
 	accessExpiry := 3600
 	refreshToken := "refresh_token_456"
 	refreshExpiry := 7200
-	mockAuthSvc.On("Login", reqBody.Email, reqBody.Password).
+	mockAuthSvc.On("Login", mock.Anything, reqBody.Email, reqBody.Password).
 		Return(accessToken, accessExpiry, refreshToken, refreshExpiry, nil)
 
 	w := httptest.NewRecorder()
@@ -320,7 +321,7 @@ func TestLoginHandler_InvalidCredentials(t *testing.T) {
 	jsonBody, _ := json.Marshal(reqBody)
 
 	// Mock service returns specific error for invalid credentials
-	mockAuthSvc.On("Login", reqBody.Email, reqBody.Password).
+	mockAuthSvc.On("Login", mock.Anything, reqBody.Email, reqBody.Password).
 		Return("", 0, "", 0, errors.New("invalid credentials"))
 
 	w := httptest.NewRecorder()
@@ -351,7 +352,7 @@ func TestLoginHandler_EmailNotVerified(t *testing.T) {
 	jsonBody, _ := json.Marshal(reqBody)
 
 	// Mock service returns specific error for email not verified
-	mockAuthSvc.On("Login", reqBody.Email, reqBody.Password).
+	mockAuthSvc.On("Login", mock.Anything, reqBody.Email, reqBody.Password).
 		Return("", 0, "", 0, errors.New("email not verified"))
 
 	w := httptest.NewRecorder()
@@ -381,7 +382,7 @@ func TestRefreshHandler_Success(t *testing.T) {
 	newRefreshToken := "new_refresh_token"
 	newRefreshExpiry := 3600
 
-	mockAuthSvc.On("Refresh", oldRefreshToken).
+	mockAuthSvc.On("Refresh", mock.Anything, oldRefreshToken).
 		Return(newAccessToken, newAccessExpiry, newRefreshToken, newRefreshExpiry, nil)
 
 	w := httptest.NewRecorder()
@@ -449,7 +450,7 @@ func TestRefreshHandler_InvalidToken(t *testing.T) {
 
 	invalidToken := "invalid_refresh_token"
 	// Mock service returns an error indicating the token is invalid
-	mockAuthSvc.On("Refresh", invalidToken).
+	mockAuthSvc.On("Refresh", mock.Anything, invalidToken).
 		Return("", 0, "", 0, errors.New("invalid refresh token")) // Use the error service returns
 
 	w := httptest.NewRecorder()
@@ -477,7 +478,7 @@ func TestLogoutHandler_Success(t *testing.T) {
 	handler, mockAuthSvc, _, _ := setupAuthHandlerWithMocks(t)
 
 	refreshToken := "current_refresh_token"
-	mockAuthSvc.On("Logout", refreshToken).Return(nil)
+	mockAuthSvc.On("Logout", mock.Anything, refreshToken).Return(nil)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -570,7 +571,7 @@ func TestGetCurrentUser_Success(t *testing.T) {
 		NameFa: "دانشکده تست",
 	}
 
-	mockAuthSvc.On("GetCurrentUser", testUserID).Return(mockUser, nil)
+	mockAuthSvc.On("GetCurrentUser", mock.Anything, testUserID).Return(mockUser, nil)
 	mockUniSvc.On("Get", testUniID).Return(mockUniversity, nil)
 	mockFacultySvc.On("Get", testFacultyID).Return(mockFaculty, nil)
 
@@ -629,7 +630,7 @@ func TestGetCurrentUser_MissingUniversity(t *testing.T) {
 		NameFa: "دانشکده تست",
 	}
 
-	mockAuthSvc.On("GetCurrentUser", testUserID).Return(mockUser, nil)
+	mockAuthSvc.On("GetCurrentUser", mock.Anything, testUserID).Return(mockUser, nil)
 	// Simulate University Service returning an error (e.g., Not Found)
 	mockUniSvc.On("Get", testUniID).Return(nil, errors.NewNotFoundError("university", testUniID.String()))
 	mockFacultySvc.On("Get", testFacultyID).Return(mockFaculty, nil) // Faculty still found

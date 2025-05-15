@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"github.com/armanjr/termustat/api/dto"
 	"github.com/armanjr/termustat/api/errors"
 	"github.com/armanjr/termustat/api/services"
@@ -8,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"net/http"
+	"time"
 )
 
 type AuthHandler struct {
@@ -44,6 +46,9 @@ func NewAuthHandler(
 // @Failure      500   {object}  dto.ErrorResponse    "Failed to register user"
 // @Router       /v1/auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
+	defer cancel()
+
 	var req dto.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Warn("Invalid registration request",
@@ -86,7 +91,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Gender:       req.Gender,
 	}
 
-	if err := h.authService.Register(serviceReq); err != nil {
+	if err := h.authService.Register(ctx, serviceReq); err != nil {
 		status := http.StatusInternalServerError
 		message := "Failed to register user"
 
@@ -120,13 +125,16 @@ func (h *AuthHandler) Register(c *gin.Context) {
 // @Failure      500   {object}  dto.ErrorResponse       "Failed to verify email"
 // @Router       /v1/auth/verify-email [post]
 func (h *AuthHandler) VerifyEmail(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
+	defer cancel()
+
 	var req dto.VerifyEmailRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := h.authService.VerifyEmail(req.Token); err != nil {
+	if err := h.authService.VerifyEmail(ctx, req.Token); err != nil {
 		status := http.StatusInternalServerError
 		message := "Failed to verify email"
 
@@ -157,13 +165,16 @@ func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 // @Failure      500   {object}  dto.ErrorResponse  "Failed to login"
 // @Router       /v1/auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
+	defer cancel()
+
 	var req dto.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	access, accessExpiry, refresh, refreshExpiry, err := h.authService.Login(req.Email, req.Password)
+	access, accessExpiry, refresh, refreshExpiry, err := h.authService.Login(ctx, req.Email, req.Password)
 	if err != nil {
 		status := http.StatusInternalServerError
 		message := "Failed to login"
@@ -207,13 +218,16 @@ func (h *AuthHandler) Login(c *gin.Context) {
 // @Failure      401   {object}  dto.ErrorResponse    "Invalid or expired refresh token"
 // @Router       /v1/auth/refresh [post]
 func (h *AuthHandler) Refresh(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
+	defer cancel()
+
 	refresh, err := c.Cookie("refresh_token")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing refresh token"})
 		return
 	}
 
-	access, accessExpiry, newRefresh, newRefreshExpiry, err := h.authService.Refresh(refresh)
+	access, accessExpiry, newRefresh, newRefreshExpiry, err := h.authService.Refresh(ctx, refresh)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -246,13 +260,16 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 // @Failure      400   {object}  dto.ErrorResponse   "Missing refresh token"
 // @Router       /v1/auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
+	defer cancel()
+
 	refresh, err := c.Cookie("refresh_token")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing refresh token"})
 		return
 	}
 
-	if err := h.authService.Logout(refresh); err != nil {
+	if err := h.authService.Logout(ctx, refresh); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to logout"})
 		return
 	}
@@ -283,13 +300,16 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 // @Failure      500   {object}  dto.ErrorResponse          "Failed to process request"
 // @Router       /v1/auth/forgot-password [post]
 func (h *AuthHandler) ForgotPassword(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
+	defer cancel()
+
 	var req dto.ForgotPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := h.authService.ForgotPassword(req.Email); err != nil {
+	if err := h.authService.ForgotPassword(ctx, req.Email); err != nil {
 		h.logger.Error("Failed to process forgot password request",
 			zap.String("email", req.Email),
 			zap.Error(err))
@@ -312,13 +332,16 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 // @Failure      500   {object}  dto.ErrorResponse        "Failed to reset password"
 // @Router       /v1/auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
+	defer cancel()
+
 	var req dto.ResetPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := h.authService.ResetPassword(req.Token, req.Password); err != nil {
+	if err := h.authService.ResetPassword(ctx, req.Token, req.Password); err != nil {
 		status := http.StatusInternalServerError
 		message := "Failed to reset password"
 
@@ -346,6 +369,9 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 // @Router       /v1/user/me [get]
 // @Security     BearerAuth
 func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
+	defer cancel()
+
 	userIDVal, exists := c.Get("userID")
 	if !exists {
 		h.logger.Warn("userID not found in context for /me endpoint")
@@ -367,7 +393,7 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.authService.GetCurrentUser(parsedID)
+	user, err := h.authService.GetCurrentUser(ctx, parsedID)
 	if err != nil {
 		// If the user associated with a valid token isn't found, it's usually a 404.
 		logMsg := "User associated with token not found"

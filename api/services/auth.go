@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"github.com/armanjr/termustat/api/dto"
@@ -17,15 +18,15 @@ import (
 )
 
 type AuthService interface {
-	Register(req *dto.RegisterServiceRequest) error
-	Login(email, password string) (string, int, string, int, error)
-	ForgotPassword(email string) error
-	ResetPassword(token, newPassword string) error
-	GetCurrentUser(userID uuid.UUID) (*models.User, error)
-	VerifyEmail(token string) error
-	ValidateToken(token string) (*utils.JWTClaims, error)
-	Refresh(oldToken string) (string, int, string, int, error)
-	Logout(refreshToken string) error
+	Register(ctx context.Context, req *dto.RegisterServiceRequest) error
+	Login(ctx context.Context, email, password string) (string, int, string, int, error)
+	ForgotPassword(ctx context.Context, email string) error
+	ResetPassword(ctx context.Context, token, newPassword string) error
+	GetCurrentUser(ctx context.Context, userID uuid.UUID) (*models.User, error)
+	VerifyEmail(ctx context.Context, token string) error
+	ValidateToken(ctx context.Context, token string) (*utils.JWTClaims, error)
+	Refresh(ctx context.Context, oldToken string) (string, int, string, int, error)
+	Logout(ctx context.Context, refreshToken string) error
 }
 
 type authService struct {
@@ -61,8 +62,8 @@ func NewAuthService(
 	}
 }
 
-func (s *authService) Register(req *dto.RegisterServiceRequest) error {
-	user, err := s.repo.FindUserByEmailOrStudentID(req.Email, req.StudentID)
+func (s *authService) Register(ctx context.Context, req *dto.RegisterServiceRequest) error {
+	user, err := s.repo.FindUserByEmailOrStudentID(ctx, req.Email, req.StudentID)
 	if err == nil && user != nil {
 		return errors.New("email or student ID already exists")
 	}
@@ -89,7 +90,7 @@ func (s *authService) Register(req *dto.RegisterServiceRequest) error {
 		IsAdmin:       false,
 	}
 
-	if err := s.repo.CreateUser(user); err != nil {
+	if err := s.repo.CreateUser(ctx, user); err != nil {
 		return errors.Wrapf(err, "failed to create user")
 	}
 
@@ -100,7 +101,7 @@ func (s *authService) Register(req *dto.RegisterServiceRequest) error {
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(24 * time.Hour),
 	}
-	if err := s.repo.CreateEmailVerification(verification); err != nil {
+	if err := s.repo.CreateEmailVerification(ctx, verification); err != nil {
 		return errors.Wrapf(err, "failed to create email verification")
 	}
 
@@ -114,8 +115,8 @@ func (s *authService) Register(req *dto.RegisterServiceRequest) error {
 	return nil
 }
 
-func (s *authService) Login(email, password string) (string, int, string, int, error) {
-	user, err := s.repo.FindUserByEmail(email)
+func (s *authService) Login(ctx context.Context, email, password string) (string, int, string, int, error) {
+	user, err := s.repo.FindUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			s.logger.Warn("Login attempt failed: user not found", zap.String("email", email))
@@ -167,8 +168,8 @@ func (s *authService) Login(email, password string) (string, int, string, int, e
 	return access, accessExpirySeconds, refreshStr, refreshExpirySeconds, nil
 }
 
-func (s *authService) ForgotPassword(email string) error {
-	user, err := s.repo.FindUserByEmail(email)
+func (s *authService) ForgotPassword(ctx context.Context, email string) error {
+	user, err := s.repo.FindUserByEmail(ctx, email)
 	if err != nil {
 		return nil // Don't reveal if email exists
 	}
@@ -182,7 +183,7 @@ func (s *authService) ForgotPassword(email string) error {
 		ExpiresAt: resetExpiry,
 	}
 
-	if err := s.repo.CreatePasswordReset(passwordReset); err != nil {
+	if err := s.repo.CreatePasswordReset(ctx, passwordReset); err != nil {
 		return errors.Wrapf(err, "failed to create password reset")
 	}
 
@@ -196,8 +197,8 @@ func (s *authService) ForgotPassword(email string) error {
 	return nil
 }
 
-func (s *authService) ResetPassword(token, newPassword string) error {
-	reset, err := s.repo.FindPasswordResetByToken(token)
+func (s *authService) ResetPassword(ctx context.Context, token, newPassword string) error {
+	reset, err := s.repo.FindPasswordResetByToken(ctx, token)
 	if err != nil {
 		return errors.New("invalid or expired token")
 	}
@@ -207,11 +208,11 @@ func (s *authService) ResetPassword(token, newPassword string) error {
 		return errors.Wrapf(err, "failed to hash password")
 	}
 
-	if err := s.repo.UpdateUserPassword(reset.UserID, string(hashedPassword)); err != nil {
+	if err := s.repo.UpdateUserPassword(ctx, reset.UserID, string(hashedPassword)); err != nil {
 		return errors.Wrapf(err, "failed to update password")
 	}
 
-	if err := s.repo.DeletePasswordReset(reset); err != nil {
+	if err := s.repo.DeletePasswordReset(ctx, reset); err != nil {
 		s.logger.Error("Failed to delete password reset",
 			zap.String("token", token),
 			zap.Error(err))
@@ -220,16 +221,16 @@ func (s *authService) ResetPassword(token, newPassword string) error {
 	return nil
 }
 
-func (s *authService) GetCurrentUser(userID uuid.UUID) (*models.User, error) {
-	user, err := s.repo.FindUserByID(userID)
+func (s *authService) GetCurrentUser(ctx context.Context, userID uuid.UUID) (*models.User, error) {
+	user, err := s.repo.FindUserByID(ctx, userID)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to find user")
 	}
 	return user, nil
 }
 
-func (s *authService) VerifyEmail(token string) error {
-	verification, err := s.repo.FindEmailVerificationByToken(token)
+func (s *authService) VerifyEmail(ctx context.Context, token string) error {
+	verification, err := s.repo.FindEmailVerificationByToken(ctx, token)
 	if err != nil {
 		return errors.New("invalid or expired token")
 	}
@@ -238,11 +239,11 @@ func (s *authService) VerifyEmail(token string) error {
 		return errors.New("invalid or expired token")
 	}
 
-	if err := s.repo.VerifyUserEmail(verification.UserID); err != nil {
+	if err := s.repo.VerifyUserEmail(ctx, verification.UserID); err != nil {
 		return errors.Wrapf(err, "failed to verify user email")
 	}
 
-	if err := s.repo.DeleteEmailVerification(verification); err != nil {
+	if err := s.repo.DeleteEmailVerification(ctx, verification); err != nil {
 		s.logger.Error("Failed to delete email verification",
 			zap.String("token", token),
 			zap.Error(err))
@@ -251,7 +252,7 @@ func (s *authService) VerifyEmail(token string) error {
 	return nil
 }
 
-func (s *authService) ValidateToken(token string) (*utils.JWTClaims, error) {
+func (s *authService) ValidateToken(ctx context.Context, token string) (*utils.JWTClaims, error) {
 	claims, err := utils.ParseJWT(token, s.jwtSecret)
 	if err != nil {
 		switch {
@@ -266,7 +267,7 @@ func (s *authService) ValidateToken(token string) (*utils.JWTClaims, error) {
 	}
 
 	// Verify user still exists and is active
-	_, err = s.repo.FindUserByID(uuid.MustParse(claims.UserID))
+	_, err = s.repo.FindUserByID(ctx, uuid.MustParse(claims.UserID))
 	if err != nil {
 		s.logger.Warn("User from token not found",
 			zap.String("user_id", claims.UserID),
@@ -277,7 +278,7 @@ func (s *authService) ValidateToken(token string) (*utils.JWTClaims, error) {
 	return claims, nil
 }
 
-func (s *authService) Refresh(old string) (string, int, string, int, error) {
+func (s *authService) Refresh(ctx context.Context, old string) (string, int, string, int, error) {
 	rt, err := s.refreshRepo.Find(old)
 	if err != nil {
 		s.logger.Warn("Invalid or expired refresh token provided", zap.String("token_prefix", old[:min(10, len(old))]))
@@ -325,7 +326,7 @@ func (s *authService) Refresh(old string) (string, int, string, int, error) {
 	return newAccess, accessExpirySeconds, newRefresh, refreshExpirySeconds, nil
 }
 
-func (s *authService) Logout(refreshToken string) error {
+func (s *authService) Logout(ctx context.Context, refreshToken string) error {
 	rt, err := s.refreshRepo.Find(refreshToken)
 	if err != nil {
 		return nil

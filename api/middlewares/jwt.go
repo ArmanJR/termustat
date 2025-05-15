@@ -39,7 +39,7 @@ func (m *JWTMiddleware) AuthRequired() gin.HandlerFunc {
 		}
 
 		// Use ValidateToken which now internally uses ParseJWT
-		claims, err := m.authService.ValidateToken(tokenString)
+		claims, err := m.authService.ValidateToken(c.Request.Context(), tokenString)
 		if err != nil {
 			status := http.StatusUnauthorized
 			errMsg := "Invalid token"
