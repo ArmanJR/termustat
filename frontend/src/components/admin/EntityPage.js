@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useTheme, useMediaQuery } from "@mui/material";
 import useFetch from "../../hooks/useFetch";
 import EntityHeader from "./EntityHeader";
@@ -17,7 +17,6 @@ const EntityPage = ({
   const theme = useTheme();
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
 
-  const isFirstRender = useRef(true);
   const { data, loading, error, fetchData } = useFetch(fetchFunction);
 
   const [dialogState, setDialogState] = useState({
@@ -25,14 +24,6 @@ const EntityPage = ({
     mode: null,
     entity: null,
   });
-
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    fetchData();
-  }, []);
 
   const openDialog = (mode, entity = null) => {
     setDialogState({ open: true, mode, entity });
