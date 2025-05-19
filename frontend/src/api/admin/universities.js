@@ -4,7 +4,7 @@ export const getUniversities = async () => {
   const response = await axiosInstance.get(
     "/admin/universities"
   );
-  return response.data;
+  return response;
 };
 
 export const addUniversity = async (universityData) => {
@@ -12,7 +12,7 @@ export const addUniversity = async (universityData) => {
     "/admin/universities",
     universityData
   );
-  return response.data;
+  return response;
 };
 
 export const deleteUniversity = async (id) => {
@@ -27,5 +27,5 @@ export const editUniversity = async (id, universityData) => {
     `/admin/universities/${id}`,
     universityData
   );
-  return response.data;
+  return response;
 };

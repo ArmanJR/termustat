@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Link, useLocation } from 'react-router-dom';
 import AppRoutes from './routes/index.js';
+import { ThemeProvider } from '@mui/material';
+import muiTheme from './themes/muiTheme.js';
 
 function App() {
   // get the current route
@@ -8,7 +10,7 @@ function App() {
   const showNav = location.pathname === '/';
 
   return (
-    <div>
+    <ThemeProvider theme={muiTheme}>
       {showNav && (
         <nav>
           <ul>
@@ -18,7 +20,7 @@ function App() {
         </nav>
       )}
       <AppRoutes />
-    </div>
+    </ThemeProvider>
   );
 }
 

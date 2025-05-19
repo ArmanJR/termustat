@@ -1,9 +1,3 @@
-.top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .table {
   border-collapse: collapse;
   border: 1px solid #dddddd;
@@ -14,15 +8,21 @@
 .td {
   border-bottom: 1px solid #dddddd;
   height: 40px;
-  width: 25%;
   padding: 10px;
   padding-left: 0;
 }
 
 .td:nth-last-child(1), .td:nth-last-child(2) {
-  width: 1%;
+  width: 0.1%;
   padding: 0;
-  margin: 0;
+}
+
+.td:nth-last-child(2) {
+  padding-left: 8px;
+}
+
+.td:nth-last-child(1) {
+  padding-left: 16px;
 }
 
 .tr:hover {

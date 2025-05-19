@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link as RouterLink, Outlet } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import styles from "./AdminLayout.module.css";
-import AdminLayoutTheme from "./AdminLayoutTheme";
 import logo_full from "../images/logo-full-white.png";
 import logo from "../images/logo.png";
 
@@ -15,7 +14,6 @@ import {
   ListItemText,
   useTheme,
   useMediaQuery,
-  ThemeProvider,
 } from "@mui/material";
 
 import {
@@ -73,7 +71,7 @@ export default function AdminLayout() {
   );
 
   return (
-    <ThemeProvider theme={AdminLayoutTheme}>
+    <>
       <div className={styles.pageWrapper}>
         
         {/* Topbar */}
@@ -113,6 +111,6 @@ export default function AdminLayout() {
           </div>
         </div>
       </div>
-    </ThemeProvider>
+    </>
   );
 }
