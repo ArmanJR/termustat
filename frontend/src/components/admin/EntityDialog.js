@@ -63,6 +63,8 @@ const EntityDialog = ({
     } catch (error) {
       if (entityName === "دانشگاه" && error.response?.status === 409)
         showSnackbar(`این دانشگاه قبلا در سیستم ثبت شده است.`, "warning");
+      else if (entityName === "دانشکده" && error.response?.status === 409)
+        showSnackbar("کد دانشکده تکراری است.", "warning");
       else
         showSnackbar(`خطا در ${modeLabels[mode]} ${entityName}. لطفا دوباره تلاش کنید.`, "error");
     }

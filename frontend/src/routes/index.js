@@ -7,6 +7,7 @@ import AdminLogin from '../pages/admin/Login';
 import AdminLayout from '../layouts/AdminLayout';
 import Dashboard from '../pages/admin/Dashboard';
 import Universities from '../pages/admin/universities/Universities';
+import Faculties from '../pages/admin/faculties/Faculties';
 
 const Home = () => <div>Home</div>;
 
@@ -32,6 +33,7 @@ function AppRoutes() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="universities" element={<Universities />} />
+            <Route path="faculties" element={<Faculties />} />
           </Route>
         </Route>
       </Routes>
