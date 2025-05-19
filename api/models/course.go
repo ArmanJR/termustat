@@ -18,6 +18,7 @@ type Course struct {
 	GenderRestriction string `gorm:"size:6;check:gender_restriction IN ('male', 'female', 'mixed')"`
 	ExamStart         time.Time
 	ExamEnd           time.Time
+	Professor         Professor
 	CourseTimes       []CourseTime
 	CreatedAt         time.Time `gorm:"autoCreateTime"`
 	UpdatedAt         time.Time `gorm:"autoUpdateTime"`

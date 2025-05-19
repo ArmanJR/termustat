@@ -28,7 +28,7 @@ func NewProfessorHandler(professorService services.ProfessorService, logger *zap
 // @Tags         professors
 // @Produce      json
 // @Param        id   path      string                  true  "University ID"
-// @Success      200  {array}   dto.ProfessorResponse
+// @Success      200  {array}   dto.ProfessorMinimalResponse
 // @Failure      400  {object}  dto.ErrorResponse       "Invalid university ID"
 // @Failure      500  {object}  dto.ErrorResponse       "Internal server error"
 // @Router       /v1/admin/universities/{id}/professors [get]
@@ -50,7 +50,7 @@ func (h *ProfessorHandler) GetAllByUniversity(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, *professors)
+	c.JSON(http.StatusOK, professors)
 }
 
 // Get returns a single professor
@@ -59,7 +59,7 @@ func (h *ProfessorHandler) GetAllByUniversity(c *gin.Context) {
 // @Tags         professors
 // @Produce      json
 // @Param        id   path      string                  true  "Professor ID"
-// @Success      200  {object}  dto.ProfessorResponse
+// @Success      200  {object}  dto.ProfessorDetailResponse
 // @Failure      400  {object}  dto.ErrorResponse       "Invalid professor ID"
 // @Failure      404  {object}  dto.ErrorResponse       "Professor not found"
 // @Failure      500  {object}  dto.ErrorResponse       "Internal server error"
@@ -97,7 +97,7 @@ func (h *ProfessorHandler) Get(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        body  body      dto.CreateProfessorRequest  true  "Create professor payload"
-// @Success      201   {object}  dto.ProfessorResponse
+// @Success      201   {object}  dto.ProfessorMinimalResponse
 // @Failure      400   {object}  dto.ErrorResponse           "Invalid payload or university not found"
 // @Failure      500   {object}  dto.ErrorResponse           "Internal server error"
 // @Router       /v1/admin/professors [post]

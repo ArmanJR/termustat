@@ -1,0 +1,11 @@
+### Set base URL and admin token
+@base_url = http://localhost:8080/api/v1
+@auth_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMDAwMDAwMDAtMDAwMC00MDAwLWEwMDAtMDAwMDAwMDAwMDAzIiwic2NwIjpbImFkbWluLWRhc2hib2FyZCJdLCJpc3MiOiJ0ZXJtdXN0YXQiLCJzdWIiOiIwMDAwMDAwMC0wMDAwLTQwMDAtYTAwMC0wMDAwMDAwMDAwMDMiLCJleHAiOjE3NDgyNzUyNTAsIm5iZiI6MTc0NzY3MDQ1MCwiaWF0IjoxNzQ3NjcwNDUwfQ.WdOHPSMUa-w7OqvPMj2RtGXjEPxZIVYKJGRjaf8729Y
+
+### Get all professors for a university
+GET {{base_url}}/admin/universities/00000000-0000-4000-a000-000000000001/professors
+Authorization: Bearer {{auth_token}}
+
+### Get a specific professor by ID
+GET {{base_url}}/admin/professors/00000000-0000-4000-a000-000000000004
+Authorization: Bearer {{auth_token}}

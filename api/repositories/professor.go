@@ -24,7 +24,7 @@ func NewProfessorRepository(db *gorm.DB) ProfessorRepository {
 
 func (r *professorRepository) Find(id uuid.UUID) (*models.Professor, error) {
 	var professor models.Professor
-	if err := r.db.First(&professor, "id = ?", id).Error; err != nil {
+	if err := r.db.Preload("University").Preload("Courses").First(&professor, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.NewNotFoundError("professor", id.String())
 		}

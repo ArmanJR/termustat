@@ -12,9 +12,9 @@ import (
 )
 
 type ProfessorService interface {
-	GetOrCreateByName(universityID uuid.UUID, name string) (*dto.ProfessorResponse, error)
-	GetAllByUniversity(universityID uuid.UUID) (*[]dto.ProfessorResponse, error)
-	Get(id uuid.UUID) (*dto.ProfessorResponse, error)
+	GetOrCreateByName(universityID uuid.UUID, name string) (*dto.ProfessorMinimalResponse, error)
+	GetAllByUniversity(universityID uuid.UUID) ([]dto.ProfessorMinimalResponse, error)
+	Get(id uuid.UUID) (*dto.ProfessorDetailResponse, error)
 }
 
 type professorService struct {
@@ -34,33 +34,53 @@ func NewProfessorService(
 	}
 }
 
-func mapProfessorToDTO(professor *models.Professor) dto.ProfessorResponse {
-	return dto.ProfessorResponse{
+func mapProfessorToListDTO(professor *models.Professor) dto.ProfessorMinimalResponse {
+	return dto.ProfessorMinimalResponse{
 		ID:             professor.ID,
 		Name:           professor.Name,
 		NormalizedName: professor.NormalizedName,
-		UniversityID:   professor.UniversityID,
-		CreatedAt:      professor.CreatedAt,
-		UpdatedAt:      professor.UpdatedAt,
 	}
 }
 
-func (s *professorService) GetAllByUniversity(universityID uuid.UUID) (*[]dto.ProfessorResponse, error) {
+func mapCoursesToProfessorResponse(courses []models.Course) []dto.CourseResponse {
+	if len(courses) == 0 {
+		return []dto.CourseResponse{}
+	}
+
+	response := make([]dto.CourseResponse, len(courses))
+	for i, course := range courses {
+		response[i] = dto.CourseResponse{
+			ID:                course.ID,
+			Code:              course.Code,
+			Name:              course.Name,
+			Weight:            course.Weight,
+			Capacity:          course.Capacity,
+			GenderRestriction: course.GenderRestriction,
+			ExamStart:         course.ExamStart,
+			ExamEnd:           course.ExamEnd,
+		}
+	}
+	return response
+}
+
+func (s *professorService) GetAllByUniversity(universityID uuid.UUID) ([]dto.ProfessorMinimalResponse, error) {
 	professors, err := s.professorRepository.FindAllByUniversity(universityID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch professors: %w", err)
 	}
+
 	if len(*professors) == 0 {
-		return &[]dto.ProfessorResponse{}, nil
+		return []dto.ProfessorMinimalResponse{}, nil
 	}
-	response := make([]dto.ProfessorResponse, len(*professors))
+
+	response := make([]dto.ProfessorMinimalResponse, len(*professors))
 	for i, prof := range *professors {
-		response[i] = mapProfessorToDTO(&prof)
+		response[i] = mapProfessorToListDTO(&prof)
 	}
-	return &response, nil
+	return response, nil
 }
 
-func (s *professorService) Get(id uuid.UUID) (*dto.ProfessorResponse, error) {
+func (s *professorService) Get(id uuid.UUID) (*dto.ProfessorDetailResponse, error) {
 	professor, err := s.professorRepository.Find(id)
 	if err != nil {
 		switch {
@@ -75,18 +95,30 @@ func (s *professorService) Get(id uuid.UUID) (*dto.ProfessorResponse, error) {
 			return nil, fmt.Errorf("failed to get professor")
 		}
 	}
-	response := dto.ProfessorResponse{
+
+	// Get university details
+	university, err := s.universityService.Get(professor.UniversityID)
+	if err != nil {
+		s.logger.Error("Failed to fetch university for professor",
+			zap.String("professor_id", id.String()),
+			zap.String("university_id", professor.UniversityID.String()),
+			zap.Error(err))
+		return nil, fmt.Errorf("failed to get professor details")
+	}
+
+	response := &dto.ProfessorDetailResponse{
 		ID:             professor.ID,
 		Name:           professor.Name,
 		NormalizedName: professor.NormalizedName,
-		UniversityID:   professor.UniversityID,
+		University:     *university,
+		Courses:        mapCoursesToProfessorResponse(professor.Courses),
 		CreatedAt:      professor.CreatedAt,
 		UpdatedAt:      professor.UpdatedAt,
 	}
-	return &response, nil
+	return response, nil
 }
 
-func (s *professorService) GetOrCreateByName(universityID uuid.UUID, name string) (*dto.ProfessorResponse, error) {
+func (s *professorService) GetOrCreateByName(universityID uuid.UUID, name string) (*dto.ProfessorMinimalResponse, error) {
 	university, err := s.universityService.Get(universityID)
 	if err != nil {
 		switch {
@@ -108,8 +140,7 @@ func (s *professorService) GetOrCreateByName(universityID uuid.UUID, name string
 		s.logger.Error("Invalid professor name after normalization",
 			zap.String("name", name),
 			zap.String("service", "Professor"),
-			zap.String("operation", "GetOrCreateByName"),
-			zap.Error(err))
+			zap.String("operation", "GetOrCreateByName"))
 		return nil, fmt.Errorf("invalid professor name after normalization")
 	}
 
@@ -143,14 +174,6 @@ func (s *professorService) GetOrCreateByName(universityID uuid.UUID, name string
 		}
 	}
 
-	response := dto.ProfessorResponse{
-		ID:             professor.ID,
-		Name:           professor.Name,
-		NormalizedName: professor.NormalizedName,
-		UniversityID:   professor.UniversityID,
-		CreatedAt:      professor.CreatedAt,
-		UpdatedAt:      professor.UpdatedAt,
-	}
-
+	response := mapProfessorToListDTO(professor)
 	return &response, nil
 }

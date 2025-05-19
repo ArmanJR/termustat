@@ -5,17 +5,20 @@ import (
 	"time"
 )
 
-type ProfessorResponse struct {
-	ID             uuid.UUID
-	Name           string
-	NormalizedName string
-	UniversityID   uuid.UUID
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+type ProfessorMinimalResponse struct {
+	ID             uuid.UUID `json:"id"`
+	Name           string    `json:"name"`
+	NormalizedName string    `json:"normalized_name"`
 }
 
-type UpdateProfessorRequest struct {
-	Name string `json:"name" binding:"required"`
+type ProfessorDetailResponse struct {
+	ID             uuid.UUID          `json:"id"`
+	Name           string             `json:"name"`
+	NormalizedName string             `json:"normalized_name"`
+	University     UniversityResponse `json:"university"`
+	Courses        []CourseResponse   `json:"courses"`
+	CreatedAt      time.Time          `json:"created_at"`
+	UpdatedAt      time.Time          `json:"updated_at"`
 }
 
 type CreateProfessorRequest struct {
