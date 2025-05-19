@@ -6,12 +6,12 @@ import (
 )
 
 type CreateSemesterRequest struct {
-	Year int    `json:"year" binding:"required,min=1900,max=2200"`
+	Year int    `json:"year" binding:"required,min=1000,max=3000"`
 	Term string `json:"term" binding:"required,oneof=spring fall"`
 }
 
 type UpdateSemesterRequest struct {
-	Year int    `json:"year" binding:"required,min=1900,max=2200"`
+	Year int    `json:"year" binding:"required,min=1000,max=3000"`
 	Term string `json:"term" binding:"required,oneof=spring fall"`
 }
 
