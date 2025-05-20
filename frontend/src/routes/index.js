@@ -8,6 +8,7 @@ import AdminLayout from '../layouts/AdminLayout';
 import Dashboard from '../pages/admin/Dashboard';
 import Universities from '../pages/admin/universities/Universities';
 import Faculties from '../pages/admin/faculties/Faculties';
+import Semesters from '../pages/admin/semesters/Semesters';
 
 const Home = () => <div>Home</div>;
 
@@ -34,6 +35,7 @@ function AppRoutes() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="universities" element={<Universities />} />
             <Route path="faculties" element={<Faculties />} />
+            <Route path="semesters" element={<Semesters />} />
           </Route>
         </Route>
       </Routes>
