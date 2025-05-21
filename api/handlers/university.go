@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"github.com/armanjr/termustat/api/dto"
 	"github.com/armanjr/termustat/api/errors"
 	"github.com/armanjr/termustat/api/services"
@@ -8,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"net/http"
+	"time"
 )
 
 type UniversityHandler struct {
@@ -36,6 +38,9 @@ func NewUniversityHandler(service services.UniversityService, logger *zap.Logger
 // @Router       /v1/admin/universities [post]
 // @Security     BearerAuth
 func (h *UniversityHandler) Create(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
+	defer cancel()
+
 	var req dto.CreateUniversityRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Warn("Invalid university request", zap.Error(err))
@@ -43,7 +48,7 @@ func (h *UniversityHandler) Create(c *gin.Context) {
 		return
 	}
 
-	exists, err := h.service.ExistsByName(req.NameEn, req.NameFa)
+	exists, err := h.service.ExistsByName(ctx, req.NameEn, req.NameFa)
 	if err != nil {
 		h.logger.Error("Failed to check university existence", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
@@ -54,7 +59,7 @@ func (h *UniversityHandler) Create(c *gin.Context) {
 		return
 	}
 
-	university, err := h.service.Create(&req)
+	university, err := h.service.Create(ctx, &req)
 	if err != nil {
 		switch {
 		case errors.Is(err, errors.ErrInvalid):
@@ -84,6 +89,9 @@ func (h *UniversityHandler) Create(c *gin.Context) {
 // @Router       /v1/admin/universities/{id} [get]
 // @Security     BearerAuth
 func (h *UniversityHandler) Get(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
+	defer cancel()
+
 	id := c.Param("id")
 	parsedID, err := uuid.Parse(id)
 	if err != nil {
@@ -92,7 +100,7 @@ func (h *UniversityHandler) Get(c *gin.Context) {
 		return
 	}
 
-	university, err := h.service.Get(parsedID)
+	university, err := h.service.Get(ctx, parsedID)
 	if err != nil {
 		switch {
 		case errors.Is(err, errors.ErrNotFound):
@@ -117,7 +125,10 @@ func (h *UniversityHandler) Get(c *gin.Context) {
 // @Router       /v1/admin/universities [get]
 // @Security     BearerAuth
 func (h *UniversityHandler) GetAll(c *gin.Context) {
-	universities, err := h.service.GetAll()
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
+	defer cancel()
+
+	universities, err := h.service.GetAll(ctx)
 	if err != nil {
 		h.logger.Error("Failed to fetch universities", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
@@ -142,6 +153,9 @@ func (h *UniversityHandler) GetAll(c *gin.Context) {
 // @Router       /v1/admin/universities/{id} [put]
 // @Security     BearerAuth
 func (h *UniversityHandler) Update(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
+	defer cancel()
+
 	id := c.Param("id")
 	parsedID, err := uuid.Parse(id)
 	if err != nil {
@@ -157,7 +171,7 @@ func (h *UniversityHandler) Update(c *gin.Context) {
 		return
 	}
 
-	university, err := h.service.Update(parsedID, &req)
+	university, err := h.service.Update(ctx, parsedID, &req)
 	if err != nil {
 		switch {
 		case errors.Is(err, errors.ErrNotFound):
@@ -187,6 +201,9 @@ func (h *UniversityHandler) Update(c *gin.Context) {
 // @Router       /v1/admin/universities/{id} [delete]
 // @Security     BearerAuth
 func (h *UniversityHandler) Delete(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
+	defer cancel()
+
 	id := c.Param("id")
 	parsedID, err := uuid.Parse(id)
 	if err != nil {
@@ -195,7 +212,7 @@ func (h *UniversityHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Delete(parsedID); err != nil {
+	if err := h.service.Delete(ctx, parsedID); err != nil {
 		switch {
 		case errors.Is(err, errors.ErrNotFound):
 			c.JSON(http.StatusNotFound, gin.H{"error": "University not found"})

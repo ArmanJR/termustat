@@ -412,7 +412,7 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 	var universityResponse *dto.UniversityResponse
 	// Check if UniversityID is valid before attempting fetch
 	if user.UniversityID != uuid.Nil {
-		universityResponse, err = h.universityService.Get(user.UniversityID)
+		universityResponse, err = h.universityService.Get(ctx, user.UniversityID)
 		if err != nil {
 			h.logger.Warn("Failed to fetch university details for user (continuing)",
 				zap.String("userID", user.ID.String()),

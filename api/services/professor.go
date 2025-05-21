@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"github.com/armanjr/termustat/api/dto"
 	"github.com/armanjr/termustat/api/errors"
@@ -97,7 +98,7 @@ func (s *professorService) Get(id uuid.UUID) (*dto.ProfessorDetailResponse, erro
 	}
 
 	// Get university details
-	university, err := s.universityService.Get(professor.UniversityID)
+	university, err := s.universityService.Get(context.Background(), professor.UniversityID)
 	if err != nil {
 		s.logger.Error("Failed to fetch university for professor",
 			zap.String("professor_id", id.String()),
@@ -119,7 +120,7 @@ func (s *professorService) Get(id uuid.UUID) (*dto.ProfessorDetailResponse, erro
 }
 
 func (s *professorService) GetOrCreateByName(universityID uuid.UUID, name string) (*dto.ProfessorMinimalResponse, error) {
-	university, err := s.universityService.Get(universityID)
+	university, err := s.universityService.Get(context.Background(), universityID)
 	if err != nil {
 		switch {
 		case errors.Is(err, errors.ErrNotFound):
