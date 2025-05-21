@@ -82,26 +82,26 @@ type MockUniversityService struct {
 	mock.Mock
 }
 
-func (m *MockUniversityService) Get(id uuid.UUID) (*dto.UniversityResponse, error) {
-	args := m.Called(id)
+func (m *MockUniversityService) Get(ctx context.Context, id uuid.UUID) (*dto.UniversityResponse, error) {
+	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.UniversityResponse), args.Error(1)
 }
-func (m *MockUniversityService) Create(req *dto.CreateUniversityRequest) (*dto.UniversityResponse, error) {
+func (m *MockUniversityService) Create(ctx context.Context, req *dto.CreateUniversityRequest) (*dto.UniversityResponse, error) {
 	panic("Create not implemented in mock")
 }
-func (m *MockUniversityService) GetAll() ([]dto.UniversityResponse, error) {
+func (m *MockUniversityService) GetAll(ctx context.Context) ([]dto.UniversityResponse, error) {
 	panic("GetAll not implemented in mock")
 }
-func (m *MockUniversityService) Update(id uuid.UUID, req *dto.UpdateUniversityRequest) (*dto.UniversityResponse, error) {
+func (m *MockUniversityService) Update(ctx context.Context, id uuid.UUID, req *dto.UpdateUniversityRequest) (*dto.UniversityResponse, error) {
 	panic("Update not implemented in mock")
 }
-func (m *MockUniversityService) ExistsByName(nameEn, nameFa string) (bool, error) {
+func (m *MockUniversityService) ExistsByName(ctx context.Context, nameEn, nameFa string) (bool, error) {
 	panic("ExistsByName not implemented in mock")
 }
-func (m *MockUniversityService) Delete(id uuid.UUID) error {
+func (m *MockUniversityService) Delete(ctx context.Context, id uuid.UUID) error {
 	panic("Delete not implemented in mock")
 }
 
@@ -572,8 +572,17 @@ func TestGetCurrentUser_Success(t *testing.T) {
 	}
 
 	mockAuthSvc.On("GetCurrentUser", mock.Anything, testUserID).Return(mockUser, nil)
-	mockUniSvc.On("Get", testUniID).Return(mockUniversity, nil)
+	mockUniSvc.On("Get", mock.MatchedBy(func(ctx context.Context) bool {
+		_, ok := ctx.Deadline()
+		return ctx != nil && ok
+	}), testUniID).Return(mockUniversity, nil)
+	// Assuming FacultyService.Get in the mock is defined as Get(id uuid.UUID) or Get(ctx context.Context, id uuid.UUID)
+	// If it's Get(id uuid.UUID), then context.Background() is not passed.
+	// If it's Get(ctx context.Context, id uuid.UUID), then we should pass a context.
+	// Based on the provided file, MockFacultyService.Get does not take a context.
+	// So, we call it as it was:
 	mockFacultySvc.On("Get", testFacultyID).Return(mockFaculty, nil)
+
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -632,7 +641,12 @@ func TestGetCurrentUser_MissingUniversity(t *testing.T) {
 
 	mockAuthSvc.On("GetCurrentUser", mock.Anything, testUserID).Return(mockUser, nil)
 	// Simulate University Service returning an error (e.g., Not Found)
-	mockUniSvc.On("Get", testUniID).Return(nil, errors.NewNotFoundError("university", testUniID.String()))
+	mockUniSvc.On("Get", mock.MatchedBy(func(ctx context.Context) bool {
+		_, ok := ctx.Deadline()
+		return ctx != nil && ok
+	}), testUniID).Return(nil, errors.NewNotFoundError("university", testUniID.String()))
+	// Based on the provided file, MockFacultyService.Get does not take a context.
+	// So, we call it as it was:
 	mockFacultySvc.On("Get", testFacultyID).Return(mockFaculty, nil) // Faculty still found
 
 	w := httptest.NewRecorder()

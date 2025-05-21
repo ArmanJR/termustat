@@ -46,7 +46,7 @@ func NewAdminUserService(
 }
 
 func (s *adminUserService) Create(ctx context.Context, req *dto.AdminCreateUserRequest) (*dto.AdminUserResponse, error) {
-	if _, err := s.universityService.Get(req.UniversityID); err != nil {
+	if _, err := s.universityService.Get(ctx, req.UniversityID); err != nil {
 		if errors.Is(err, errors.ErrNotFound) {
 			return nil, errors.NewValidationError("invalid university_id")
 		}
@@ -144,7 +144,7 @@ func (s *adminUserService) Update(ctx context.Context, id uuid.UUID, req *dto.Ad
 	}
 
 	if req.UniversityID != uuid.Nil && req.UniversityID != user.UniversityID {
-		if _, err := s.universityService.Get(req.UniversityID); err != nil {
+		if _, err := s.universityService.Get(ctx, req.UniversityID); err != nil {
 			if errors.Is(err, errors.ErrNotFound) {
 				return nil, errors.NewValidationError("invalid university_id")
 			}

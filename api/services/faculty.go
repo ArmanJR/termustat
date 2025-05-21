@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"github.com/armanjr/termustat/api/dto"
 	"github.com/armanjr/termustat/api/errors"
@@ -39,7 +40,7 @@ func NewFacultyService(
 }
 
 func (s *facultyService) Create(dto dto.CreateFacultyDTO) (*dto.FacultyResponse, error) {
-	university, err := s.universityService.Get(dto.UniversityID)
+	university, err := s.universityService.Get(context.Background(), dto.UniversityID)
 	if err != nil {
 		switch {
 		case errors.Is(err, errors.ErrNotFound):
@@ -106,7 +107,7 @@ func (s *facultyService) Get(id uuid.UUID) (*dto.FacultyResponse, error) {
 }
 
 func (s *facultyService) GetAllByUniversity(universityID uuid.UUID) ([]*dto.FacultyResponse, error) {
-	_, err := s.universityService.Get(universityID)
+	_, err := s.universityService.Get(context.Background(), universityID)
 	if err != nil {
 		switch {
 		case errors.Is(err, errors.ErrNotFound):

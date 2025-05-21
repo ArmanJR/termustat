@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"github.com/armanjr/termustat/api/dto"
 	"github.com/armanjr/termustat/api/errors"
@@ -12,12 +13,12 @@ import (
 )
 
 type UniversityService interface {
-	Update(id uuid.UUID, req *dto.UpdateUniversityRequest) (*dto.UniversityResponse, error)
-	Create(req *dto.CreateUniversityRequest) (*dto.UniversityResponse, error)
-	Get(id uuid.UUID) (*dto.UniversityResponse, error)
-	GetAll() ([]dto.UniversityResponse, error)
-	ExistsByName(nameEn, nameFa string) (bool, error)
-	Delete(id uuid.UUID) error
+	Update(ctx context.Context, id uuid.UUID, req *dto.UpdateUniversityRequest) (*dto.UniversityResponse, error)
+	Create(ctx context.Context, req *dto.CreateUniversityRequest) (*dto.UniversityResponse, error)
+	Get(ctx context.Context, id uuid.UUID) (*dto.UniversityResponse, error)
+	GetAll(ctx context.Context) ([]dto.UniversityResponse, error)
+	ExistsByName(ctx context.Context, nameEn, nameFa string) (bool, error)
+	Delete(ctx context.Context, id uuid.UUID) error
 }
 
 type universityService struct {
@@ -32,8 +33,8 @@ func NewUniversityService(repo repositories.UniversityRepository, logger *zap.Lo
 	}
 }
 
-func (s *universityService) Get(id uuid.UUID) (*dto.UniversityResponse, error) {
-	university, err := s.repo.Find(id)
+func (s *universityService) Get(ctx context.Context, id uuid.UUID) (*dto.UniversityResponse, error) {
+	university, err := s.repo.Find(ctx, id)
 	if err != nil {
 		switch {
 		case errors.Is(err, errors.ErrNotFound):
@@ -57,7 +58,7 @@ func (s *universityService) Get(id uuid.UUID) (*dto.UniversityResponse, error) {
 	return &response, nil
 }
 
-func (s *universityService) Create(req *dto.CreateUniversityRequest) (*dto.UniversityResponse, error) {
+func (s *universityService) Create(ctx context.Context, req *dto.CreateUniversityRequest) (*dto.UniversityResponse, error) {
 	if req.NameEn == "" {
 		return nil, errors.NewValidationError("name_en")
 	}
@@ -74,7 +75,7 @@ func (s *universityService) Create(req *dto.CreateUniversityRequest) (*dto.Unive
 		IsActive: *req.IsActive,
 	}
 
-	created, err := s.repo.Create(university)
+	created, err := s.repo.Create(ctx, university)
 	if err != nil {
 		s.logger.Error("Failed to create university",
 			zap.String("name_en", req.NameEn),
@@ -93,8 +94,8 @@ func (s *universityService) Create(req *dto.CreateUniversityRequest) (*dto.Unive
 	return &response, nil
 }
 
-func (s *universityService) GetAll() ([]dto.UniversityResponse, error) {
-	universities, err := s.repo.FindAll()
+func (s *universityService) GetAll(ctx context.Context) ([]dto.UniversityResponse, error) {
+	universities, err := s.repo.FindAll(ctx)
 	if err != nil {
 		s.logger.Error("Failed to fetch universities", zap.Error(err))
 		return nil, fmt.Errorf("failed to fetch universities: %w", err)
@@ -114,7 +115,7 @@ func (s *universityService) GetAll() ([]dto.UniversityResponse, error) {
 	return response, nil
 }
 
-func (s *universityService) Update(id uuid.UUID, req *dto.UpdateUniversityRequest) (*dto.UniversityResponse, error) {
+func (s *universityService) Update(ctx context.Context, id uuid.UUID, req *dto.UpdateUniversityRequest) (*dto.UniversityResponse, error) {
 	if req.NameEn == "" {
 		return nil, errors.NewValidationError("name_en")
 	}
@@ -125,7 +126,7 @@ func (s *universityService) Update(id uuid.UUID, req *dto.UpdateUniversityReques
 		return nil, errors.NewValidationError("is_active")
 	}
 
-	university, err := s.repo.Find(id)
+	university, err := s.repo.Find(ctx, id)
 	if err != nil {
 		if errors.Is(err, errors.ErrNotFound) {
 			return nil, err
@@ -142,7 +143,7 @@ func (s *universityService) Update(id uuid.UUID, req *dto.UpdateUniversityReques
 	university.NameFa = strings.TrimSpace(req.NameFa)
 	university.IsActive = *req.IsActive
 
-	updated, err := s.repo.Update(university)
+	updated, err := s.repo.Update(ctx, university)
 	if err != nil {
 		s.logger.Error("Failed to update university",
 			zap.String("id", id.String()),
@@ -163,8 +164,8 @@ func (s *universityService) Update(id uuid.UUID, req *dto.UpdateUniversityReques
 	return &response, nil
 }
 
-func (s *universityService) ExistsByName(nameEn, nameFa string) (bool, error) {
-	exists, err := s.repo.ExistsByName(nameEn, nameFa)
+func (s *universityService) ExistsByName(ctx context.Context, nameEn, nameFa string) (bool, error) {
+	exists, err := s.repo.ExistsByName(ctx, nameEn, nameFa)
 	if err != nil {
 		s.logger.Error("Failed to check university existence",
 			zap.String("name_en", nameEn),
@@ -175,8 +176,8 @@ func (s *universityService) ExistsByName(nameEn, nameFa string) (bool, error) {
 	return exists, nil
 }
 
-func (s *universityService) Delete(id uuid.UUID) error {
-	_, err := s.repo.Find(id)
+func (s *universityService) Delete(ctx context.Context, id uuid.UUID) error {
+	_, err := s.repo.Find(ctx, id)
 	if err != nil {
 		if errors.Is(err, errors.ErrNotFound) {
 			return err
@@ -189,7 +190,7 @@ func (s *universityService) Delete(id uuid.UUID) error {
 		return fmt.Errorf("failed to delete university: %w", err)
 	}
 
-	if err = s.repo.Delete(id); err != nil {
+	if err = s.repo.Delete(ctx, id); err != nil {
 		s.logger.Error("Failed to delete university",
 			zap.String("id", id.String()),
 			zap.String("service", "University"),

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"github.com/armanjr/termustat/api/dto"
 	"github.com/armanjr/termustat/api/errors"
@@ -52,7 +53,7 @@ func NewCourseService(
 }
 
 func (s *courseService) Create(dto dto.CreateCourseDTO) (*dto.CourseResponse, error) {
-	if _, err := s.universityService.Get(dto.UniversityID); err != nil {
+	if _, err := s.universityService.Get(context.Background(), dto.UniversityID); err != nil {
 		return nil, err
 	}
 
@@ -195,7 +196,7 @@ func (s *courseService) Update(id uuid.UUID, dto dto.UpdateCourseDTO) (*dto.Cour
 		}
 	}
 
-	if _, err := s.universityService.Get(dto.UniversityID); err != nil {
+	if _, err := s.universityService.Get(context.Background(), dto.UniversityID); err != nil {
 		return nil, err
 	}
 
@@ -280,7 +281,7 @@ func (s *courseService) BatchCreate(dtos []dto.CreateCourseDTO) ([]*dto.CourseRe
 	semesterID := dtos[0].SemesterID
 
 	// Validate university exists
-	if _, err := s.universityService.Get(universityID); err != nil {
+	if _, err := s.universityService.Get(context.Background(), universityID); err != nil {
 		return nil, err
 	}
 
@@ -557,7 +558,7 @@ func (s *courseService) parseCourseTimes(times []string) ([]models.CourseTime, e
 }
 
 func (s *courseService) prepareCourse(dto dto.CreateCourseDTO) (*models.Course, error) {
-	if _, err := s.universityService.Get(dto.UniversityID); err != nil {
+	if _, err := s.universityService.Get(context.Background(), dto.UniversityID); err != nil {
 		return nil, err
 	}
 
