@@ -10,19 +10,16 @@ import (
 	"github.com/armanjr/termustat/api/dto"
 	"github.com/armanjr/termustat/api/errors"
 	"github.com/armanjr/termustat/api/handlers"
-	// "github.com/armanjr/termustat/api/services" // Removed unused import
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	// "context" // Removed unused import
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
 )
 
-// --- Test Setup Helper for Handler ---
 func setupUniversityHandlerWithMocks(t *testing.T) (*handlers.UniversityHandler, *MockUniversityService) {
 	mockService := new(MockUniversityService) // This will now refer to MockUniversityService from auth_test.go
-	logger, _ := zap.NewDevelopment() // Use development logger for test output
+	logger, _ := zap.NewDevelopment()
 
 	handler := handlers.NewUniversityHandler(
 		mockService,
@@ -31,22 +28,20 @@ func setupUniversityHandlerWithMocks(t *testing.T) (*handlers.UniversityHandler,
 	return handler, mockService
 }
 
-// --- Test Cases for Create ---
-
 func TestCreateUniversity_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	handler, mockService := setupUniversityHandlerWithMocks(t)
 
 	isActiveVal := true
 	reqBody := dto.CreateUniversityRequest{
-		NameEn: "Test University",
-		NameFa: "دانشگاه تست",
+		NameEn:   "Test University",
+		NameFa:   "دانشگاه تست",
 		IsActive: &isActiveVal, // Corrected to use a pointer
 	}
 	expectedResp := &dto.UniversityResponse{
-		ID:     uuid.New(),
-		NameEn: reqBody.NameEn,
-		NameFa: reqBody.NameFa,
+		ID:       uuid.New(),
+		NameEn:   reqBody.NameEn,
+		NameFa:   reqBody.NameFa,
 		IsActive: *reqBody.IsActive, // Corrected to dereference the pointer
 	}
 
@@ -75,8 +70,6 @@ func TestCreateUniversity_Success(t *testing.T) {
 	mockService.AssertCalled(t, "ExistsByName", mock.Anything, reqBody.NameEn, reqBody.NameFa)
 	mockService.AssertCalled(t, "Create", mock.Anything, &reqBody)
 }
-
-// --- Test Cases for Get ---
 
 func TestGetUniversity_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
@@ -108,8 +101,6 @@ func TestGetUniversity_Success(t *testing.T) {
 	mockService.AssertCalled(t, "Get", mock.Anything, uniID)
 }
 
-// --- Test Cases for GetAll ---
-
 func TestGetAllUniversities_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	handler, mockService := setupUniversityHandlerWithMocks(t)
@@ -137,8 +128,6 @@ func TestGetAllUniversities_Success(t *testing.T) {
 	mockService.AssertCalled(t, "GetAll", mock.Anything)
 }
 
-// --- Test Cases for Update ---
-
 func TestUpdateUniversity_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	handler, mockService := setupUniversityHandlerWithMocks(t)
@@ -146,14 +135,14 @@ func TestUpdateUniversity_Success(t *testing.T) {
 	uniID := uuid.New()
 	isActiveVal := true
 	reqBody := dto.UpdateUniversityRequest{
-		NameEn: "Updated University",
-		NameFa: "دانشگاه آپدیت شده",
+		NameEn:   "Updated University",
+		NameFa:   "دانشگاه آپدیت شده",
 		IsActive: &isActiveVal,
 	}
 	expectedResp := &dto.UniversityResponse{
-		ID:     uniID,
-		NameEn: reqBody.NameEn,
-		NameFa: reqBody.NameFa,
+		ID:       uniID,
+		NameEn:   reqBody.NameEn,
+		NameFa:   reqBody.NameFa,
 		IsActive: *reqBody.IsActive,
 	}
 
@@ -180,8 +169,6 @@ func TestUpdateUniversity_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 	mockService.AssertCalled(t, "Update", mock.Anything, uniID, &reqBody)
 }
-
-// --- Test Cases for Delete ---
 
 func TestDeleteUniversity_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
@@ -336,10 +323,10 @@ func TestUpdateUniversity_NotFound(t *testing.T) {
 	handler, mockService := setupUniversityHandlerWithMocks(t)
 
 	uniID := uuid.New()
-	isActiveVal := false // Or true, depending on what the test aims for, let's use false
+	isActiveVal := false
 	reqBody := dto.UpdateUniversityRequest{
-		NameEn: "Updated University",
-		NameFa: "دانشگاه آپدیت شده",
+		NameEn:   "Updated University",
+		NameFa:   "دانشگاه آپدیت شده",
 		IsActive: &isActiveVal,
 	}
 	serviceErr := errors.NewNotFoundError("university", uniID.String())
@@ -372,8 +359,8 @@ func TestUpdateUniversity_ServiceError(t *testing.T) {
 	uniID := uuid.New()
 	isActiveVal := true
 	reqBody := dto.UpdateUniversityRequest{
-		NameEn: "Updated University",
-		NameFa: "دانشگاه آپدیت شده",
+		NameEn:   "Updated University",
+		NameFa:   "دانشگاه آپدیت شده",
 		IsActive: &isActiveVal,
 	}
 	serviceErr := errors.New("some internal error")
@@ -519,8 +506,8 @@ func TestCreateUniversity_Conflict_AlreadyExists(t *testing.T) {
 
 	isActiveVal := true
 	reqBody := dto.CreateUniversityRequest{
-		NameEn: "Existing University",
-		NameFa: "دانشگاه موجود",
+		NameEn:   "Existing University",
+		NameFa:   "دانشگاه موجود",
 		IsActive: &isActiveVal,
 	}
 
@@ -552,8 +539,8 @@ func TestCreateUniversity_ServiceError_ExistsByName(t *testing.T) {
 
 	isActiveVal := true
 	reqBody := dto.CreateUniversityRequest{
-		NameEn: "Test University",
-		NameFa: "دانشگاه تست",
+		NameEn:   "Test University",
+		NameFa:   "دانشگاه تست",
 		IsActive: &isActiveVal,
 	}
 
@@ -585,8 +572,8 @@ func TestCreateUniversity_ServiceError_Create(t *testing.T) {
 
 	isActiveVal := true
 	reqBody := dto.CreateUniversityRequest{
-		NameEn: "Test University",
-		NameFa: "دانشگاه تست",
+		NameEn:   "Test University",
+		NameFa:   "دانشگاه تست",
 		IsActive: &isActiveVal,
 	}
 
