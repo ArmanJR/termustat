@@ -36,7 +36,7 @@ func (s *semesterService) Create(req *dto.CreateSemesterRequest) (*dto.SemesterR
 	}
 
 	if !isValidYear(req.Year) {
-		return nil, errors.NewValidationError("year must be between 1900 and 2200")
+		return nil, errors.NewValidationError("year must be between 1000 and 3000")
 	}
 
 	existing, err := s.repo.FindByYearAndTerm(req.Year, req.Term)
@@ -166,7 +166,7 @@ func isValidTerm(term string) bool {
 }
 
 func isValidYear(year int) bool {
-	return year >= 1900 && year <= 2200
+	return year >= 1000 && year <= 3000
 }
 
 func mapSemesterToDTO(semester *models.Semester) *dto.SemesterResponse {

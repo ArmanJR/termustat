@@ -6,7 +6,7 @@
         "version": "1.0"
     },
     "host": "localhost:8080",
-    "basePath": "/api/v1",
+    "basePath": "/api",
     "paths": {
         "/courses": {
             "get": {
@@ -280,7 +280,7 @@
                 }
             }
         },
-        "/faculties/{facultyID}/courses": {
+        "/faculties/{id}/courses": {
             "get": {
                 "description": "Retrieves all courses under the specified faculty",
                 "consumes": [
@@ -297,7 +297,7 @@
                     {
                         "type": "string",
                         "description": "Faculty ID",
-                        "name": "facultyID",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -596,7 +596,7 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.ProfessorResponse"
+                            "$ref": "#/definitions/dto.ProfessorMinimalResponse"
                         }
                     },
                     "400": {
@@ -642,7 +642,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.ProfessorResponse"
+                            "$ref": "#/definitions/dto.ProfessorDetailResponse"
                         }
                     },
                     "400": {
@@ -1328,7 +1328,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.ProfessorResponse"
+                                "$ref": "#/definitions/dto.ProfessorMinimalResponse"
                             }
                         }
                     },
@@ -1618,7 +1618,7 @@
         },
         "/v1/auth/login": {
             "post": {
-                "description": "Authenticates user and returns a JWT token",
+                "description": "Authenticates user and returns access token in response body and refresh token as HTTP-only cookie",
                 "consumes": [
                     "application/json"
                 ],
@@ -1642,11 +1642,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "token: JWT token",
+                        "description": "Contains access_token and expires_in",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
+                            "$ref": "#/definitions/dto.LoginResponse"
+                        },
+                        "headers": {
+                            "Set-Cookie": {
+                                "type": "string",
+                                "description": "refresh_token=\u003ctoken\u003e; Path=/; HttpOnly; Secure"
                             }
                         }
                     },
@@ -1670,6 +1673,85 @@
                     },
                     "500": {
                         "description": "Failed to login",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/auth/logout": {
+            "post": {
+                "description": "Revokes the current refresh token and clears the cookie",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logout",
+                "responses": {
+                    "200": {
+                        "description": "message: logged out successfully",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "headers": {
+                            "Set-Cookie": {
+                                "type": "string",
+                                "description": "refresh_token=; Path=/; HttpOnly; Secure; MaxAge=0"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Missing refresh token",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/auth/refresh": {
+            "post": {
+                "description": "Generate new access token using refresh token from HTTP-only cookie",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Refresh token",
+                "responses": {
+                    "200": {
+                        "description": "Contains access_token and expires_in",
+                        "schema": {
+                            "$ref": "#/definitions/dto.LoginResponse"
+                        },
+                        "headers": {
+                            "Set-Cookie": {
+                                "type": "string",
+                                "description": "refresh_token=\u003ctoken\u003e; Path=/; HttpOnly; Secure"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Missing refresh token cookie",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or expired refresh token",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
@@ -2089,19 +2171,20 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieves information about the authenticated user",
+                "description": "Retrieves detailed information about the authenticated user, including university and faculty names (if available)",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "auth"
                 ],
-                "summary": "Get Current User",
+                "summary": "Get Current User Details",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Detailed user information, university/faculty may be null if lookup failed",
                         "schema": {
-                            "$ref": "#/definitions/dto.AdminUserResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
@@ -2111,7 +2194,13 @@
                         }
                     },
                     "404": {
-                        "description": "User not found",
+                        "description": "User not found\" // Only if user lookup fails",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
@@ -2414,8 +2503,8 @@
                 },
                 "year": {
                     "type": "integer",
-                    "maximum": 2200,
-                    "minimum": 1900
+                    "maximum": 3000,
+                    "minimum": 1000
                 }
             }
         },
@@ -2442,7 +2531,6 @@
             "type": "object",
             "properties": {
                 "error": {
-                    "description": "error message\nexample: invalid request format",
                     "type": "string"
                 }
             }
@@ -2502,10 +2590,27 @@
                 }
             }
         },
-        "dto.ProfessorResponse": {
+        "dto.LoginResponse": {
             "type": "object",
             "properties": {
-                "createdAt": {
+                "access_token": {
+                    "type": "string"
+                },
+                "expires_in": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.ProfessorDetailResponse": {
+            "type": "object",
+            "properties": {
+                "courses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CourseResponse"
+                    }
+                },
+                "created_at": {
                     "type": "string"
                 },
                 "id": {
@@ -2514,13 +2619,27 @@
                 "name": {
                     "type": "string"
                 },
-                "normalizedName": {
+                "normalized_name": {
                     "type": "string"
                 },
-                "universityID": {
+                "university": {
+                    "$ref": "#/definitions/dto.UniversityResponse"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ProfessorMinimalResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
                     "type": "string"
                 },
-                "updatedAt": {
+                "name": {
+                    "type": "string"
+                },
+                "normalized_name": {
                     "type": "string"
                 }
             }
@@ -2733,8 +2852,8 @@
                 },
                 "year": {
                     "type": "integer",
-                    "maximum": 2200,
-                    "minimum": 1900
+                    "maximum": 3000,
+                    "minimum": 1000
                 }
             }
         },

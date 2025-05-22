@@ -287,7 +287,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/faculties/{facultyID}/courses": {
+        "/faculties/{id}/courses": {
             "get": {
                 "description": "Retrieves all courses under the specified faculty",
                 "consumes": [
@@ -304,7 +304,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Faculty ID",
-                        "name": "facultyID",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -603,7 +603,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.ProfessorResponse"
+                            "$ref": "#/definitions/dto.ProfessorMinimalResponse"
                         }
                     },
                     "400": {
@@ -649,7 +649,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.ProfessorResponse"
+                            "$ref": "#/definitions/dto.ProfessorDetailResponse"
                         }
                     },
                     "400": {
@@ -1335,7 +1335,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.ProfessorResponse"
+                                "$ref": "#/definitions/dto.ProfessorMinimalResponse"
                             }
                         }
                     },
@@ -1625,7 +1625,7 @@ const docTemplate = `{
         },
         "/v1/auth/login": {
             "post": {
-                "description": "Authenticates user and returns a JWT token",
+                "description": "Authenticates user and returns access token in response body and refresh token as HTTP-only cookie",
                 "consumes": [
                     "application/json"
                 ],
@@ -1649,11 +1649,14 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "token: JWT token",
+                        "description": "Contains access_token and expires_in",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
+                            "$ref": "#/definitions/dto.LoginResponse"
+                        },
+                        "headers": {
+                            "Set-Cookie": {
+                                "type": "string",
+                                "description": "refresh_token=\u003ctoken\u003e; Path=/; HttpOnly; Secure"
                             }
                         }
                     },
@@ -1677,6 +1680,85 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Failed to login",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/auth/logout": {
+            "post": {
+                "description": "Revokes the current refresh token and clears the cookie",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logout",
+                "responses": {
+                    "200": {
+                        "description": "message: logged out successfully",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        },
+                        "headers": {
+                            "Set-Cookie": {
+                                "type": "string",
+                                "description": "refresh_token=; Path=/; HttpOnly; Secure; MaxAge=0"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Missing refresh token",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/auth/refresh": {
+            "post": {
+                "description": "Generate new access token using refresh token from HTTP-only cookie",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Refresh token",
+                "responses": {
+                    "200": {
+                        "description": "Contains access_token and expires_in",
+                        "schema": {
+                            "$ref": "#/definitions/dto.LoginResponse"
+                        },
+                        "headers": {
+                            "Set-Cookie": {
+                                "type": "string",
+                                "description": "refresh_token=\u003ctoken\u003e; Path=/; HttpOnly; Secure"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Missing refresh token cookie",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or expired refresh token",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
@@ -2096,19 +2178,20 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieves information about the authenticated user",
+                "description": "Retrieves detailed information about the authenticated user, including university and faculty names (if available)",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "auth"
                 ],
-                "summary": "Get Current User",
+                "summary": "Get Current User Details",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Detailed user information, university/faculty may be null if lookup failed",
                         "schema": {
-                            "$ref": "#/definitions/dto.AdminUserResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
@@ -2118,7 +2201,13 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "User not found",
+                        "description": "User not found\" // Only if user lookup fails",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
@@ -2421,8 +2510,8 @@ const docTemplate = `{
                 },
                 "year": {
                     "type": "integer",
-                    "maximum": 2200,
-                    "minimum": 1900
+                    "maximum": 3000,
+                    "minimum": 1000
                 }
             }
         },
@@ -2449,7 +2538,6 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "error": {
-                    "description": "error message\nexample: invalid request format",
                     "type": "string"
                 }
             }
@@ -2509,10 +2597,27 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ProfessorResponse": {
+        "dto.LoginResponse": {
             "type": "object",
             "properties": {
-                "createdAt": {
+                "access_token": {
+                    "type": "string"
+                },
+                "expires_in": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.ProfessorDetailResponse": {
+            "type": "object",
+            "properties": {
+                "courses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CourseResponse"
+                    }
+                },
+                "created_at": {
                     "type": "string"
                 },
                 "id": {
@@ -2521,13 +2626,27 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "normalizedName": {
+                "normalized_name": {
                     "type": "string"
                 },
-                "universityID": {
+                "university": {
+                    "$ref": "#/definitions/dto.UniversityResponse"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ProfessorMinimalResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
                     "type": "string"
                 },
-                "updatedAt": {
+                "name": {
+                    "type": "string"
+                },
+                "normalized_name": {
                     "type": "string"
                 }
             }
@@ -2740,8 +2859,8 @@ const docTemplate = `{
                 },
                 "year": {
                     "type": "integer",
-                    "maximum": 2200,
-                    "minimum": 1900
+                    "maximum": 3000,
+                    "minimum": 1000
                 }
             }
         },
@@ -2782,7 +2901,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8080",
-	BasePath:         "/api/v1",
+	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "Termustat API",
 	Description:      "",

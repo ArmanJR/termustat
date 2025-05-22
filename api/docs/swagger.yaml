@@ -1,4 +1,4 @@
-basePath: /api/v1
+basePath: /api
 definitions:
   dto.AdminUpdateUserRequest:
     properties:
@@ -197,8 +197,8 @@ definitions:
         - fall
         type: string
       year:
-        maximum: 2200
-        minimum: 1900
+        maximum: 3000
+        minimum: 1000
         type: integer
     required:
     - term
@@ -220,9 +220,6 @@ definitions:
   dto.ErrorResponse:
     properties:
       error:
-        description: |-
-          error message
-          example: invalid request format
         type: string
     type: object
   dto.FacultyResponse:
@@ -261,19 +258,39 @@ definitions:
     - email
     - password
     type: object
-  dto.ProfessorResponse:
+  dto.LoginResponse:
     properties:
-      createdAt:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+    type: object
+  dto.ProfessorDetailResponse:
+    properties:
+      courses:
+        items:
+          $ref: '#/definitions/dto.CourseResponse'
+        type: array
+      created_at:
         type: string
       id:
         type: string
       name:
         type: string
-      normalizedName:
+      normalized_name:
         type: string
-      universityID:
+      university:
+        $ref: '#/definitions/dto.UniversityResponse'
+      updated_at:
         type: string
-      updatedAt:
+    type: object
+  dto.ProfessorMinimalResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      normalized_name:
         type: string
     type: object
   dto.RegisterRequest:
@@ -419,8 +436,8 @@ definitions:
         - fall
         type: string
       year:
-        maximum: 2200
-        minimum: 1900
+        maximum: 3000
+        minimum: 1000
         type: integer
     required:
     - term
@@ -632,7 +649,7 @@ paths:
       summary: Update a course
       tags:
       - courses
-  /faculties/{facultyID}/courses:
+  /faculties/{id}/courses:
     get:
       consumes:
       - application/json
@@ -640,7 +657,7 @@ paths:
       parameters:
       - description: Faculty ID
         in: path
-        name: facultyID
+        name: id
         required: true
         type: string
       produces:
@@ -833,7 +850,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.ProfessorResponse'
+            $ref: '#/definitions/dto.ProfessorMinimalResponse'
         "400":
           description: Invalid payload or university not found
           schema:
@@ -862,7 +879,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.ProfessorResponse'
+            $ref: '#/definitions/dto.ProfessorDetailResponse'
         "400":
           description: Invalid professor ID
           schema:
@@ -1299,7 +1316,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.ProfessorResponse'
+              $ref: '#/definitions/dto.ProfessorMinimalResponse'
             type: array
         "400":
           description: Invalid university ID
@@ -1491,7 +1508,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Authenticates user and returns a JWT token
+      description: Authenticates user and returns access token in response body and
+        refresh token as HTTP-only cookie
       parameters:
       - description: Login payload
         in: body
@@ -1503,11 +1521,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: 'token: JWT token'
-          schema:
-            additionalProperties:
+          description: Contains access_token and expires_in
+          headers:
+            Set-Cookie:
+              description: refresh_token=<token>; Path=/; HttpOnly; Secure
               type: string
-            type: object
+          schema:
+            $ref: '#/definitions/dto.LoginResponse'
         "400":
           description: Invalid payload
           schema:
@@ -1525,6 +1545,58 @@ paths:
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
       summary: Login
+      tags:
+      - auth
+  /v1/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Revokes the current refresh token and clears the cookie
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: logged out successfully'
+          headers:
+            Set-Cookie:
+              description: refresh_token=; Path=/; HttpOnly; Secure; MaxAge=0
+              type: string
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Missing refresh token
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Logout
+      tags:
+      - auth
+  /v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Generate new access token using refresh token from HTTP-only cookie
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Contains access_token and expires_in
+          headers:
+            Set-Cookie:
+              description: refresh_token=<token>; Path=/; HttpOnly; Secure
+              type: string
+          schema:
+            $ref: '#/definitions/dto.LoginResponse'
+        "400":
+          description: Missing refresh token cookie
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Invalid or expired refresh token
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Refresh token
       tags:
       - auth
   /v1/auth/register:
@@ -1790,25 +1862,32 @@ paths:
       - user-courses
   /v1/user/me:
     get:
-      description: Retrieves information about the authenticated user
+      description: Retrieves detailed information about the authenticated user, including
+        university and faculty names (if available)
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Detailed user information, university/faculty may be null if
+            lookup failed
           schema:
-            $ref: '#/definitions/dto.AdminUserResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: User not authenticated
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
         "404":
-          description: User not found
+          description: User not found" // Only if user lookup fails
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Get Current User
+      summary: Get Current User Details
       tags:
       - auth
 swagger: "2.0"
