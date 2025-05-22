@@ -34,18 +34,24 @@ Copy the example environment file and edit `.env` with your values:
 cp .env.example .env
 ```
 
-### Development (Docker)
+### Development
 
-This spins up the API, engine, and frontend in live‑reload mode:
+Make sure you have **Docker Engine** Installed. Following commands spins up the API, engine, and frontend in live‑reload mode:
 
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build
-```
+| Command        | Purpose                                                          |
+| -------------- | ---------------------------------------------------------------- |
+| `make up`      | Build images (if needed) and start the stack (attached).         |
+| `make build`   | Build / rebuild images only.                                     |
+| `make stop`    | Gracefully stop running containers without removing them.        |
+| `make down`    | Stop containers **and** remove containers, networks and volumes. |
+| `make restart` | Convenience alias: `make down` then `make up`.                   |
+| `make logs`    | Follow logs for all services (`docker compose logs -f`).         |
+| `make help`    | Show an auto-generated summary of all targets.                   |
 
 - **Frontend** on `http://localhost:3000`
 - **API** on `http://localhost:8080/api`
 
-### Production (Docker Compose)
+### Production
 
 > [!WARNING]
 > Termusat is currently undergoing a full refactor and is not yet ready for production use.
