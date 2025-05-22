@@ -19,6 +19,7 @@ import {
 import {
   Dashboard,
   School,
+  Business,
   Menu,
   ExitToApp,
 } from "@mui/icons-material";
@@ -26,6 +27,7 @@ import {
 const menuItems = [
   { label: "صفحه اصلی", icon: <Dashboard />, route: "/admin/dashboard" },
   { label: "دانشگاه‌ها", icon: <School />, route: "/admin/universities" },
+  { label: "دانشکده‌ها", icon: <Business />, route: "/admin/faculties" },
 ];
 
 export default function AdminLayout() {
