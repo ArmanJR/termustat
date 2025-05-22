@@ -16,10 +16,12 @@ const Input = ({ type, name, label, value, dir = "rtl", onChange, required }) =>
 
   // Detect input direction based on the first typed character
   useEffect(() => {
-    const firstChar = value.trim().charAt(0);
-    const rtlChars = /[\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC]/;
-    if (firstChar) {
-      setDirection(rtlChars.test(firstChar) ? "rtl" : "ltr");
+    if (type === "text" || type === "password") {
+      const firstChar = value.trim().charAt(0);
+      const rtlChars = /[\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC]/;
+      if (firstChar) {
+        setDirection(rtlChars.test(firstChar) ? "rtl" : "ltr");
+      }
     }
   }, [value]);
 

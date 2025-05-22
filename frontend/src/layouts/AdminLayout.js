@@ -20,6 +20,7 @@ import {
   Dashboard,
   School,
   Business,
+  CalendarMonth,
   Menu,
   ExitToApp,
 } from "@mui/icons-material";
@@ -28,6 +29,7 @@ const menuItems = [
   { label: "صفحه اصلی", icon: <Dashboard />, route: "/admin/dashboard" },
   { label: "دانشگاه‌ها", icon: <School />, route: "/admin/universities" },
   { label: "دانشکده‌ها", icon: <Business />, route: "/admin/faculties" },
+  { label: "نیمسال تحصیلی", icon: <CalendarMonth />, route: "/admin/semesters" },
 ];
 
 export default function AdminLayout() {

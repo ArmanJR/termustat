@@ -43,6 +43,8 @@ const EntityDialog = ({
           ? e.target.value === "true"
             ? true
             : false
+          : fields.find((field) => field.name === e.target.name).dataType === "number"
+          ? parseInt(e.target.value, 10)
           : e.target.value,
     });
   };
@@ -61,8 +63,8 @@ const EntityDialog = ({
       showSnackbar(`${modeLabels[mode]} ${entityName} با موفقیت انجام شد`, "success");
       onClose();
     } catch (error) {
-      if (entityName === "دانشگاه" && error.response?.status === 409)
-        showSnackbar(`این دانشگاه قبلا در سیستم ثبت شده است.`, "warning");
+      if ((entityName === "دانشگاه" || entityName === "نیمسال تحصیلی") && error.response?.status === 409)
+        showSnackbar(`این ${entityName} قبلا در سیستم ثبت شده است.`, "warning");
       else if (entityName === "دانشکده" && error.response?.status === 409)
         showSnackbar("کد دانشکده تکراری است.", "warning");
       else
@@ -92,7 +94,10 @@ const EntityDialog = ({
             {mode === "edit" || mode === "add" ? (
               fields.map((field) =>
                 field.inputType === "radio" ? (
-                  <div>
+                  <div
+                    dir={field.dir || "rtl"}
+                    style={(field.dir === "ltr" && { textAlign: "left" }) || {}}
+                  >
                     {field.options?.map((option) => (
                       <label>
                         <input
@@ -106,10 +111,11 @@ const EntityDialog = ({
                       </label>
                     ))}
                   </div>
-                ) : field.inputType === "text" ? (
+                ) : field.inputType === "text" ||
+                  field.inputType === "number" ? (
                   <>
                     <Input
-                      type="text"
+                      type={field.inputType}
                       name={field.name}
                       label={field.label}
                       value={formData[field.name] || ""}
@@ -129,10 +135,19 @@ const EntityDialog = ({
               )
             ) : (
               <p>
-                آیا از حذف {entityName}
-                <span style={{ fontWeight: "bold" }}>
-                  &nbsp;"{formData.name_fa}"&nbsp;
-                </span>
+                آیا از حذف
+                <>
+                  &nbsp;{entityName}
+                  <span style={{ fontWeight: "bold" }}>
+                    &nbsp;"
+                    {entityName === "دانشگاه" || entityName === "دانشکده"
+                      ? formData.name_fa
+                      : entityName === "نیمسال تحصیلی"
+                      ? `${formData.term} ${formData.year}`
+                      : ""}
+                    "&nbsp;
+                  </span>
+                </>
                 مطمئن هستید؟
               </p>
             )}
