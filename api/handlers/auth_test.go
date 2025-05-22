@@ -90,19 +90,33 @@ func (m *MockUniversityService) Get(ctx context.Context, id uuid.UUID) (*dto.Uni
 	return args.Get(0).(*dto.UniversityResponse), args.Error(1)
 }
 func (m *MockUniversityService) Create(ctx context.Context, req *dto.CreateUniversityRequest) (*dto.UniversityResponse, error) {
-	panic("Create not implemented in mock")
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.UniversityResponse), args.Error(1)
 }
 func (m *MockUniversityService) GetAll(ctx context.Context) ([]dto.UniversityResponse, error) {
-	panic("GetAll not implemented in mock")
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]dto.UniversityResponse), args.Error(1)
 }
 func (m *MockUniversityService) Update(ctx context.Context, id uuid.UUID, req *dto.UpdateUniversityRequest) (*dto.UniversityResponse, error) {
-	panic("Update not implemented in mock")
+	args := m.Called(ctx, id, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.UniversityResponse), args.Error(1)
 }
 func (m *MockUniversityService) ExistsByName(ctx context.Context, nameEn, nameFa string) (bool, error) {
-	panic("ExistsByName not implemented in mock")
+	args := m.Called(ctx, nameEn, nameFa)
+	return args.Bool(0), args.Error(1)
 }
 func (m *MockUniversityService) Delete(ctx context.Context, id uuid.UUID) error {
-	panic("Delete not implemented in mock")
+	args := m.Called(ctx, id)
+	return args.Error(0)
 }
 
 // --- Mock Faculty Service ---
