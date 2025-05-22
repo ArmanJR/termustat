@@ -64,7 +64,7 @@ func (m *MockSemesterService) Delete(id uuid.UUID) error {
 // --- Test Setup Helper for Handler ---
 func setupSemesterHandlerWithMocks(t *testing.T) (*handlers.SemesterHandler, *MockSemesterService) {
 	mockService := new(MockSemesterService)
-	logger, _ := zap.NewDevelopment() 
+	logger, _ := zap.NewDevelopment()
 
 	handler := handlers.NewSemesterHandler(
 		mockService,
@@ -80,7 +80,7 @@ func TestCreateSemester_Success(t *testing.T) {
 	handler, mockService := setupSemesterHandlerWithMocks(t)
 
 	reqBody := dto.CreateSemesterRequest{
-		Year: 2024,
+		Year: 1404,
 		Term: "fall",
 	}
 	expectedResponse := &dto.SemesterResponse{
@@ -118,7 +118,7 @@ func TestCreateSemester_InvalidInput(t *testing.T) {
 	handler, _ := setupSemesterHandlerWithMocks(t)
 
 	reqBody := dto.CreateSemesterRequest{
-		Year: 2024,
+		Year: 1404,
 		Term: "summer", // Invalid term
 	}
 
@@ -140,9 +140,9 @@ func TestCreateSemester_InvalidInput(t *testing.T) {
 func TestCreateSemester_Conflict(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	handler, mockService := setupSemesterHandlerWithMocks(t)
-	
+
 	reqBody := dto.CreateSemesterRequest{
-		Year: 2024,
+		Year: 1404,
 		Term: "fall",
 	}
 
@@ -173,10 +173,10 @@ func TestGetSemester_Success(t *testing.T) {
 	semesterID := uuid.New()
 	expectedResponse := &dto.SemesterResponse{
 		ID:        semesterID,
-		Year:      2023,
+		Year:      1403,
 		Term:      "spring",
-		CreatedAt: time.Now().Add(-10 * 24 * time.Hour), 
-		UpdatedAt: time.Now().Add(-5 * 24 * time.Hour),  
+		CreatedAt: time.Now().Add(-10 * 24 * time.Hour),
+		UpdatedAt: time.Now().Add(-5 * 24 * time.Hour),
 	}
 
 	mockService.On("Get", semesterID).Return(expectedResponse, nil)
@@ -225,7 +225,7 @@ func TestGetSemester_NotFound(t *testing.T) {
 
 func TestGetSemester_InvalidUUID(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	handler, _ := setupSemesterHandlerWithMocks(t) 
+	handler, _ := setupSemesterHandlerWithMocks(t)
 
 	invalidID := "not-a-uuid"
 	w := httptest.NewRecorder()
@@ -247,8 +247,8 @@ func TestGetAllSemesters_Success(t *testing.T) {
 	handler, mockService := setupSemesterHandlerWithMocks(t)
 
 	expectedResponse := []dto.SemesterResponse{
-		{ID: uuid.New(), Year: 2023, Term: "fall", CreatedAt: time.Now(), UpdatedAt: time.Now()},
-		{ID: uuid.New(), Year: 2024, Term: "spring", CreatedAt: time.Now(), UpdatedAt: time.Now()},
+		{ID: uuid.New(), Year: 1403, Term: "fall", CreatedAt: time.Now(), UpdatedAt: time.Now()},
+		{ID: uuid.New(), Year: 1404, Term: "spring", CreatedAt: time.Now(), UpdatedAt: time.Now()},
 	}
 	mockService.On("GetAll").Return(expectedResponse, nil)
 
@@ -264,7 +264,7 @@ func TestGetAllSemesters_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, len(expectedResponse), len(actualResp))
 	if len(expectedResponse) > 0 && len(actualResp) > 0 {
-		assert.Equal(t, expectedResponse[0].Year, actualResp[0].Year) 
+		assert.Equal(t, expectedResponse[0].Year, actualResp[0].Year)
 	}
 	mockService.AssertExpectations(t)
 }
@@ -273,7 +273,7 @@ func TestGetAllSemesters_Empty(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	handler, mockService := setupSemesterHandlerWithMocks(t)
 
-	expectedResponse := []dto.SemesterResponse{} 
+	expectedResponse := []dto.SemesterResponse{}
 	mockService.On("GetAll").Return(expectedResponse, nil)
 
 	w := httptest.NewRecorder()
@@ -286,7 +286,7 @@ func TestGetAllSemesters_Empty(t *testing.T) {
 	var actualResp []dto.SemesterResponse
 	err := json.Unmarshal(w.Body.Bytes(), &actualResp)
 	assert.NoError(t, err)
-	assert.Empty(t, actualResp) 
+	assert.Empty(t, actualResp)
 	mockService.AssertExpectations(t)
 }
 
@@ -296,14 +296,14 @@ func TestUpdateSemester_Success(t *testing.T) {
 
 	semesterID := uuid.New()
 	reqBody := dto.UpdateSemesterRequest{
-		Year: 2024,
+		Year: 1404,
 		Term: "spring",
 	}
 	expectedResponse := &dto.SemesterResponse{
 		ID:        semesterID,
 		Year:      reqBody.Year,
 		Term:      reqBody.Term,
-		UpdatedAt: time.Now(), 
+		UpdatedAt: time.Now(),
 	}
 
 	mockService.On("Update", semesterID, &reqBody).Return(expectedResponse, nil)
@@ -334,7 +334,7 @@ func TestUpdateSemester_InvalidInput(t *testing.T) {
 	semesterID := uuid.New()
 
 	reqBody := dto.UpdateSemesterRequest{
-		Year: 2024,
+		Year: 1404,
 		Term: "winter", // Invalid term
 	}
 
@@ -446,7 +446,7 @@ func TestCreateSemester_ServiceError(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	handler, mockService := setupSemesterHandlerWithMocks(t)
 
-	reqBody := dto.CreateSemesterRequest{Year: 2024, Term: "fall"}
+	reqBody := dto.CreateSemesterRequest{Year: 1404, Term: "fall"}
 	mockService.On("Create", &reqBody).Return(nil, fmt.Errorf("database error"))
 
 	jsonBody, _ := json.Marshal(reqBody)
@@ -461,7 +461,7 @@ func TestCreateSemester_ServiceError(t *testing.T) {
 	var respBody map[string]string
 	err := json.Unmarshal(w.Body.Bytes(), &respBody)
 	assert.NoError(t, err)
-	assert.Equal(t, "Internal server error", respBody["error"]) 
+	assert.Equal(t, "Internal server error", respBody["error"])
 	mockService.AssertExpectations(t)
 }
 
@@ -544,7 +544,7 @@ func TestUpdateSemester_Conflict(t *testing.T) {
 
 	semesterID := uuid.New()
 	reqBody := dto.UpdateSemesterRequest{
-		Year: 2024,
+		Year: 1404,
 		Term: "fall",
 	}
 
