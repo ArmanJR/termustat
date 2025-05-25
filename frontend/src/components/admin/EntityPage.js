@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useTheme, useMediaQuery } from "@mui/material";
 import useFetch from "../../hooks/useFetch";
 import EntityHeader from "./EntityHeader";
 import EntityTable from "./EntityTable";
@@ -14,9 +13,6 @@ const EntityPage = ({
   validate,
   onSubmit,
 }) => {
-  const theme = useTheme();
-  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
-
   const { data, loading, error, fetchData } = useFetch(fetchFunction);
 
   const [dialogState, setDialogState] = useState({
@@ -56,7 +52,6 @@ const EntityPage = ({
         <EntityTable
           data={data}
           columns={tableColumns}
-          isTablet={isTablet}
           onEdit={(item) => openDialog("edit", item)}
           onDelete={(item) => openDialog("delete", item)}
         />
