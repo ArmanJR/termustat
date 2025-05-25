@@ -1,8 +1,11 @@
 import styles from "./EntityTable.module.css";
-import { IconButton } from "@mui/material";
+import { IconButton, useTheme, useMediaQuery } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
 
-const EntityTable = ({ data, columns, isTablet, onEdit, onDelete }) => {
+const EntityTable = ({ data, columns, onEdit, onDelete }) => {
+  const theme = useTheme();
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+
   if (data.length === 0) {
     return <p>موردی برای نمایش وجود ندارد.</p>;
   }
