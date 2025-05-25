@@ -28,16 +28,20 @@ const EntityTable = ({ data, columns, onEdit, onDelete }) => {
                   </td>
                 )
             )}
-            <td className={styles.td}>
-              <IconButton onClick={() => onEdit(item)}>
-                <Edit />
-              </IconButton>
-            </td>
-            <td className={styles.td}>
-              <IconButton onClick={() => onDelete(item)}>
-                <Delete />
-              </IconButton>
-            </td>
+            {onEdit && (
+              <td className={styles.actionButton}>
+                <IconButton onClick={() => onEdit(item)}>
+                  <Edit />
+                </IconButton>
+              </td>
+            )}
+            {onDelete && (
+              <td className={styles.actionButton}>
+                <IconButton onClick={() => onDelete(item)}>
+                  <Delete />
+                </IconButton>
+              </td>
+            )}
           </tr>
         ))}
       </tbody>
