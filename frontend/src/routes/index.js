@@ -9,6 +9,7 @@ import Dashboard from '../pages/admin/Dashboard';
 import Universities from '../pages/admin/universities/Universities';
 import Faculties from '../pages/admin/faculties/Faculties';
 import Semesters from '../pages/admin/semesters/Semesters';
+import Professors from '../pages/admin/professors/Professors';
 
 const Home = () => <div>Home</div>;
 
@@ -36,6 +37,7 @@ function AppRoutes() {
             <Route path="universities" element={<Universities />} />
             <Route path="faculties" element={<Faculties />} />
             <Route path="semesters" element={<Semesters />} />
+            <Route path="professors" element={<Professors />} />
           </Route>
         </Route>
       </Routes>
