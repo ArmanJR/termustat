@@ -40,8 +40,8 @@ Make sure you have **Docker Engine** Installed. Following commands spins up the 
 
 | Command        | Purpose                                                          |
 | -------------- | ---------------------------------------------------------------- |
-| `make up`      | Build images (if needed) and start the stack (attached).         |
-| `make build`   | Build / rebuild images only.                                     |
+| `make up`      | Start the stack (attached).                                      |
+| `make build`   | Build / rebuild images.                                          |
 | `make stop`    | Gracefully stop running containers without removing them.        |
 | `make down`    | Stop containers **and** remove containers, networks and volumes. |
 | `make restart` | Convenience alias: `make down` then `make up`.                   |
