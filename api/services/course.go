@@ -535,8 +535,8 @@ func (s *courseService) parseTimeSlot(timeStr string) (*models.CourseTime, error
 
 	return &models.CourseTime{
 		DayOfWeek: day,
-		StartTime: startTime,
-		EndTime:   endTime,
+		StartTime: models.CustomTime{Time: startTime, Valid: !startTime.IsZero()},
+		EndTime:   models.CustomTime{Time: endTime, Valid: !endTime.IsZero()},
 	}, nil
 }
 
@@ -647,12 +647,19 @@ func (s *courseService) CreateFromEngine(reqDto dto.CourseEngineDTO) (*dto.Cours
 }
 
 func mapCourseTimeToResponse(courseTime models.CourseTime) dto.CourseTimeResponse {
+	var startTime, endTime time.Time
+	if courseTime.StartTime.Valid {
+		startTime = courseTime.StartTime.Time
+	}
+	if courseTime.EndTime.Valid {
+		endTime = courseTime.EndTime.Time
+	}
 	return dto.CourseTimeResponse{
 		ID:        courseTime.ID,
 		CourseID:  courseTime.CourseID,
 		DayOfWeek: courseTime.DayOfWeek,
-		StartTime: courseTime.StartTime,
-		EndTime:   courseTime.EndTime,
+		StartTime: startTime,
+		EndTime:   endTime,
 	}
 }
 
