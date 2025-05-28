@@ -12,6 +12,9 @@ const EntityPage = ({
   dialogFields,
   validate,
   onSubmit,
+  canAdd=true,
+  canEdit=true,
+  canDelete=true,
 }) => {
   const { data, loading, error, fetchData } = useFetch(fetchFunction);
 
@@ -42,7 +45,7 @@ const EntityPage = ({
       <EntityHeader
         title={title}
         entityName={entityName}
-        onAdd={() => openDialog("add")}
+        onAdd={canAdd ? () => openDialog("add") : null}
       />
       {loading ? (
         <p></p>
@@ -52,20 +55,22 @@ const EntityPage = ({
         <EntityTable
           data={data}
           columns={tableColumns}
-          onEdit={(item) => openDialog("edit", item)}
-          onDelete={(item) => openDialog("delete", item)}
+          onEdit={canEdit ? (item) => openDialog("edit", item) : null}
+          onDelete={canEdit ? (item) => openDialog("delete", item) : null}
         />
       )}
-      <EntityDialog
-        open={dialogState.open}
-        mode={dialogState.mode}
-        entityName={entityName}
-        entity={dialogState.entity}
-        fields={dialogFields}
-        validate={validate}
-        onSubmit={handleSubmit}
-        onClose={closeDialog}
-      />
+      {(canAdd || canEdit || canDelete) && (
+        <EntityDialog
+          open={dialogState.open}
+          mode={dialogState.mode}
+          entityName={entityName}
+          entity={dialogState.entity}
+          fields={dialogFields}
+          validate={validate}
+          onSubmit={handleSubmit}
+          onClose={closeDialog}
+        />
+      )}
     </div>
   );
 };
