@@ -31,6 +31,12 @@ const muiTheme = createTheme({
       },
       variants: [
         {
+          props: { variant: "hamburger" },
+          style: {
+            color: "#dddddd",
+          },
+        },
+        {
           props: { variant: "addButton" },
           style: {
             backgroundColor: "#309a9a",

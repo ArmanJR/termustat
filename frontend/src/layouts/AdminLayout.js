@@ -83,7 +83,7 @@ export default function AdminLayout() {
         {/* Topbar */}
         <div className={styles.topbar}>
           {isMobile && (
-            <IconButton onClick={handleDrawerToggle}>
+            <IconButton variant="hamburger" onClick={handleDrawerToggle}>
               <Menu />
             </IconButton>
           )}
