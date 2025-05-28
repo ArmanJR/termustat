@@ -2,13 +2,11 @@ import {
   addSemester,
   editSemester,
   deleteSemester,
-  getSemesters,
 } from "../../../api/admin/semesters";
 
 const config = {
   title: "نیمسال تحصیلی",
   entityName: "نیمسال تحصیلی",
-  fetchFunction: getSemesters,
 
   tableColumns: [
     {

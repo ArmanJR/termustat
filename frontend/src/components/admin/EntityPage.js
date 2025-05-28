@@ -1,5 +1,4 @@
 import { useState } from "react";
-import useFetch from "../../hooks/useFetch";
 import EntityHeader from "./EntityHeader";
 import EntityTable from "./EntityTable";
 import EntityDialog from "./EntityDialog";
@@ -7,7 +6,8 @@ import EntityDialog from "./EntityDialog";
 const EntityPage = ({
   title,
   entityName,
-  fetchFunction,
+  data,
+  fetchData,
   tableColumns,
   dialogFields,
   validate,
@@ -16,8 +16,6 @@ const EntityPage = ({
   canEdit=true,
   canDelete=true,
 }) => {
-  const { data, loading, error, fetchData } = useFetch(fetchFunction);
-
   const [dialogState, setDialogState] = useState({
     open: false,
     mode: null,
@@ -47,18 +45,12 @@ const EntityPage = ({
         entityName={entityName}
         onAdd={canAdd ? () => openDialog("add") : null}
       />
-      {loading ? (
-        <p></p>
-      ) : error ? (
-        <p>{error}</p>
-      ) : (
-        <EntityTable
-          data={data}
-          columns={tableColumns}
-          onEdit={canEdit ? (item) => openDialog("edit", item) : null}
-          onDelete={canEdit ? (item) => openDialog("delete", item) : null}
-        />
-      )}
+      <EntityTable
+        data={data}
+        columns={tableColumns}
+        onEdit={canEdit ? (item) => openDialog("edit", item) : null}
+        onDelete={canEdit ? (item) => openDialog("delete", item) : null}
+      />
       {(canAdd || canEdit || canDelete) && (
         <EntityDialog
           open={dialogState.open}
