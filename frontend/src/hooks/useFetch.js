@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const useFetch = (fetchFunction, id = null) => {
+const useFetch = (fetchFunction, deps = null) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -10,12 +10,7 @@ const useFetch = (fetchFunction, id = null) => {
     setError(null);
 
     try {
-      let response;
-      if (id) {
-        response = await fetchFunction(id);
-      } else {
-        response = await fetchFunction();
-      }
+      const response = await fetchFunction();
       setData(response.data);
     } catch (error) {
       if (error.response?.status === 500) {
@@ -30,7 +25,7 @@ const useFetch = (fetchFunction, id = null) => {
 
   useEffect(() => {
     fetch();
-  }, []);
+  }, deps === null ? [] : deps);
 
   return { data, loading, error, fetchData: fetch };
 };
