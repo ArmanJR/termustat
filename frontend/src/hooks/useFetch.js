@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 const useFetch = (fetchFunction, id = null) => {
-  const hasFetched = useRef(false);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -30,10 +29,8 @@ const useFetch = (fetchFunction, id = null) => {
   };
 
   useEffect(() => {
-    if (hasFetched.current) return;
-    hasFetched.current = true;
     fetch();
-  }, [fetchFunction, id]);
+  }, []);
 
   return { data, loading, error, fetchData: fetch };
 };
