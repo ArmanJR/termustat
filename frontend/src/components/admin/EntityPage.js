@@ -12,6 +12,7 @@ const EntityPage = ({
   dialogFields,
   validate,
   onSubmit,
+  onOpenDialog,
   canAdd=true,
   canEdit=true,
   canDelete=true,
@@ -22,7 +23,18 @@ const EntityPage = ({
     entity: null,
   });
 
-  const openDialog = (mode, entity = null) => {
+  const [localDialogFields, setLocalDialogFields] = useState(dialogFields);
+
+  const openDialog = async (mode, entity = null) => {
+    if (onOpenDialog) {
+      await onOpenDialog({
+        mode,
+        entity,
+        setDialogFields: setLocalDialogFields,
+      });
+    } else {
+      setLocalDialogFields(dialogFields);
+    }
     setDialogState({ open: true, mode, entity });
   };
 
@@ -57,7 +69,7 @@ const EntityPage = ({
           mode={dialogState.mode}
           entityName={entityName}
           entity={dialogState.entity}
-          fields={dialogFields}
+          fields={localDialogFields}
           validate={validate}
           onSubmit={handleSubmit}
           onClose={closeDialog}
