@@ -2,6 +2,44 @@ import { editUser, deleteUser } from "../../../api/admin/users";
 import { getFaculties } from "../../../api/admin/faculties";
 import { getUniversities } from "../../../api/admin/universities";
 
+const universityListCache = { data: null, fetched: false };
+const facultyListCache = new Map();
+
+const getCachedUniversities = async () => {
+  if (universityListCache.fetched && universityListCache.data) {
+    return universityListCache.data;
+  }
+  try {
+    const res = await getUniversities();
+    const options = res.data.map((u) => ({
+      label: u.name_fa,
+      value: u.id,
+    }));
+    universityListCache.data = options;
+    universityListCache.fetched = true;
+    return options;
+  } catch {
+    return [];
+  }
+};
+
+const getCachedFaculties = async (universityId) => {
+  if (facultyListCache.has(universityId)) {
+    return facultyListCache.get(universityId);
+  }
+  try {
+    const res = await getFaculties(universityId);
+    const options = res.data.map((f) => ({
+      label: f.name_fa,
+      value: f.id,
+    }));
+    facultyListCache.set(universityId, options);
+    return options;
+  } catch {
+    return [];
+  }
+};
+
 const config = {
   title: "کاربران",
   entityName: "کاربر",
@@ -105,11 +143,9 @@ const config = {
       let universityOptions = [];
       let facultyOptions = [];
       if (mode === "edit") {
-        const universityRes = await getUniversities();
-        universityOptions = universityRes?.data || [];
+        universityOptions = await getCachedUniversities();
         if (entity?.university_id) {
-          const facultyRes = await getFaculties(entity.university_id);
-          facultyOptions = facultyRes?.data || [];
+          facultyOptions = await getCachedFaculties(entity.university_id);
         }
       }
       const handleUniversityChange = async (universityId) => {
@@ -119,17 +155,13 @@ const config = {
           )
         );
         if (universityId) {
-          const facultyRes = await getFaculties(universityId);
-          const newFacultyOptions = facultyRes?.data || [];
+          const newFacultyOptions = await getCachedFaculties(universityId);
           setDialogFields((prev) =>
             prev.map((field) =>
               field.name === "faculty_id"
                 ? {
                     ...field,
-                    options: newFacultyOptions.map((f) => ({
-                      label: f.name_fa,
-                      value: f.id,
-                    })),
+                    options: newFacultyOptions,
                   }
                 : field
             )
@@ -141,20 +173,14 @@ const config = {
           if (field.name === "university_id") {
             return {
               ...field,
-              options: universityOptions.map((u) => ({
-                label: u.name_fa,
-                value: u.id,
-              })),
+              options: universityOptions,
               onChangeHandler: handleUniversityChange,
             };
           }
           if (field.name === "faculty_id") {
             return {
               ...field,
-              options: facultyOptions.map((f) => ({
-                label: f.name_fa,
-                value: f.id,
-              })),
+              options: facultyOptions,
             };
           }
           return field;
