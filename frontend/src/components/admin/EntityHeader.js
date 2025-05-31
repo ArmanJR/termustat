@@ -6,11 +6,13 @@ const EntityHeader = ({ title, entityName, onAdd }) => {
   return (
     <div className={styles.top}>
       <h1>{title}</h1>
-      <Tooltip title={`افزودن ${entityName}`} placement="right" arrow>
-        <IconButton variant="addButton" onClick={onAdd}>
-          <Add />
-        </IconButton>
-      </Tooltip>
+      {onAdd && (
+        <Tooltip title={`افزودن ${entityName}`} placement="right" arrow>
+          <IconButton variant="addButton" onClick={onAdd}>
+            <Add />
+          </IconButton>
+        </Tooltip>
+      )}
     </div>
   );
 };
