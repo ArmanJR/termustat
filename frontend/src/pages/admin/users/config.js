@@ -131,6 +131,15 @@ const config = {
       inputType: "select",
       options: [],
     },
+    {
+      name: "password",
+      label: "رمز عبور جدید (اختیاری)",
+      dir: "ltr",
+      defaultValue: "",
+      dataType: "string",
+      inputType: "password",
+      required: false,
+    },
   ],
 
   onSubmit: async ({ id, data, mode }) => {

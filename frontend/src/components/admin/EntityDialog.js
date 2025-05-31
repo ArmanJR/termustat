@@ -129,6 +129,7 @@ const EntityDialog = ({
                     ))}
                   </div>
                 ) : field.inputType === "text" ||
+                  field.inputType === "password" ||
                   field.inputType === "number" ? (
                   <>
                     <Input
@@ -138,7 +139,7 @@ const EntityDialog = ({
                       value={formData[field.name] || ""}
                       onChange={handleChange}
                       dir={field.dir || ""}
-                      required
+                      required={field.required !== undefined ? field.required : true}
                     />
                     {errors[field.name] && (
                       <div className={styles.errorMessage}>
