@@ -1,5 +1,4 @@
 import { useState } from "react";
-import useFetch from "../../hooks/useFetch";
 import EntityHeader from "./EntityHeader";
 import EntityTable from "./EntityTable";
 import EntityDialog from "./EntityDialog";
@@ -7,21 +6,35 @@ import EntityDialog from "./EntityDialog";
 const EntityPage = ({
   title,
   entityName,
-  fetchFunction,
+  data,
+  fetchData,
   tableColumns,
   dialogFields,
   validate,
   onSubmit,
+  onOpenDialog,
+  canAdd=true,
+  canEdit=true,
+  canDelete=true,
 }) => {
-  const { data, loading, error, fetchData } = useFetch(fetchFunction);
-
   const [dialogState, setDialogState] = useState({
     open: false,
     mode: null,
     entity: null,
   });
 
-  const openDialog = (mode, entity = null) => {
+  const [localDialogFields, setLocalDialogFields] = useState(dialogFields);
+
+  const openDialog = async (mode, entity = null) => {
+    if (onOpenDialog) {
+      await onOpenDialog({
+        mode,
+        entity,
+        setDialogFields: setLocalDialogFields,
+      });
+    } else {
+      setLocalDialogFields(dialogFields);
+    }
     setDialogState({ open: true, mode, entity });
   };
 
@@ -42,30 +55,26 @@ const EntityPage = ({
       <EntityHeader
         title={title}
         entityName={entityName}
-        onAdd={() => openDialog("add")}
+        onAdd={canAdd ? () => openDialog("add") : null}
       />
-      {loading ? (
-        <p></p>
-      ) : error ? (
-        <p>{error}</p>
-      ) : (
-        <EntityTable
-          data={data}
-          columns={tableColumns}
-          onEdit={(item) => openDialog("edit", item)}
-          onDelete={(item) => openDialog("delete", item)}
+      <EntityTable
+        data={data}
+        columns={tableColumns}
+        onEdit={canEdit ? (item) => openDialog("edit", item) : null}
+        onDelete={canEdit ? (item) => openDialog("delete", item) : null}
+      />
+      {(canAdd || canEdit || canDelete) && (
+        <EntityDialog
+          open={dialogState.open}
+          mode={dialogState.mode}
+          entityName={entityName}
+          entity={dialogState.entity}
+          fields={localDialogFields}
+          validate={validate}
+          onSubmit={handleSubmit}
+          onClose={closeDialog}
         />
       )}
-      <EntityDialog
-        open={dialogState.open}
-        mode={dialogState.mode}
-        entityName={entityName}
-        entity={dialogState.entity}
-        fields={dialogFields}
-        validate={validate}
-        onSubmit={handleSubmit}
-        onClose={closeDialog}
-      />
     </div>
   );
 };

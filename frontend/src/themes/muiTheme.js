@@ -75,6 +75,23 @@ const muiTheme = createTheme({
         },
       },
     },
+    MuiPagination: {
+      styleOverrides: {
+        root: {
+          direction: 'ltr',
+        },
+      },
+    },
+    MuiPaginationItem: {
+      styleOverrides: {
+        root: {
+          "&.Mui-selected": {
+            backgroundColor: "#309a9a",
+            color: "#ffffff",
+          },
+        },
+      },
+    },
   },
 });
 

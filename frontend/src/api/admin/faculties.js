@@ -29,3 +29,10 @@ export const editFaculty = async (id, facultyData) => {
   );
   return response;
 };
+
+export const getFacultyById = async (id) => {
+  const response = await axiosInstance.get(
+    `/admin/faculties/${id}`
+  );
+  return response;
+};

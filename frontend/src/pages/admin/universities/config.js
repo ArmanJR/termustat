@@ -2,7 +2,6 @@ import {
   addUniversity,
   editUniversity,
   deleteUniversity,
-  getUniversities,
 } from "../../../api/admin/universities";
 
 import { IconButton } from "@mui/material";
@@ -11,7 +10,6 @@ import { Block } from "@mui/icons-material";
 const config = {
   title: "دانشگاه‌ها",
   entityName: "دانشگاه",
-  fetchFunction: getUniversities,
 
   tableColumns: [
     {

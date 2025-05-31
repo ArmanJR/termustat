@@ -10,6 +10,7 @@ import Universities from '../pages/admin/universities/Universities';
 import Faculties from '../pages/admin/faculties/Faculties';
 import Semesters from '../pages/admin/semesters/Semesters';
 import Professors from '../pages/admin/professors/Professors';
+import Users from '../pages/admin/users/Users';
 
 const Home = () => <div>Home</div>;
 
@@ -38,6 +39,7 @@ function AppRoutes() {
             <Route path="faculties" element={<Faculties />} />
             <Route path="semesters" element={<Semesters />} />
             <Route path="professors" element={<Professors />} />
+            <Route path="users" element={<Users />} />
           </Route>
         </Route>
       </Routes>
