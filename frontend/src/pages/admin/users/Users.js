@@ -9,35 +9,42 @@ import { getFacultyById } from "../../../api/admin/faculties";
 import { useSearchParams } from "react-router-dom";
 import { Pagination } from "@mui/material";
 
+const facultyCache = new Map();
+const universityCache = new Map();
+
 const enhanceUsersWithNames = async (users) => {
-  const enhancedUsers = await Promise.all(
-    users.map(async (user) => {
-      let faculty_name = "نامشخص";
-      let university_name = "نامشخص";
-      if (user.faculty_id) {
-        try {
-          const res = await getFacultyById(user.faculty_id);
-          faculty_name = res.data.name_fa;
-        } catch {
-          faculty_name = "نامشخص";
-        }
+  const uniqueFacultyIds = [
+    ...new Set(users.map((u) => u.faculty_id).filter(Boolean)),
+  ];
+  const uniqueUniversityIds = [
+    ...new Set(users.map((u) => u.university_id).filter(Boolean)),
+  ];
+  const facultyPromises = uniqueFacultyIds
+    .filter((id) => !facultyCache.has(id))
+    .map(async (id) => {
+      try {
+        const res = await getFacultyById(id);
+        facultyCache.set(id, res.data.name_fa);
+      } catch {
+        facultyCache.set(id, "نامشخص");
       }
-      if (user.university_id) {
-        try {
-          const res = await getUniversityById(user.university_id);
-          university_name = res.data.name_fa;
-        } catch {
-          university_name = "نامشخص";
-        }
+    });
+  const universityPromises = uniqueUniversityIds
+    .filter((id) => !universityCache.has(id))
+    .map(async (id) => {
+      try {
+        const res = await getUniversityById(id);
+        universityCache.set(id, res.data.name_fa);
+      } catch {
+        universityCache.set(id, "نامشخص");
       }
-      return {
-        ...user,
-        faculty_name,
-        university_name,
-      };
-    })
-  );
-  return enhancedUsers;
+    });
+  await Promise.all([...facultyPromises, ...universityPromises]);
+  return users.map((user) => ({
+    ...user,
+    faculty_name: facultyCache.get(user.faculty_id) || "نامشخص",
+    university_name: universityCache.get(user.university_id) || "نامشخص",
+  }));
 };
 
 const Users = () => {
