@@ -1,6 +1,9 @@
+import styles from "./Users.module.css";
 import { editUser, deleteUser } from "../../../api/admin/users";
 import { getFaculties } from "../../../api/admin/faculties";
 import { getUniversities } from "../../../api/admin/universities";
+import { IconButton } from "@mui/material";
+import { Error } from '@mui/icons-material';
 
 const universityListCache = { data: null, fetched: false };
 const facultyListCache = new Map();
@@ -56,28 +59,8 @@ const config = {
       render: (user) => user.last_name,
     },
     {
-      key: "email",
-      render: (user) => user.email,
-      hideOnTablet: true,
-    },
-    {
-      key: "email_verified",
-      render: (user) => String(user.email_verified),
-      hideOnTablet: true,
-    },
-    {
       key: "gender",
-      render: (user) => user.gender,
-      hideOnTablet: true,
-    },
-    {
-      key: "is_admin",
-      render: (user) => String(user.is_admin),
-      hideOnTablet: true,
-    },
-    {
-      key: "student_id",
-      render: (user) => user.student_id,
+      render: (user) => (user.gender === "female" ? "زن" : "مرد"),
       hideOnTablet: true,
     },
     {
@@ -88,6 +71,34 @@ const config = {
     {
       key: "faculty_name",
       render: (user) => user.faculty_name,
+      hideOnTablet: true,
+    },
+    {
+      key: "student_id",
+      render: (user) => user.student_id,
+      hideOnTablet: true,
+    },
+    {
+      key: "email",
+      render: (user) => (
+        <div  className={styles.email}>
+          {user.email}
+          {!user.email_verified && (
+            <IconButton disabled>
+              <Error />
+            </IconButton>
+          )}
+        </div>
+      ),
+      hideOnTablet: true,
+    },
+    {
+      key: "is_admin",
+      render: (user) => (
+        <div className={styles.admin}>
+          {user.is_admin ? "ادمین" : ""}
+        </div>
+      ),
       hideOnTablet: true,
     },
   ],

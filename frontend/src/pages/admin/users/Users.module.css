@@ -2,3 +2,12 @@
   display: flex;
   justify-content: center;
 }
+
+.email {
+  display: inline-flex;
+  align-items: center;
+}
+
+.admin {
+  text-align: center;
+}
