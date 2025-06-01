@@ -45,7 +45,8 @@ const Faculties = () => {
           key={selectedUniversity}
           title={`دانشکده‌های ${ universities?.find((u) => u.id === selectedUniversity)?.name_fa || "" }`}
           entityName={config.entityName}
-          fetchFunction={() => config.fetchFunction(selectedUniversity)}
+          data={faculties}
+          fetchData={fetchData}
           tableColumns={config.tableColumns}
           dialogFields={config.dialogFields}
           validate={config.validate}

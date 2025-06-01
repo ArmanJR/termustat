@@ -2,7 +2,6 @@ import {
   addFaculty,
   editFaculty,
   deleteFaculty,
-  getFaculties,
 } from "../../../api/admin/faculties";
 
 import { IconButton } from "@mui/material";
@@ -11,7 +10,6 @@ import { Block } from "@mui/icons-material";
 const config = {
   title: "",
   entityName: "دانشکده",
-  fetchFunction: getFaculties,
 
   tableColumns: [
     {
