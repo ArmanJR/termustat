@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import styles from "./EntityDialog.module.css";
 import Input from "../form/Input";
 import Button from "../form/Button";
-import { Dialog, DialogContent, Snackbar, Alert } from "@mui/material";
+import { Dialog, DialogContent } from "@mui/material";
+import { useSnackbar } from "../../contexts/SnackbarContext";
 
 const EntityDialog = ({
   open,
@@ -14,6 +15,7 @@ const EntityDialog = ({
   onSubmit,
   onClose,
 }) => {
+  const { showSnackbar } = useSnackbar();
   const modeLabels = { add: "افزودن", edit: "ویرایش", delete: "حذف" };
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
@@ -49,6 +51,23 @@ const EntityDialog = ({
     });
   };
 
+  const handleSelectChange = (e, field) => {
+    const value = e.target.value;
+    setFormData((prev) => {
+      const hasFacultyField = fields.some((f) => f.name === "faculty_id");
+      return {
+        ...prev,
+        [field.name]: value,
+        ...(field.name === "university_id" && hasFacultyField
+          ? { faculty_id: "" }
+          : {}),
+      };
+    });
+    if (field.onChangeHandler) {
+      field.onChangeHandler(value);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -70,16 +89,6 @@ const EntityDialog = ({
       else
         showSnackbar(`خطا در ${modeLabels[mode]} ${entityName}. لطفا دوباره تلاش کنید.`, "error");
     }
-  };
-
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success",
-  });
-
-  const showSnackbar = (message, severity = "success") => {
-    setSnackbar({ open: true, message, severity });
   };
 
   return (
@@ -112,6 +121,7 @@ const EntityDialog = ({
                     ))}
                   </div>
                 ) : field.inputType === "text" ||
+                  field.inputType === "password" ||
                   field.inputType === "number" ? (
                   <>
                     <Input
@@ -121,7 +131,7 @@ const EntityDialog = ({
                       value={formData[field.name] || ""}
                       onChange={handleChange}
                       dir={field.dir || ""}
-                      required
+                      required={field.required ?? true}
                     />
                     {errors[field.name] && (
                       <div className={styles.errorMessage}>
@@ -129,6 +139,23 @@ const EntityDialog = ({
                       </div>
                     )}
                   </>
+                ) : field.inputType === "select" ? (
+                  <div key={field.name}>
+                    <select
+                      name={field.name}
+                      value={formData[field.name] || ""}
+                      onChange={(e) => handleSelectChange(e, field)}
+                    >
+                      <option key="" value="" disabled>
+                        {field.label}
+                      </option>
+                      {field.options?.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 ) : (
                   <></>
                 )
@@ -144,6 +171,8 @@ const EntityDialog = ({
                       ? formData.name_fa
                       : entityName === "نیمسال تحصیلی"
                       ? `${formData.term} ${formData.year}`
+                      : entityName === "کاربر"
+                      ? `${formData.first_name} ${formData.last_name}`
                       : ""}
                     "&nbsp;
                   </span>
@@ -156,18 +185,6 @@ const EntityDialog = ({
           </form>
         </DialogContent>
       </Dialog>
-
-      <Snackbar
-        open={snackbar.open}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </>
   );
 };

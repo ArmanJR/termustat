@@ -29,3 +29,10 @@ export const editUniversity = async (id, universityData) => {
   );
   return response;
 };
+
+export const getUniversityById = async (id) => {
+  const response = await axiosInstance.get(
+    `/admin/universities/${id}`
+  );
+  return response;
+};
