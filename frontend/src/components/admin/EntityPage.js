@@ -61,7 +61,7 @@ const EntityPage = ({
         data={data}
         columns={tableColumns}
         onEdit={canEdit ? (item) => openDialog("edit", item) : null}
-        onDelete={canEdit ? (item) => openDialog("delete", item) : null}
+        onDelete={canDelete ? (item) => openDialog("delete", item) : null}
       />
       {(canAdd || canEdit || canDelete) && (
         <EntityDialog
