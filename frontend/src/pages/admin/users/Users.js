@@ -25,7 +25,8 @@ const enhanceUsersWithNames = async (users) => {
       try {
         const res = await getFacultyById(id);
         facultyCache.set(id, res.data.name_fa);
-      } catch {
+      } catch(err) {
+        console.error(`Failed to fetch faculty with ID ${id}:`, err);
         facultyCache.set(id, "نامشخص");
       }
     });
@@ -35,7 +36,8 @@ const enhanceUsersWithNames = async (users) => {
       try {
         const res = await getUniversityById(id);
         universityCache.set(id, res.data.name_fa);
-      } catch {
+      } catch(err) {
+        console.error(`Failed to fetch university with ID ${id}:`, err);
         universityCache.set(id, "نامشخص");
       }
     });

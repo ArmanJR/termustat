@@ -18,7 +18,8 @@ const getCachedUniversities = async () => {
     universityListCache.data = options;
     universityListCache.fetched = true;
     return options;
-  } catch {
+  } catch(err) {
+    console.error("Failed to fetch universities:", err);
     return [];
   }
 };
@@ -35,7 +36,8 @@ const getCachedFaculties = async (universityId) => {
     }));
     facultyListCache.set(universityId, options);
     return options;
-  } catch {
+  } catch(err) {
+    console.error(`Failed to fetch faculties for university ID ${universityId}:`, err);
     return [];
   }
 };
@@ -60,7 +62,7 @@ const config = {
     },
     {
       key: "email_verified",
-      render: (user) => user.email_verified + "",
+      render: (user) => String(user.email_verified),
       hideOnTablet: true,
     },
     {
@@ -70,7 +72,7 @@ const config = {
     },
     {
       key: "is_admin",
-      render: (user) => user.is_admin + "",
+      render: (user) => String(user.is_admin),
       hideOnTablet: true,
     },
     {
@@ -195,7 +197,8 @@ const config = {
           return field;
         })
       );
-    } catch {
+    } catch(err) {
+      console.error("Failed to open dialog and set fields:", err);
       setDialogFields((prevFields) =>
         prevFields.map((field) =>
           field.name === "university_id" || field.name === "faculty_id"
