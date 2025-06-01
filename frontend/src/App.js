@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Link, useLocation } from 'react-router-dom';
 import AppRoutes from './routes/index.js';
+import { SnackbarProvider } from './contexts/SnackbarContext.js';
 import { ThemeProvider } from '@mui/material';
 import muiTheme from './themes/muiTheme.js';
 
@@ -11,15 +12,17 @@ function App() {
 
   return (
     <ThemeProvider theme={muiTheme}>
-      {showNav && (
-        <nav>
-          <ul>
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/admin/login">Admin Login</Link></li>
-          </ul>
-        </nav>
-      )}
-      <AppRoutes />
+      <SnackbarProvider>
+        {showNav && (
+          <nav>
+            <ul>
+              <li><Link to="/">Home</Link></li>
+              <li><Link to="/admin/login">Admin Login</Link></li>
+            </ul>
+          </nav>
+        )}
+        <AppRoutes />
+      </SnackbarProvider>
     </ThemeProvider>
   );
 }
