@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -7,15 +7,10 @@ import { useAuth } from "../contexts/AuthContext";
  * Checks if the user is logged in and has admin privileges.
  */
 const AdminRoute = () => {
-  const isFirstRender = useRef(true);
   const { isAdmin, isLoggingOut, isLoggedIn, tryRefreshToken } = useAuth();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return; // Skip the effect on first render (loading state)
-    }
     const refreshToken = async () => {
       await tryRefreshToken();
       setLoading(false);
