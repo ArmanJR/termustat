@@ -2,6 +2,7 @@ name: API Lint
 
 on:
   push:
+    branches: [ "**" ]
   pull_request:
 
 jobs:
