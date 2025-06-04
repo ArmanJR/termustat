@@ -1,10 +1,10 @@
 package services
 
 import (
-	"fmt"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"github.com/armanjr/termustat/api/dto"
 	"github.com/armanjr/termustat/api/errors"
 	"github.com/armanjr/termustat/api/infrastructure/mailer"
