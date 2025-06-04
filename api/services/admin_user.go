@@ -275,32 +275,6 @@ func (s *adminUserService) GetByFaculty(ctx context.Context, facultyID uuid.UUID
 	}, nil
 }
 
-func (s *authService) sendPasswordResetEmail(user *models.User, token string) error {
-	resetURL := fmt.Sprintf("%s/reset-password?token=%s", s.frontendURL, token)
-	tplData := struct {
-		ResetURL string
-	}{ResetURL: resetURL}
-
-	emailContent, err := s.mailer.RenderTemplate("password_reset_email.html", tplData)
-	if err != nil {
-		s.logger.Error("Failed to render password reset email template",
-			zap.String("user_id", user.ID.String()),
-			zap.String("operation", "sendPasswordResetEmail"),
-			zap.Error(err))
-		return fmt.Errorf("failed to render password reset email template: %w", err)
-	}
-
-	if err = s.mailer.SendEmail(user.Email, emailContent.Subject, emailContent.Body); err != nil {
-		s.logger.Error("Failed to send password reset email",
-			zap.String("user_id", user.ID.String()),
-			zap.String("operation", "sendPasswordResetEmail"),
-			zap.Error(err))
-		return fmt.Errorf("failed to send password reset email: %w", err)
-	}
-
-	return nil
-}
-
 func (s *adminUserService) mapUserToDTO(user *models.User) (*dto.AdminUserResponse, error) {
 	return &dto.AdminUserResponse{
 		ID:            user.ID,
