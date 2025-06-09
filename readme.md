@@ -54,7 +54,7 @@ Make sure you have **Docker Engine** Installed. Following commands spins up the 
 ### Production
 
 > [!WARNING]
-> Termusat is currently undergoing a full refactor and is not yet ready for production use.
+> Termustat is currently undergoing a full refactor and is not yet ready for production use.
 
 Build and run all services:
 
