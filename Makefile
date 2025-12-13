@@ -3,7 +3,7 @@ COMPOSE_FILES    := -f docker-compose.yml -f docker-compose.dev.yml
 
 compose          = $(COMPOSE) $(COMPOSE_FILES)
 
-.PHONY: help up build stop down restart logs
+.PHONY: help up build stop down restart logs lint lint-api lint-frontend
 
 help:           ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?##' $(MAKEFILE_LIST) | \
@@ -27,3 +27,13 @@ restart:        ## down + up
 
 logs:           ## Follow logs for all services
 	$(call compose) logs -f
+
+lint:           ## Run all linters (API + Frontend)
+	$(MAKE) lint-api
+	$(MAKE) lint-frontend
+
+lint-api:       ## Lint Go code (API + Engine)
+	golangci-lint run
+
+lint-frontend:  ## Lint Frontend code
+	cd frontend && npm run lint
