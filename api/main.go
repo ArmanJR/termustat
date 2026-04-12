@@ -43,7 +43,7 @@ func main() {
 
 	// Initialize logger
 	log := logger.NewLogger()
-	defer log.Sync()
+	defer func() { _ = log.Sync() }()
 
 	// Set Gin mode based on environment
 	if cfg.Environment == "production" {

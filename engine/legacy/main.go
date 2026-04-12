@@ -48,7 +48,11 @@ func processAllCourses() error {
 	if err != nil {
 		return fmt.Errorf("error opening combined.sql: %w", err)
 	}
-	defer combinedFile.Close()
+	defer func() {
+		if err := combinedFile.Close(); err != nil {
+			log.Printf("error closing combined file: %v", err)
+		}
+	}()
 
 	for _, file := range files {
 		if file.IsDir() || filepath.Ext(file.Name()) != ".html" {
@@ -91,7 +95,11 @@ func processHTMLFile(path, faculty string) ([]Record, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error opening file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("error closing file %s: %v", path, err)
+		}
+	}()
 
 	doc, err := goquery.NewDocumentFromReader(file)
 	if err != nil {
@@ -222,7 +230,7 @@ func generateSQLInsert(faculty string, records []Record) (string, error) {
 	}
 
 	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("\nINSERT INTO %s VALUES\n", faculty))
+	fmt.Fprintf(&builder, "\nINSERT INTO %s VALUES\n", faculty)
 
 	for i, record := range records {
 		if i > 0 {

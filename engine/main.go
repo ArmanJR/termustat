@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gin-gonic/gin"
@@ -61,7 +60,7 @@ func processUploadedFile(c *gin.Context) {
 		})
 		return
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	filePath := filepath.Join(tempDir, file.Filename)
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
@@ -85,65 +84,17 @@ func processUploadedFile(c *gin.Context) {
 	})
 }
 
-// processAllCourses is used to process all the files in a directory
-func processAllCourses() error {
-	files, err := os.ReadDir("courses")
-	if err != nil {
-		return fmt.Errorf("error reading courses directory: %w", err)
-	}
-
-	if err := os.MkdirAll("export", os.ModePerm); err != nil {
-		return fmt.Errorf("error creating output directory: %w", err)
-	}
-
-	combinedFile, err := os.OpenFile("export/combined.sql", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return fmt.Errorf("error opening combined.sql: %w", err)
-	}
-	defer combinedFile.Close()
-
-	for _, file := range files {
-		if file.IsDir() || filepath.Ext(file.Name()) != ".html" {
-			continue
-		}
-
-		faculty := strings.TrimSuffix(file.Name(), ".html")
-		filePath := filepath.Join("courses", file.Name())
-
-		records, err := processHTMLFile(filePath)
-		if err != nil {
-			log.Printf("Skipping %s due to error: %v", filePath, err)
-			continue
-		}
-
-		if err := generateJSONOutput(faculty, records); err != nil {
-			log.Printf("Error generating JSON for %s: %v", faculty, err)
-		}
-
-		sqlContent, err := generateSQLInsert(faculty, records)
-		if err != nil {
-			log.Printf("Error generating SQL for %s: %v", faculty, err)
-			continue
-		}
-
-		if err := writeSQLFile(faculty, sqlContent); err != nil {
-			log.Printf("Error writing SQL file for %s: %v", faculty, err)
-		}
-
-		if _, err := combinedFile.WriteString(sqlContent + "\n"); err != nil {
-			log.Printf("Error appending to combined.sql: %v", err)
-		}
-	}
-
-	return nil
-}
 
 func processHTMLFile(path string) ([]Record, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("error opening file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("error closing file %s: %v", path, err)
+		}
+	}()
 
 	doc, err := goquery.NewDocumentFromReader(file)
 	if err != nil {
@@ -246,69 +197,8 @@ func cleanText(text string) string {
 		"۵", "5", "۶", "6", "۷", "7", "۸", "8", "۹", "9",
 		"ي", "ی", "ك", "ک", "ئ", "ی", "ء", "", "٠", "0", "١", "1",
 		"٢", "2", "٣", "3", "٤", "4", "٥", "5", "٦", "6", "٧", "7",
-		"٨", "8", "٩", "9", "‌", " ", "‏", "", "\u200c", " ",
+		"٨", "8", "٩", "9", "\u200c", " ", "\u200f", "",
 	)
 	return strings.TrimSpace(replacer.Replace(text))
 }
 
-func generateJSONOutput(faculty string, records []Record) error {
-	jsonData, err := json.MarshalIndent(records, "", "  ")
-	if err != nil {
-		return fmt.Errorf("error marshaling JSON: %w", err)
-	}
-
-	jsonPath := filepath.Join("export", faculty+".json")
-	if err := os.WriteFile(jsonPath, jsonData, 0644); err != nil {
-		return fmt.Errorf("error writing JSON file: %w", err)
-	}
-
-	return nil
-}
-
-func generateSQLInsert(faculty string, records []Record) (string, error) {
-	if len(records) == 0 {
-		return "", nil
-	}
-
-	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("\nINSERT INTO %s VALUES\n", faculty))
-
-	for i, record := range records {
-		if i > 0 {
-			builder.WriteString(",\n")
-		}
-		builder.WriteString(fmt.Sprintf(
-			"(NULL,'%s','%s',%s,%s,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')",
-			escapeSQL(record.CourseID),
-			escapeSQL(record.Name),
-			record.Weight,
-			record.Capacity,
-			escapeSQL(record.Gender),
-			escapeSQL(record.Professor),
-			escapeSQL(record.Faculty),
-			escapeSQL(record.Time1),
-			escapeSQL(record.Time2),
-			escapeSQL(record.Time3),
-			escapeSQL(record.Time4),
-			escapeSQL(record.Time5),
-			escapeSQL(record.TimeExam),
-			escapeSQL(record.DateExam),
-		))
-	}
-
-	builder.WriteString(";")
-	return builder.String(), nil
-}
-
-func escapeSQL(value string) string {
-	return strings.ReplaceAll(value, "'", "''")
-}
-
-func writeSQLFile(faculty, content string) error {
-	if content == "" {
-		return nil
-	}
-
-	sqlPath := filepath.Join("export", faculty+".sql")
-	return os.WriteFile(sqlPath, []byte(content), 0644)
-}

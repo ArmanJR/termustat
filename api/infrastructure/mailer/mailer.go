@@ -67,8 +67,8 @@ func (m *mailerImpl) SendEmail(to, subject, body string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	message := m.mg.NewMessage(m.sender, subject, "", to)
-	message.SetHtml(body)
+	message := mailgun.NewMessage(m.sender, subject, "", to)
+	message.SetHTML(body)
 
 	_, id, err := m.mg.Send(ctx, message)
 	if err != nil {
