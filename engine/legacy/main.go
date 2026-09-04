@@ -236,7 +236,7 @@ func generateSQLInsert(faculty string, records []Record) (string, error) {
 		if i > 0 {
 			builder.WriteString(",\n")
 		}
-		builder.WriteString(fmt.Sprintf(
+		fmt.Fprintf(&builder,
 			"(NULL,'%s','%s',%s,%s,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')",
 			escapeSQL(record.CourseID),
 			escapeSQL(record.Name),
@@ -252,7 +252,7 @@ func generateSQLInsert(faculty string, records []Record) (string, error) {
 			escapeSQL(record.Time5),
 			escapeSQL(record.TimeExam),
 			escapeSQL(record.DateExam),
-		))
+		)
 	}
 
 	builder.WriteString(";")
