@@ -1,0 +1,16 @@
+version: 2
+
+updates:
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    # Keep routine version updates disabled. Security updates remain enabled in
+    # the repository settings and are grouped below to reduce notification and
+    # pull-request volume.
+    open-pull-requests-limit: 0
+    groups:
+      frontend-security-updates:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
